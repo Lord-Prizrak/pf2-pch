@@ -14,11 +14,19 @@ var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
 var LS_THEME = 'pf2e.theme.v1';
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
+/* Каждая тема задаёт и цветовое оформление, и РАСПОЛОЖЕНИЕ блоков вкладки
+   «Лист» (layout): набор секций (.sheet-sec) и колонки с их распределением.
+   Раскладка перестраивается через CSS Grid order/grid-area — DOM не дублируется. */
+var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'feats', 'actions'];
 var THEMES = [
-  { id: 'default', name: 'Классический' },
-  { id: 'official', name: 'Официальный (Paizo)' },
-  { id: 'sanych', name: 'Лист персонажа (Саныч)' },
-  { id: 'dark', name: 'Тёмный VTT' }
+  { id: 'default', name: 'Классический', layout: { cols: 3, map: {
+      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'combat'], right: ['magic', 'feats', 'actions'] } } },
+  { id: 'official', name: 'Официальный (Paizo)', layout: { cols: 2, map: {
+      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'magic'] } } },
+  { id: 'sanych', name: 'Лист персонажа (Саныч)', layout: { cols: 3, map: {
+      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes'], right: ['magic', 'feats', 'actions'] } } },
+  { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
+      left: ['abil', 'skills'], mid: ['def', 'strikes', 'feats'], right: ['magic', 'actions'] } } }
 ];
 
 /* ---------------- утилиты ---------------- */
@@ -361,6 +369,63 @@ function renderAbilities() {
     cb.appendChild(chk); tr.appendChild(cb);
     tb.appendChild(tr);
   });
+  // карточки (раскладки classic/official): аббр -> [название, мод, значение, +2 ув.]
+  var cards = $('#ability-cards');
+  if (cards) {
+    cards.innerHTML = '';
+    [['str','СИЛ'],['dex','ЛОВ'],['con','ВЫН'],['int','ИНТ'],['wis','МУД'],['cha','ХАР']].forEach(function (pair) {
+      var k = pair[0], a = State.sheet.abilities[k];
+      var numInp = el('input', { type: 'number', value: a.score, class: 'card-score' });
+      numInp.addEventListener('input', function () { a.score = Number(numInp.value) || 0; markDirty(); updateComputed(); renderAbilities(); });
+      var chk = el('input', { type: 'checkbox', title: '+2 улучшение' }); chk.checked = !!a.boost;
+      chk.addEventListener('change', function () { a.boost = chk.checked; markDirty(); updateComputed(); renderAbilities(); });
+      var card = el('div', { class: 'abil-card sec-abil' }, [
+        el('span', { class: 'card-abbr', text: pair[1] }),
+        el('b', { class: 'card-mod', text: modStr(abilityMod(a)) }),
+        numInp,
+        el('label', { class: 'card-boost' }, [chk, document.createTextNode('+2')])
+      ]);
+      cards.appendChild(card);
+    });
+  }
+}
+
+/* Панель «ПЗ и щит» (крупные цифры раскладки official) — синхронизируется из updateComputed */
+function renderHpShieldPanel() {
+  var box = $('#hps-quick'); if (!box || box.childNodes.length) return;
+  [[-5,'−5'],[-1,'−1'],[1,'+1'],[5,'+5']].forEach(function (p) {
+    box.appendChild(el('button', { class: 'btn small', text: p[1], onclick: function () { applyDamage(p[0]); } }));
+  });
+  box.appendChild(el('button', { class: 'btn small', text: 'Отдых', onclick: function () {
+    var hp = State.sheet.hitPoints; hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0;
+    markDirty(); updateComputed();
+  }}));
+}
+
+/* Компактная сводка боя (раскладка sanych): КБ/спасброски/КСС + удары с броском */
+function renderCombatSummary() {
+  var box = $('#combat-summary'); if (!box) return;
+  var d = getComputed(), s = State.sheet;
+  box.innerHTML = '';
+  var stats = el('div', { class: 'combat-stats' });
+  [['КБ', String(d.ac)], ['Воспр', modStr(d.perception)],
+   ['Стoйк', modStr(d.saves.fortitude)], ['Реакц', modStr(d.saves.reflex)], ['Воля', modStr(d.saves.will)],
+   ['Кл.КС', String(d.classDC)], ['Маг.атк', modStr(d.spellAttack)], ['Маг.КС', String(d.spellDC)]].forEach(function (p) {
+    stats.appendChild(el('span', { class: 'cstat' }, [
+      el('small', { text: p[0] }), el('b', { text: p[1] })]));
+  });
+  box.appendChild(stats);
+  ['melee', 'ranged'].forEach(function (kind) {
+    (s.strikes[kind] || []).forEach(function (st, i) {
+      var v = d.strikes[kind][i];
+      box.appendChild(el('div', { class: 'combat-strike' }, [
+        el('button', { class: 'roll-btn', text: '🎲', onclick: function () { rollStrike(st.name, v, st.damage); } }),
+        el('span', { class: 'strike-attack', text: modStr(v) }),
+        el('span', { text: st.name || '(без названия)' }),
+        el('small', { text: st.damage || '' })
+      ]));
+    });
+  });
 }
 
 function renderDefense() {
@@ -371,6 +436,15 @@ function renderDefense() {
     profPicker(s.armor.prof, function (r) { s.armor.prof = r; markDirty(); updateComputed(); })
   ]));
   var sb = $('#saves-block'); sb.innerHTML = '';
+  // плитки итоговых спасбросков (раскладка official) — id save-total-* обновляет updateComputed
+  var tiles = el('div', { class: 'saves-tiles' });
+  [['fortitude', 'Стойкость'], ['reflex', 'Реакция'], ['will', 'Воля']].forEach(function (pair) {
+    tiles.appendChild(el('div', { class: 'save-tile' }, [
+      el('span', { text: pair[1] }),
+      el('b', { id: 'save-tile-' + pair[0], text: '' })
+    ]));
+  });
+  sb.appendChild(tiles);
   [['fortitude', 'Стойкость'], ['reflex', 'Реакция'], ['will', 'Воля']].forEach(function (pair) {
     var blk = s.saves[pair[0]];
     var row = el('div', { class: 'row' });
@@ -702,6 +776,10 @@ function updateComputed() {
   $('#save-total-fortitude').textContent = modStr(d.saves.fortitude);
   $('#save-total-reflex').textContent = modStr(d.saves.reflex);
   $('#save-total-will').textContent = modStr(d.saves.will);
+  var tf = $('#save-tile-fortitude');
+  if (tf) { tf.textContent = modStr(d.saves.fortitude);
+            $('#save-tile-reflex').textContent = modStr(d.saves.reflex);
+            $('#save-tile-will').textContent = modStr(d.saves.will); }
   Object.keys(d.skills).forEach(function (k) {
     var e = $('#skill-total-' + k); if (e) e.textContent = modStr(d.skills[k]);
   });
@@ -721,6 +799,27 @@ function updateComputed() {
   $('#hp-text').textContent = hp.current + ' / ' + hp.max + (hp.temp ? ' (+' + hp.temp + ' врем.)' : '');
   $('#dying-val').textContent = hp.dying || 0;
   $('#wounded-val').textContent = hp.wounded || 0;
+  // панель «ПЗ и щит» (раскладка official)
+  renderHpShieldPanel();
+  var hc = $('#hp-big-cur'), hm = $('#hp-big-max'), sc = $('#shield-big'), sm = $('#shield-big-max');
+  if (hc) {
+    hc.textContent = hp.current;
+    hm.textContent = 'из ' + hp.max + (hp.temp ? ' +' + hp.temp : '');
+    var sh = State.sheet.armor.shield || {};
+    sc.textContent = sh.current != null ? sh.current : (sh.hp || 0);
+    sm.textContent = 'из ' + (sh.hp || 0);
+  }
+  // сводка боя (раскладка sanych): обновляем только цифры, список ударов — в renderAll
+  var cbox = $('#combat-summary');
+  if (cbox && cbox.childNodes.length) {
+    var vals = [d.ac, modStr(d.perception), modStr(d.saves.fortitude), modStr(d.saves.reflex),
+                modStr(d.saves.will), d.classDC, modStr(d.spellAttack), d.spellDC];
+    $all('.cstat b', cbox).forEach(function (bEl, i) { if (vals[i] != null) bEl.textContent = String(vals[i]); });
+    $all('.combat-strike .strike-attack', cbox).forEach(function (e, i) {
+      var all = d.strikes.melee.concat(d.strikes.ranged);
+      if (all[i] != null) e.textContent = modStr(all[i]);
+    });
+  }
 }
 
 function renderAll() {
@@ -733,11 +832,37 @@ function renderAll() {
   renderStrikes();
   renderWeaponProf();
   renderHeroPoints();
+  renderCombatSummary();
   renderSpells();
   renderFeats();
   renderActions();
   renderInventory();
   updateComputed();
+  syncCombatStrip();
+
+  /* Пересобираем раскладку, если пользователь сменил тему между рендерами */
+  var grid = $('#sheet-grid');
+  if (grid && grid.dataset.layoutApplied !== currentTheme()) applyLayout(currentTheme());
+}
+
+/* Раскладка «Тёмный VTT» (strip): панель «ПЗ и щит» дублируется в верхнюю
+   горизонтальную ленту над колонками. Копия — только для отображения
+   (id удалены), поэтому не конфликтует с оригиналом при updateComputed. */
+function syncCombatStrip() {
+  var grid = $('#sheet-grid'); if (!grid) return;
+  var src = $('#hp-shield-panel');
+  var stripBox = $('.combat-strip', grid);
+  if (!src || !stripBox) return;
+  if (grid.classList.contains('layout-strip')) {
+    // пересобираем копию при каждом рендере, чтобы цифры были актуальны
+    stripBox.innerHTML = '';
+    var clone = src.cloneNode(true);
+    clone.removeAttribute('id');
+    $all('[id]', clone).forEach(function (n) { n.removeAttribute('id'); });
+    stripBox.appendChild(clone);
+  } else {
+    stripBox.innerHTML = '';
+  }
 }
 
 /* ---------------- броски кубиков ---------------- */
@@ -1193,7 +1318,7 @@ function wireTopbar() {
   });
 }
 
-/* ---------------- темы оформления ---------------- */
+/* ---------------- темы оформления (цвета + раскладка) ---------------- */
 var BUILD_THEME = (typeof window !== 'undefined' && window.__PF2E_BUILD_THEME__) || '';
 
 function validTheme(t) {
@@ -1203,11 +1328,41 @@ function currentTheme() {
   // приоритет: сохранённый выбор пользователя > тема, вшитая сборщиком > default
   return validTheme(localStorage.getItem(LS_THEME) || BUILD_THEME);
 }
+function themeById(id) {
+  for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i];
+  return THEMES[0];
+}
+
+/* Раскладка вкладки «Лист»: каждой секции (.sheet-sec) назначается CSS-переменная
+   --area (имя колонки) и --ord (порядок внутри колонки). Grid расставляет блоки. */
+function applyLayout(themeId) {
+  var grid = $('#sheet-grid'); if (!grid) return;
+  var lay = themeById(themeId).layout;
+  grid.classList.toggle('layout-strip', !!(lay && lay.strip));
+  grid.style.gridTemplateColumns =
+    lay.cols === 2 ? 'minmax(0,1fr) minmax(0,1.15fr)' : 'minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr)';
+  SECTIONS.forEach(function (sec) {
+    $all('.sec-' + sec, grid).forEach(function (node) {
+      var found = null;
+      ['left', 'mid', 'right'].forEach(function (col) {
+        var idx = lay.map[col].indexOf(sec);
+        if (idx >= 0) found = { col: col, ord: idx };
+      });
+      if (!found) found = { col: 'right', ord: 9 };
+      node.style.setProperty('--area', found.col);
+      node.style.setProperty('--ord', String(found.ord));
+    });
+  });
+  grid.dataset.layoutApplied = themeId;
+  syncCombatStrip();
+}
+
 function applyTheme(t) {
   THEMES.forEach(function (x) {
     if (x.id !== 'default') document.body.classList.remove('theme-' + x.id);
   });
   if (t !== 'default') document.body.classList.add('theme-' + t);
+  applyLayout(t);
   var sel = $('#theme-select');
   if (sel) sel.value = t;
 }
@@ -1220,6 +1375,7 @@ function wireThemePicker() {
   sel.addEventListener('change', function () {
     localStorage.setItem(LS_THEME, sel.value);
     applyTheme(sel.value);
+    renderAll();   // пересобрать содержимое под новую раскладку (лента/цифры)
   });
   applyTheme(currentTheme());
 }

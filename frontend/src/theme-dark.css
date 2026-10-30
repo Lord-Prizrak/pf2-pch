@@ -87,3 +87,13 @@ body.theme-dark .server-list .srv-item { background: var(--panel); }
 body.theme-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
 body.theme-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
 body.theme-dark .hint { color: var(--muted); }
+
+/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху, три колонки ---------- */
+body.theme-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
+body.theme-dark .hps-row { display: flex; gap: 12px; align-items: center; }
+body.theme-dark .hp-stat, body.theme-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
+body.theme-dark .hp-stat span, body.theme-dark .shield-stat span { text-transform: uppercase; font-size: 10.5px; color: var(--muted); }
+body.theme-dark .hp-stat b, body.theme-dark .shield-stat b { font-size: 26px; color: var(--accent); }
+body.theme-dark .hp-stat small, body.theme-dark .shield-stat small { color: var(--muted); }
+body.theme-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
+body.theme-dark .sheet-sec { border-radius: 12px; }

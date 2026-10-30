@@ -62,14 +62,17 @@ def load_embedded():
     return {'schema': 1, 'characters': chars}
 
 
-def build_html(html, css, js, payload, theme='default'):
+def build_html(html, css, js, payload, theme='default', layout=None):
     # инлайн CSS: все темы присутствуют в файле — переключение возможно на лету;
-    # --theme задаёт тему сборки (класс на <body> и __PF2E_BUILD_THEME__)
+    # --theme задаёт тему сборки (класс на <body> и __PF2E_BUILD_THEME__),
+    # --layout — раскладку (по умолчанию совпадает с темой)
+    layout = layout or theme
     html = html.replace('<link rel="stylesheet" href="style.css">',
                         '<style>\n' + css.replace('</style>', '<\\/style>') + '\n</style>')
 
     # тема сборки: значение для JS и класс на <body> (для default — без класса)
     html = html.replace("'__PF2E_THEME__'", json.dumps(theme))
+    html = html.replace("'__PF2E_LAYOUT__'", json.dumps(layout))
     body_cls = ' class="theme-%s"' % theme if theme != 'default' else ''
     html = html.replace('<body class="theme-__PF2E_THEME_BODY__">', '<body%s>' % body_cls)
 
@@ -92,7 +95,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--no-data', action='store_true')
     ap.add_argument('--theme', choices=sorted(THEMES), default='default',
-                    help='вариант оформления листа (по умолчанию default)')
+                    help='вариант оформления листа: цвета + расположение блоков (по умолчанию default)')
+    ap.add_argument('--layout', choices=sorted(THEMES), default=None,
+                    help='раскладка (расположение блоков); по умолчанию = --theme. '
+                         'Напр.: --theme dark --layout official — цвета тёмные, структура официальная')
     ap.add_argument('--list-themes', action='store_true',
                     help='показать доступные темы и выйти')
     args = ap.parse_args()
@@ -112,19 +118,21 @@ def main():
     payload = empty_payload if args.no_data else load_embedded()
 
     out = OUT_EMPTY if args.no_data else OUT
-    html = build_html(html_tpl, css, js, payload, theme=args.theme)
+    html = build_html(html_tpl, css, js, payload, theme=args.theme, layout=args.layout)
     with open(out, 'w', encoding='utf-8') as fh:
         fh.write(html)
     n = len(payload['characters'])
-    print(f'sheet собран: {out} ({os.path.getsize(out)} байт, персонажей встроено: {n}, тема: {args.theme})')
+    lay = args.layout or args.theme
+    print(f'sheet собран: {out} ({os.path.getsize(out)} байт, персонажей встроено: {n}, '
+          f'тема: {args.theme}, раскладка: {lay})')
 
     # за --no-data также пересобираем и обычный лист, чтобы сервер мог
     # раздавать обе страницы (sheet.html и sheet-empty.html)
     if args.no_data:
-        full = build_html(html_tpl, css, js, load_embedded(), theme=args.theme)
+        full = build_html(html_tpl, css, js, load_embedded(), theme=args.theme, layout=args.layout)
         with open(OUT, 'w', encoding='utf-8') as fh:
             fh.write(full)
-        print(f'sheet собран: {OUT} ({os.path.getsize(OUT)} байт, тема: {args.theme})')
+        print(f'sheet собран: {OUT} ({os.path.getsize(OUT)} байт, тема: {args.theme}, раскладка: {lay})')
 
 
 if __name__ == '__main__':

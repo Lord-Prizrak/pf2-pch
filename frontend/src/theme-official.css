@@ -95,3 +95,31 @@ body.theme-official .dot { border-color: var(--accent); }
 body.theme-official .dot.used { background: var(--accent); }
 body.theme-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
 body.theme-official .toast { background: #3a2f22; }
+
+/* ---------- РАСКЛАДКА official: две колонки, как в официальном PDF ---------- */
+/* «Основное» — широкая шапка сверху (как титульный блок PDF) */
+body.theme-official .info-block { grid-area: info; }
+body.theme-official #sheet-grid { grid-template-areas: "info info" "left right"; }
+@media (max-width: 1000px) { body.theme-official #sheet-grid { grid-template-areas: "info" "left" "right"; } }
+
+/* характеристики — карточками в ряд (крупный модификатор + значение), как в PDF */
+body.theme-official .abil-table { display: none; }
+body.theme-official .ability-cards { display: flex; gap: 6px; }
+body.theme-official .abil-card { flex: 1; border: 2px double #7a6f5a; border-radius: 0;
+  background: #fff; padding: 8px 4px; }
+body.theme-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
+body.theme-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
+body.theme-official .abil-card input.card-score { border: none; border-bottom: 1px solid #b7ad97; width: 48px; }
+
+/* крупные ПЗ/щит в правом верхнем углу; спасброски — квадратными плитками */
+body.theme-official #hp-shield-panel { display: block; }
+body.theme-official .hps-row { display: flex; gap: 10px; align-items: stretch; }
+body.theme-official .hp-stat, body.theme-official .shield-stat {
+  border: 3px double #7a6f5a; border-radius: 0; background: #fff; min-width: 120px; padding: 8px; }
+body.theme-official .hp-stat b, body.theme-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
+body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; color: var(--muted); font-size: 11px; }
+body.theme-official .hps-quick { display: flex; flex-wrap: wrap; gap: 4px; align-content: center; }
+body.theme-official .saves-tiles { display: flex; gap: 8px; margin: 6px 0; }
+body.theme-official .save-tile { flex: 1; text-align: center; border: 2px double #7a6f5a; background: #fff; padding: 4px; }
+body.theme-official .save-tile span { display: block; font-size: 10.5px; color: var(--accent); font-family: Georgia, serif; text-transform: uppercase; }
+body.theme-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }

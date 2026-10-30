@@ -6,6 +6,8 @@
 <title>PF2e — интерактивный лист персонажа</title>
 <!-- PF2E-BUILD-THEME: класс/тема, проставляемая tools/build.py (--theme) -->
 <script>window.__PF2E_BUILD_THEME__ = '__PF2E_THEME__';</script>
+<!-- PF2E-BUILD-LAYOUT: раскладка листа (tools/build.py --layout), переопределяется выбором темы на лету -->
+<script>window.__PF2E_BUILD_LAYOUT__ = '__PF2E_LAYOUT__';</script>
 <!-- PF2E-SHEET-DATA:START -->
 <script id="pf2e-embedded-data" type="application/json">null</script>
 <!-- PF2E-SHEET-DATA:END -->
@@ -27,9 +29,12 @@
 <main id="main">
   <!-- ==================== ВКЛАДКА: ЛИСТ ==================== -->
   <section id="tab-sheet" class="tabpage">
-    <div class="grid">
+    <div class="grid sheet-grid" id="sheet-grid">
+      <!-- лента для раскладки "Тёмный VTT" (strip): в неё JS копирует панель ПЗ/щита -->
+      <div class="combat-strip"></div>
+
       <div class="col left">
-        <fieldset><legend>Основное</legend>
+        <fieldset class="info-block"><legend>Основное</legend>
           <div class="row"><label>Имя персонажа<input data-bind="name"></label>
             <label>Игрок<input data-bind="player"></label></div>
           <div class="row"><label>Народ<input data-bind="core.ancestry"></label>
@@ -47,12 +52,14 @@
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
         </fieldset>
 
-        <fieldset><legend>Характеристики</legend>
+        <fieldset class="sheet-sec sec-abil"><legend>Характеристики</legend>
           <table class="abil-table"><thead><tr><th></th><th>Хар</th><th>Мод</th><th>+2 ув.</th></tr></thead>
           <tbody id="abilities-body"></tbody></table>
+          <!-- карточки характеристик (раскладки classic/official) -->
+          <div id="ability-cards" class="ability-cards"></div>
         </fieldset>
 
-        <fieldset><legend>Защиты</legend>
+        <fieldset class="sheet-sec sec-def"><legend>Защиты</legend>
           <div class="bigstats">
             <div class="stat"><span>КБ</span><b id="ac-total">0</b></div>
             <div class="stat"><span>Классовая КС</span><b id="classdc-total">0</b></div>
@@ -73,7 +80,7 @@
           <div class="row"><label class="grow">Устойчивости/невосприимчивости<textarea rows="2" data-bind="resistances"></textarea></label></div>
         </fieldset>
 
-        <fieldset><legend>Пункты здоровья</legend>
+        <fieldset class="sheet-sec sec-hp"><legend>Пункты здоровья</legend>
           <div class="row">
             <label>Макс<input type="number" data-bind="hitPoints.max" class="xs"></label>
             <label>Тек<input type="number" data-bind="hitPoints.current" class="xs"></label>
@@ -90,32 +97,45 @@
       </div>
 
       <div class="col mid">
-        <fieldset><legend>Навыки</legend>
+        <fieldset class="sheet-sec sec-skills"><legend>Навыки</legend>
           <div class="row"><label>Восприятие<input type="number" data-bind="perception.total" class="xs"></label>
             <span id="perception-prof"></span></div>
           <div id="skills-block"></div>
         </fieldset>
 
-        <fieldset><legend>Удары</legend>
+        <fieldset class="sheet-sec sec-strikes"><legend>Удары</legend>
           <div id="strikes-block"></div>
         </fieldset>
 
-        <fieldset><legend>Профичности оружия</legend>
+        <fieldset class="sheet-sec sec-strikes"><legend>Профичности оружия</legend>
           <div id="weapon-prof-block"></div>
           <div class="row"><label class="grow">Примечания<input data-bind="weaponProfNotes"></label></div>
         </fieldset>
       </div>
 
       <div class="col right">
-        <fieldset><legend>Магия</legend>
+        <!-- верхняя панель: ПЗ + щит (раскладка "official") -->
+        <fieldset class="sheet-sec sec-hp" id="hp-shield-panel"><legend>ПЗ и щит</legend>
+          <div class="hps-row">
+            <div class="stat hp-stat"><span>Пункты здоровья</span><b id="hp-big-cur">0</b><small id="hp-big-max"></small></div>
+            <div class="stat shield-stat"><span>Щит</span><b id="shield-big">0</b><small id="shield-big-max"></small></div>
+            <div class="hps-quick" id="hps-quick"></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="sheet-sec sec-combat" id="combat-panel"><legend>Бой</legend>
+          <div id="combat-summary"></div>
+        </fieldset>
+
+        <fieldset class="sheet-sec sec-magic"><legend>Магия</legend>
           <div id="spellcasting-block"></div>
         </fieldset>
 
-        <fieldset><legend>Черты и умения</legend>
+        <fieldset class="sheet-sec sec-feats"><legend>Черты и умения</legend>
           <div id="feats-block"></div>
         </fieldset>
 
-        <fieldset><legend>Действия</legend>
+        <fieldset class="sheet-sec sec-actions"><legend>Действия</legend>
           <div id="actions-block"></div>
         </fieldset>
       </div>

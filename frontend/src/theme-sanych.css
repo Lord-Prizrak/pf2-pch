@@ -85,3 +85,15 @@ body.theme-sanych #modal { background: var(--panel); color: var(--ink); }
 body.theme-sanych #json-editor { background: #12171c; color: var(--ink); }
 body.theme-sanych code.inline { background: #223038; color: var(--accent2); }
 body.theme-sanych .server-list .srv-item { background: var(--panel); }
+
+/* ---------- РАСКЛАДКА sanych: «боевой» лист — защиты/ПЗ слева, бой-сводка ---------- */
+body.theme-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
+body.theme-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+body.theme-sanych .cstat { border: 1px solid var(--line); background: #12171c; border-radius: 3px;
+  padding: 4px 10px; text-align: center; min-width: 64px; }
+body.theme-sanych .cstat small { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+body.theme-sanych .cstat b { color: var(--accent); font-family: Consolas, monospace; font-size: 18px; }
+body.theme-sanych .combat-strike { display: flex; align-items: center; gap: 8px;
+  border-top: 1px dashed var(--line); padding: 5px 2px; }
+body.theme-sanych .combat-strike .strike-attack { color: var(--accent2); font-family: Consolas, monospace; min-width: 34px; }
+body.theme-sanych .combat-strike small { color: var(--muted); margin-left: auto; font-family: Consolas, monospace; }

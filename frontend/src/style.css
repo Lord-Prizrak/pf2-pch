@@ -131,3 +131,46 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
 .strike-attack { font-weight: 700; min-width: 42px; display: inline-block; }
 .roll-btn { border: 1px solid var(--line); background: #fff; border-radius: 5px; cursor: pointer; padding: 2px 7px; }
 .roll-btn:hover { background: #f0e6d0; }
+
+/* ==========================================================================
+   РАСКЛАДКИ листа (layout). Тема = цвета + расположение блоков.
+   Секции (.sheet-sec) — элементы grid'а; JS (applyLayout) назначает каждой
+   --area (left|mid|right) и --ord (порядок в колонке). Колонки .col служат
+   «контейнерами» только для непереносимых блоков (например, «Основное»).
+   ========================================================================== */
+.sheet-grid { display: grid; gap: 12px; align-items: start;
+  grid-template-columns: minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr);
+  grid-template-areas: "left mid right" "info info info"; }
+@media (max-width: 1100px) { .sheet-grid { grid-template-columns: 1fr;
+  grid-template-areas: "info" "left" "mid" "right"; } }
+.sheet-grid > .col { display: contents; }          /* содержимое колонок — участники grid'а */
+.info-block { grid-area: info; }                    /* блок «Основное» всегда сверху во всю ширину */
+.sheet-sec { grid-area: var(--area, left); order: var(--ord, 0); margin-bottom: 0; }
+.combat-strip { grid-area: 1 / 1 / 2 / -1; display: none; }   /* виден только в strip-раскладке */
+.sheet-grid.layout-strip .combat-strip { display: block; }
+.sheet-grid.layout-strip { grid-template-areas: "strip strip strip" "left mid right" "info info info"; }
+.sheet-grid.layout-strip #hp-shield-panel { display: none; }  /* оригинал скрыт — показываем ленту */
+.combat-strip fieldset { border: none; background: transparent; padding: 0; margin: 0; }
+.combat-strip legend { display: none; }
+.combat-strip .hps-row { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 10px; }
+
+/* карточки характеристик (по умолчанию скрыты — включаются раскладками classic/official) */
+.ability-cards { display: none; }
+
+/* панель ПЗ/щит по умолчанию скрыта — её показывают только соответствующие раскладки */
+#hp-shield-panel { display: none; }
+
+/* ---------- раскладка темы "Классический" (default) ---------- */
+body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .ability-cards { display: grid;
+  grid-template-columns: repeat(3, 1fr); gap: 8px; }
+body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .abil-table { display: none; }
+.abil-card { border: 1px solid var(--line); border-radius: 8px; background: #faf4e8;
+  padding: 6px; text-align: center; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.abil-card .card-abbr { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.abil-card .card-mod { font-size: 22px; font-weight: 800; color: var(--accent); }
+.abil-card input.card-score { width: 56px; text-align: center; }
+.abil-card .card-boost { flex-direction: row; align-items: center; gap: 3px; font-size: 10.5px; }
+
+/* панель ПЗ/щит видна в классической и official-раскладках */
+body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
