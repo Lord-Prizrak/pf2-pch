@@ -6,6 +6,8 @@
 <title>PF2e — интерактивный лист персонажа</title>
 <!-- PF2E-BUILD-THEME: класс/тема, проставляемая tools/build.py (--theme) -->
 <script>window.__PF2E_BUILD_THEME__ = "default";</script>
+<!-- PF2E-BUILD-LAYOUT: раскладка листа (tools/build.py --layout), переопределяется выбором темы на лету -->
+<script>window.__PF2E_BUILD_LAYOUT__ = "default";</script>
 <!-- PF2E-SHEET-DATA:START -->
 <script id="pf2e-embedded-data" type="application/json">
 {
@@ -986,6 +988,77 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
 .roll-btn { border: 1px solid var(--line); background: #fff; border-radius: 5px; cursor: pointer; padding: 2px 7px; }
 .roll-btn:hover { background: #f0e6d0; }
 
+/* ==========================================================================
+   РАСКЛАДКИ листа (layout). Тема = цвета + расположение блоков.
+
+   Как это устроено и почему блоки больше не наезжают друг на друга:
+     - В DOM секции (.sheet-sec) лежат ВНУТРИ колонок-контейнеров
+       .sheet-area-left / .sheet-area-mid / .sheet-area-right; каждая колонка —
+       flex-столбик (gap между блоками гарантирован, перекрытие невозможно).
+     - applyLayout() НЕ перемещает узлы и НЕ использует display:contents /
+       grid-area: var() — эти механизмы по-разному поддерживались браузерами
+       и приводили к наложению блоков. Вместо этого:
+         * каждой колонке назначается data-col="left|mid|right" (или "full"),
+           CSS Grid расставляет сами колонки по grid-column;
+         * порядок секций внутри колонки задаётся inline order (--ord);
+         * состав секций в колонке меняется переносом узлов appendChild —
+           узлы всегда живут ровно в одном контейнере, дублирование исключено;
+         * лишние/дублирующиеся панели скрываются классом .sec-hidden.
+     - Число колонок задаётся data-cols="2|3" на #sheet-grid; «Основное»
+       (.info-block) всегда во всю ширину сверху; combat-strip — горизонтальная
+       лента для VTT-раскладки (включается data-strip="1").
+   ========================================================================== */
+.sheet-grid { display: grid; gap: 12px; align-items: start; }
+.sheet-area { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.info-block { margin-bottom: 0; }
+.combat-strip { display: none; }
+.sheet-grid[data-strip="1"] > .combat-strip { display: block; }
+.sheet-sec { margin: 0; min-width: 0; overflow-wrap: break-word; }
+.sec-hidden { display: none !important; }
+
+/* три колонки (по умолчанию) */
+#sheet-grid { grid-template-columns: minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr); }
+#sheet-grid > [data-col="strip"], #sheet-grid > [data-col="full"] { grid-column: 1 / -1; }
+#sheet-grid > [data-col="left"] { grid-column: 1; }
+#sheet-grid > [data-col="mid"] { grid-column: 2; }
+#sheet-grid > [data-col="right"] { grid-column: 3; }
+#sheet-grid > [data-col="strip"] { order: -2; }
+#sheet-grid > [data-col="full"] { order: -1; }
+#sheet-grid > [data-col="left"] { order: 1; }
+#sheet-grid > [data-col="mid"] { order: 2; }
+#sheet-grid > [data-col="right"] { order: 3; }
+
+/* две колонки (official): левая+средняя сливаются в первую grid-колонку */
+#sheet-grid[data-cols="2"] { grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); }
+#sheet-grid[data-cols="2"] > [data-col="left"],
+#sheet-grid[data-cols="2"] > [data-col="mid"] { grid-column: 1; }
+#sheet-grid[data-cols="2"] > [data-col="right"] { grid-column: 2; }
+
+@media (max-width: 1100px) {                /* планшет/мобильный — одна колонка */
+  #sheet-grid, #sheet-grid[data-cols="2"] { grid-template-columns: minmax(0,1fr); }
+  #sheet-grid > [data-col] { grid-column: 1 / -1; }
+}
+
+/* карточки характеристик (по умолчанию скрыты — включаются раскладками classic/official) */
+.ability-cards { display: none; }
+
+/* панель ПЗ/щит по умолчанию скрыта — её показывают только соответствующие раскладки */
+#hp-shield-panel { display: none; }
+
+/* ---------- раскладка темы "Классический" (default) ---------- */
+body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .ability-cards { display: grid;
+  grid-template-columns: repeat(3, 1fr); gap: 8px; }
+body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .abil-table { display: none; }
+.abil-card { border: 1px solid var(--line); border-radius: 8px; background: #faf4e8;
+  padding: 6px; text-align: center; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.abil-card .card-abbr { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.abil-card .card-mod { font-size: 22px; font-weight: 800; color: var(--accent); }
+.abil-card input.card-score { width: 56px; text-align: center; }
+.abil-card .card-boost { flex-direction: row; align-items: center; gap: 3px; font-size: 10.5px; }
+
+/* панель ПЗ/щит видна в классической и official-раскладках */
+body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
+
 
 /* === тема: dark === */
 /* ==========================================================================
@@ -1077,6 +1150,16 @@ body.theme-dark .server-list .srv-item { background: var(--panel); }
 body.theme-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
 body.theme-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
 body.theme-dark .hint { color: var(--muted); }
+
+/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху, три колонки ---------- */
+body.theme-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
+body.theme-dark .hps-row { display: flex; gap: 12px; align-items: center; }
+body.theme-dark .hp-stat, body.theme-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
+body.theme-dark .hp-stat span, body.theme-dark .shield-stat span { text-transform: uppercase; font-size: 10.5px; color: var(--muted); }
+body.theme-dark .hp-stat b, body.theme-dark .shield-stat b { font-size: 26px; color: var(--accent); }
+body.theme-dark .hp-stat small, body.theme-dark .shield-stat small { color: var(--muted); }
+body.theme-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
+body.theme-dark .sheet-sec { border-radius: 12px; }
 
 
 /* === тема: official === */
@@ -1178,6 +1261,34 @@ body.theme-official .dot.used { background: var(--accent); }
 body.theme-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
 body.theme-official .toast { background: #3a2f22; }
 
+/* ---------- РАСКЛАДКА official: две колонки, как в официальном PDF ---------- */
+/* «Основное» — широкая шапка сверху (как титульный блок PDF) */
+body.theme-official .info-block { grid-area: info; }
+body.theme-official #sheet-grid { grid-template-areas: "info info" "left right"; }
+@media (max-width: 1000px) { body.theme-official #sheet-grid { grid-template-areas: "info" "left" "right"; } }
+
+/* характеристики — карточками в ряд (крупный модификатор + значение), как в PDF */
+body.theme-official .abil-table { display: none; }
+body.theme-official .ability-cards { display: flex; gap: 6px; }
+body.theme-official .abil-card { flex: 1; border: 2px double #7a6f5a; border-radius: 0;
+  background: #fff; padding: 8px 4px; }
+body.theme-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
+body.theme-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
+body.theme-official .abil-card input.card-score { border: none; border-bottom: 1px solid #b7ad97; width: 48px; }
+
+/* крупные ПЗ/щит в правом верхнем углу; спасброски — квадратными плитками */
+body.theme-official #hp-shield-panel { display: block; }
+body.theme-official .hps-row { display: flex; gap: 10px; align-items: stretch; }
+body.theme-official .hp-stat, body.theme-official .shield-stat {
+  border: 3px double #7a6f5a; border-radius: 0; background: #fff; min-width: 120px; padding: 8px; }
+body.theme-official .hp-stat b, body.theme-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
+body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; color: var(--muted); font-size: 11px; }
+body.theme-official .hps-quick { display: flex; flex-wrap: wrap; gap: 4px; align-content: center; }
+body.theme-official .saves-tiles { display: flex; gap: 8px; margin: 6px 0; }
+body.theme-official .save-tile { flex: 1; text-align: center; border: 2px double #7a6f5a; background: #fff; padding: 4px; }
+body.theme-official .save-tile span { display: block; font-size: 10.5px; color: var(--accent); font-family: Georgia, serif; text-transform: uppercase; }
+body.theme-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }
+
 
 /* === тема: sanych === */
 /* ==========================================================================
@@ -1268,6 +1379,18 @@ body.theme-sanych #json-editor { background: #12171c; color: var(--ink); }
 body.theme-sanych code.inline { background: #223038; color: var(--accent2); }
 body.theme-sanych .server-list .srv-item { background: var(--panel); }
 
+/* ---------- РАСКЛАДКА sanych: «боевой» лист — защиты/ПЗ слева, бой-сводка ---------- */
+body.theme-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
+body.theme-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+body.theme-sanych .cstat { border: 1px solid var(--line); background: #12171c; border-radius: 3px;
+  padding: 4px 10px; text-align: center; min-width: 64px; }
+body.theme-sanych .cstat small { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+body.theme-sanych .cstat b { color: var(--accent); font-family: Consolas, monospace; font-size: 18px; }
+body.theme-sanych .combat-strike { display: flex; align-items: center; gap: 8px;
+  border-top: 1px dashed var(--line); padding: 5px 2px; }
+body.theme-sanych .combat-strike .strike-attack { color: var(--accent2); font-family: Consolas, monospace; min-width: 34px; }
+body.theme-sanych .combat-strike small { color: var(--muted); margin-left: auto; font-family: Consolas, monospace; }
+
 </style>
 </head>
 <body>
@@ -1286,9 +1409,12 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
 <main id="main">
   <!-- ==================== ВКЛАДКА: ЛИСТ ==================== -->
   <section id="tab-sheet" class="tabpage">
-    <div class="grid">
-      <div class="col left">
-        <fieldset><legend>Основное</legend>
+    <div class="grid sheet-grid" id="sheet-grid">
+      <!-- лента для раскладки "Тёмный VTT" (strip): в неё JS копирует панель ПЗ/щита -->
+      <div class="combat-strip" aria-hidden="true"></div>
+
+      <div class="sheet-area sheet-area-left">
+        <fieldset class="info-block"><legend>Основное</legend>
           <div class="row"><label>Имя персонажа<input data-bind="name"></label>
             <label>Игрок<input data-bind="player"></label></div>
           <div class="row"><label>Народ<input data-bind="core.ancestry"></label>
@@ -1306,12 +1432,14 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
         </fieldset>
 
-        <fieldset><legend>Характеристики</legend>
+        <fieldset class="sheet-sec sec-abil"><legend>Характеристики</legend>
           <table class="abil-table"><thead><tr><th></th><th>Хар</th><th>Мод</th><th>+2 ув.</th></tr></thead>
           <tbody id="abilities-body"></tbody></table>
+          <!-- карточки характеристик (раскладки classic/official) -->
+          <div id="ability-cards" class="ability-cards"></div>
         </fieldset>
 
-        <fieldset><legend>Защиты</legend>
+        <fieldset class="sheet-sec sec-def"><legend>Защиты</legend>
           <div class="bigstats">
             <div class="stat"><span>КБ</span><b id="ac-total">0</b></div>
             <div class="stat"><span>Классовая КС</span><b id="classdc-total">0</b></div>
@@ -1332,7 +1460,7 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
           <div class="row"><label class="grow">Устойчивости/невосприимчивости<textarea rows="2" data-bind="resistances"></textarea></label></div>
         </fieldset>
 
-        <fieldset><legend>Пункты здоровья</legend>
+        <fieldset class="sheet-sec sec-hp"><legend>Пункты здоровья</legend>
           <div class="row">
             <label>Макс<input type="number" data-bind="hitPoints.max" class="xs"></label>
             <label>Тек<input type="number" data-bind="hitPoints.current" class="xs"></label>
@@ -1348,33 +1476,46 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
         </fieldset>
       </div>
 
-      <div class="col mid">
-        <fieldset><legend>Навыки</legend>
+      <div class="sheet-area sheet-area-mid">
+        <fieldset class="sheet-sec sec-skills"><legend>Навыки</legend>
           <div class="row"><label>Восприятие<input type="number" data-bind="perception.total" class="xs"></label>
             <span id="perception-prof"></span></div>
           <div id="skills-block"></div>
         </fieldset>
 
-        <fieldset><legend>Удары</legend>
+        <fieldset class="sheet-sec sec-strikes"><legend>Удары</legend>
           <div id="strikes-block"></div>
         </fieldset>
 
-        <fieldset><legend>Профичности оружия</legend>
+        <fieldset class="sheet-sec sec-strikes"><legend>Профичности оружия</legend>
           <div id="weapon-prof-block"></div>
           <div class="row"><label class="grow">Примечания<input data-bind="weaponProfNotes"></label></div>
         </fieldset>
       </div>
 
-      <div class="col right">
-        <fieldset><legend>Магия</legend>
+      <div class="sheet-area sheet-area-right">
+        <!-- верхняя панель: ПЗ + щит (раскладка "official") -->
+        <fieldset class="sheet-sec sec-hp" id="hp-shield-panel"><legend>ПЗ и щит</legend>
+          <div class="hps-row">
+            <div class="stat hp-stat"><span>Пункты здоровья</span><b id="hp-big-cur">0</b><small id="hp-big-max"></small></div>
+            <div class="stat shield-stat"><span>Щит</span><b id="shield-big">0</b><small id="shield-big-max"></small></div>
+            <div class="hps-quick" id="hps-quick"></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="sheet-sec sec-combat" id="combat-panel"><legend>Бой</legend>
+          <div id="combat-summary"></div>
+        </fieldset>
+
+        <fieldset class="sheet-sec sec-magic"><legend>Магия</legend>
           <div id="spellcasting-block"></div>
         </fieldset>
 
-        <fieldset><legend>Черты и умения</legend>
+        <fieldset class="sheet-sec sec-feats"><legend>Черты и умения</legend>
           <div id="feats-block"></div>
         </fieldset>
 
-        <fieldset><legend>Действия</legend>
+        <fieldset class="sheet-sec sec-actions"><legend>Действия</legend>
           <div id="actions-block"></div>
         </fieldset>
       </div>
@@ -1507,11 +1648,29 @@ var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
 var LS_THEME = 'pf2e.theme.v1';
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
+/* Каждая тема задаёт и цветовое оформление, и РАСПОЛОЖЕНИЕ блоков вкладки
+   «Лист» (layout). Секции листа помечены class="sheet-sec sec-<id>"; узлы с
+   одним sec-id — одна логическая секция (переносится целиком).
+   Раскладка описывается так:
+     cols — число колонок (2 или 3);
+     map  — состав и порядок секций в колонках left/mid/right (для cols=2
+            содержимое mid дописывается после left в первую grid-колонку);
+     strip — показывать верхнюю горизонтальную ленту ПЗ/щита (VTT);
+     hide — селекторы панелей, скрываемых в этой раскладке (дубликаты). */
+var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'feats', 'actions'];
 var THEMES = [
-  { id: 'default', name: 'Классический' },
-  { id: 'official', name: 'Официальный (Paizo)' },
-  { id: 'sanych', name: 'Лист персонажа (Саныч)' },
-  { id: 'dark', name: 'Тёмный VTT' }
+  { id: 'default', name: 'Классический', layout: { cols: 3, map: {
+      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'combat'], right: ['magic', 'feats', 'actions'] },
+      hide: ['#hp-shield-panel'] } },
+  { id: 'official', name: 'Официальный (Paizo)', layout: { cols: 2, map: {
+      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'magic'] },
+      hide: [] } },
+  { id: 'sanych', name: 'Лист персонажа (Саныч)', layout: { cols: 3, map: {
+      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes'], right: ['magic', 'feats', 'actions'] },
+      hide: ['#hp-shield-panel'] } },
+  { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
+      left: ['abil', 'skills'], mid: ['def', 'strikes', 'feats'], right: ['magic', 'actions'] },
+      hide: ['#hp-shield-panel'] } }
 ];
 
 /* ---------------- утилиты ---------------- */
@@ -1854,6 +2013,63 @@ function renderAbilities() {
     cb.appendChild(chk); tr.appendChild(cb);
     tb.appendChild(tr);
   });
+  // карточки (раскладки classic/official): аббр -> [название, мод, значение, +2 ув.]
+  var cards = $('#ability-cards');
+  if (cards) {
+    cards.innerHTML = '';
+    [['str','СИЛ'],['dex','ЛОВ'],['con','ВЫН'],['int','ИНТ'],['wis','МУД'],['cha','ХАР']].forEach(function (pair) {
+      var k = pair[0], a = State.sheet.abilities[k];
+      var numInp = el('input', { type: 'number', value: a.score, class: 'card-score' });
+      numInp.addEventListener('input', function () { a.score = Number(numInp.value) || 0; markDirty(); updateComputed(); renderAbilities(); });
+      var chk = el('input', { type: 'checkbox', title: '+2 улучшение' }); chk.checked = !!a.boost;
+      chk.addEventListener('change', function () { a.boost = chk.checked; markDirty(); updateComputed(); renderAbilities(); });
+      var card = el('div', { class: 'abil-card' }, [
+        el('span', { class: 'card-abbr', text: pair[1] }),
+        el('b', { class: 'card-mod', text: modStr(abilityMod(a)) }),
+        numInp,
+        el('label', { class: 'card-boost' }, [chk, document.createTextNode('+2')])
+      ]);
+      cards.appendChild(card);
+    });
+  }
+}
+
+/* Панель «ПЗ и щит» (крупные цифры раскладки official) — синхронизируется из updateComputed */
+function renderHpShieldPanel() {
+  var box = $('#hps-quick'); if (!box || box.childNodes.length) return;
+  [[-5,'−5'],[-1,'−1'],[1,'+1'],[5,'+5']].forEach(function (p) {
+    box.appendChild(el('button', { class: 'btn small', text: p[1], onclick: function () { applyDamage(p[0]); } }));
+  });
+  box.appendChild(el('button', { class: 'btn small', text: 'Отдых', onclick: function () {
+    var hp = State.sheet.hitPoints; hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0;
+    markDirty(); updateComputed();
+  }}));
+}
+
+/* Компактная сводка боя (раскладка sanych): КБ/спасброски/КСС + удары с броском */
+function renderCombatSummary() {
+  var box = $('#combat-summary'); if (!box) return;
+  var d = getComputed(), s = State.sheet;
+  box.innerHTML = '';
+  var stats = el('div', { class: 'combat-stats' });
+  [['КБ', String(d.ac)], ['Воспр', modStr(d.perception)],
+   ['Стoйк', modStr(d.saves.fortitude)], ['Реакц', modStr(d.saves.reflex)], ['Воля', modStr(d.saves.will)],
+   ['Кл.КС', String(d.classDC)], ['Маг.атк', modStr(d.spellAttack)], ['Маг.КС', String(d.spellDC)]].forEach(function (p) {
+    stats.appendChild(el('span', { class: 'cstat' }, [
+      el('small', { text: p[0] }), el('b', { text: p[1] })]));
+  });
+  box.appendChild(stats);
+  ['melee', 'ranged'].forEach(function (kind) {
+    (s.strikes[kind] || []).forEach(function (st, i) {
+      var v = d.strikes[kind][i];
+      box.appendChild(el('div', { class: 'combat-strike' }, [
+        el('button', { class: 'roll-btn', text: '🎲', onclick: function () { rollStrike(st.name, v, st.damage); } }),
+        el('span', { class: 'strike-attack', text: modStr(v) }),
+        el('span', { text: st.name || '(без названия)' }),
+        el('small', { text: st.damage || '' })
+      ]));
+    });
+  });
 }
 
 function renderDefense() {
@@ -1864,6 +2080,15 @@ function renderDefense() {
     profPicker(s.armor.prof, function (r) { s.armor.prof = r; markDirty(); updateComputed(); })
   ]));
   var sb = $('#saves-block'); sb.innerHTML = '';
+  // плитки итоговых спасбросков (раскладка official) — id save-total-* обновляет updateComputed
+  var tiles = el('div', { class: 'saves-tiles' });
+  [['fortitude', 'Стойкость'], ['reflex', 'Реакция'], ['will', 'Воля']].forEach(function (pair) {
+    tiles.appendChild(el('div', { class: 'save-tile' }, [
+      el('span', { text: pair[1] }),
+      el('b', { id: 'save-tile-' + pair[0], text: '' })
+    ]));
+  });
+  sb.appendChild(tiles);
   [['fortitude', 'Стойкость'], ['reflex', 'Реакция'], ['will', 'Воля']].forEach(function (pair) {
     var blk = s.saves[pair[0]];
     var row = el('div', { class: 'row' });
@@ -2195,6 +2420,10 @@ function updateComputed() {
   $('#save-total-fortitude').textContent = modStr(d.saves.fortitude);
   $('#save-total-reflex').textContent = modStr(d.saves.reflex);
   $('#save-total-will').textContent = modStr(d.saves.will);
+  var tf = $('#save-tile-fortitude');
+  if (tf) { tf.textContent = modStr(d.saves.fortitude);
+            $('#save-tile-reflex').textContent = modStr(d.saves.reflex);
+            $('#save-tile-will').textContent = modStr(d.saves.will); }
   Object.keys(d.skills).forEach(function (k) {
     var e = $('#skill-total-' + k); if (e) e.textContent = modStr(d.skills[k]);
   });
@@ -2214,6 +2443,27 @@ function updateComputed() {
   $('#hp-text').textContent = hp.current + ' / ' + hp.max + (hp.temp ? ' (+' + hp.temp + ' врем.)' : '');
   $('#dying-val').textContent = hp.dying || 0;
   $('#wounded-val').textContent = hp.wounded || 0;
+  // панель «ПЗ и щит» (раскладка official)
+  renderHpShieldPanel();
+  var hc = $('#hp-big-cur'), hm = $('#hp-big-max'), sc = $('#shield-big'), sm = $('#shield-big-max');
+  if (hc) {
+    hc.textContent = hp.current;
+    hm.textContent = 'из ' + hp.max + (hp.temp ? ' +' + hp.temp : '');
+    var sh = State.sheet.armor.shield || {};
+    sc.textContent = sh.current != null ? sh.current : (sh.hp || 0);
+    sm.textContent = 'из ' + (sh.hp || 0);
+  }
+  // сводка боя (раскладка sanych): обновляем только цифры, список ударов — в renderAll
+  var cbox = $('#combat-summary');
+  if (cbox && cbox.childNodes.length) {
+    var vals = [d.ac, modStr(d.perception), modStr(d.saves.fortitude), modStr(d.saves.reflex),
+                modStr(d.saves.will), d.classDC, modStr(d.spellAttack), d.spellDC];
+    $all('.cstat b', cbox).forEach(function (bEl, i) { if (vals[i] != null) bEl.textContent = String(vals[i]); });
+    $all('.combat-strike .strike-attack', cbox).forEach(function (e, i) {
+      var all = d.strikes.melee.concat(d.strikes.ranged);
+      if (all[i] != null) e.textContent = modStr(all[i]);
+    });
+  }
 }
 
 function renderAll() {
@@ -2226,11 +2476,37 @@ function renderAll() {
   renderStrikes();
   renderWeaponProf();
   renderHeroPoints();
+  renderCombatSummary();
   renderSpells();
   renderFeats();
   renderActions();
   renderInventory();
   updateComputed();
+  syncCombatStrip();
+
+  /* Пересобираем раскладку, если пользователь сменил тему между рендерами */
+  var grid = $('#sheet-grid');
+  if (grid && grid.dataset.layoutApplied !== currentTheme()) applyLayout(currentTheme());
+}
+
+/* Раскладка «Тёмный VTT» (strip): панель «ПЗ и щит» дублируется в верхнюю
+   горизонтальную ленту над колонками. Копия — только для отображения
+   (id удалены), поэтому не конфликтует с оригиналом при updateComputed. */
+function syncCombatStrip() {
+  var grid = $('#sheet-grid'); if (!grid) return;
+  var src = $('#hp-shield-panel');
+  var stripBox = $('.combat-strip', grid);
+  if (!src || !stripBox) return;
+  if (grid.dataset.strip === '1') {
+    // пересобираем копию при каждом рендере, чтобы цифры были актуальны
+    stripBox.innerHTML = '';
+    var clone = src.cloneNode(true);
+    clone.removeAttribute('id');
+    $all('[id]', clone).forEach(function (n) { n.removeAttribute('id'); });
+    stripBox.appendChild(clone);
+  } else {
+    stripBox.innerHTML = '';
+  }
 }
 
 /* ---------------- броски кубиков ---------------- */
@@ -2686,7 +2962,7 @@ function wireTopbar() {
   });
 }
 
-/* ---------------- темы оформления ---------------- */
+/* ---------------- темы оформления (цвета + раскладка) ---------------- */
 var BUILD_THEME = (typeof window !== 'undefined' && window.__PF2E_BUILD_THEME__) || '';
 
 function validTheme(t) {
@@ -2696,11 +2972,89 @@ function currentTheme() {
   // приоритет: сохранённый выбор пользователя > тема, вшитая сборщиком > default
   return validTheme(localStorage.getItem(LS_THEME) || BUILD_THEME);
 }
+function themeById(id) {
+  for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i];
+  return THEMES[0];
+}
+
+/* Раскладка вкладки «Лист». Физически переносим узлы секций (.sheet-sec)
+   в нужные колонки-контейнеры (.sheet-area-left/mid/right) и задаём порядок
+   через inline order. Никаких display:contents / grid-area: var() — именно
+   они раньше приводили к наложению блоков друг на друга. Колонки — flex-столбики
+   с gap, поэтому перекрытие вертикали невозможно; горизонталь регулируется
+   data-col + data-cols в CSS Grid. Дублирующиеся панели скрываются .sec-hidden. */
+function applyLayout(themeId) {
+  var grid = $('#sheet-grid'); if (!grid) return;
+  var lay = themeById(themeId).layout || {};
+  var cols = lay.cols === 2 ? 2 : 3;
+
+  // контейнеры колонок
+  var areas = {
+    left: $('.sheet-area-left', grid),
+    mid: $('.sheet-area-mid', grid),
+    right: $('.sheet-area-right', grid)
+  };
+  // для двухколоночной раскладки средняя колонка физически не нужна:
+  // её содержимое дописываем в левую (grid-column:1), саму прячем
+  if (cols === 2) {
+    areas.mid.style.display = 'none';
+  } else {
+    areas.mid.style.display = '';
+  }
+
+  // назначаем grid-позиции контейнерам
+  grid.dataset.cols = String(cols);
+  grid.dataset.strip = lay.strip ? '1' : '0';
+  if (areas.left) areas.left.dataset.col = 'left';
+  if (areas.mid) areas.mid.dataset.col = 'mid';
+  if (areas.right) areas.right.dataset.col = 'right';
+  var strip = $('.combat-strip', grid);
+  if (strip) strip.dataset.col = 'strip';
+  var info = $('.info-block', grid);
+  if (info) info.dataset.col = 'full';
+
+  // карта sec-id -> [area, ord]
+  var map = lay.map || {};
+  function placeOf(sec) {
+    var found = null;
+    ['left', 'mid', 'right'].forEach(function (col) {
+      var idx = (map[col] || []).indexOf(sec);
+      if (idx >= 0) found = { col: col, ord: idx };
+    });
+    return found || { col: 'right', ord: 99 };
+  }
+
+  // переносим каждую секцию в нужный контейнер и ставим order
+  SECTIONS.forEach(function (sec) {
+    $all('.sec-' + sec, grid).forEach(function (node) {
+      var p = placeOf(sec);
+      // в 2-колоночной раскладке mid-секции идут в левый контейнер
+      var targetCol = (cols === 2 && p.col === 'mid') ? 'left' : p.col;
+      var container = areas[targetCol];
+      if (container && node.parentNode !== container) container.appendChild(node);
+      // order внутри контейнера: left+mid сливаются => offset по индексу в map
+      var ord = p.ord;
+      if (cols === 2 && p.col === 'mid') ord += (map.left || []).length;
+      node.style.order = String(ord);
+    });
+  });
+
+  // скрытие дублирующихся панелей (например, панель ПЗ/щит при ленте strip)
+  $all('.sheet-sec', grid).forEach(function (n) { n.classList.remove('sec-hidden'); });
+  (lay.hide || []).forEach(function (sel) {
+    var n = $(sel, grid); if (n) n.classList.add('sec-hidden');
+  });
+
+  grid.dataset.layoutApplied = themeId;
+  syncCombatStrip();
+}
+
 function applyTheme(t) {
   THEMES.forEach(function (x) {
     if (x.id !== 'default') document.body.classList.remove('theme-' + x.id);
   });
   if (t !== 'default') document.body.classList.add('theme-' + t);
+  applyLayout(t);
   var sel = $('#theme-select');
   if (sel) sel.value = t;
 }
@@ -2713,6 +3067,7 @@ function wireThemePicker() {
   sel.addEventListener('change', function () {
     localStorage.setItem(LS_THEME, sel.value);
     applyTheme(sel.value);
+    renderAll();   // пересобрать содержимое под новую раскладку (лента/цифры)
   });
   applyTheme(currentTheme());
 }
