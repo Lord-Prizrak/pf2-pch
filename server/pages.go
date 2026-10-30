@@ -29,7 +29,7 @@ code{background:#eee4cf;padding:2px 6px;border-radius:5px;font-size:13px;word-br
 form.inline{display:inline}
 </style>`
 
-const loginPageHTML = `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+var loginPageHTML = `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Вход — PF2e Character Server</title>` + pageCSS + `</head><body>
 <header class="top"><b>PF2e Character Server</b><span class="grow"></span><a href="/sheet.html">Чистый лист</a></header>
 <main>

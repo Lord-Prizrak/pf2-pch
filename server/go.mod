@@ -1,3 +1,3 @@
 module github.com/pf2e/charsrv
 
-go 1.22
+go 1.19

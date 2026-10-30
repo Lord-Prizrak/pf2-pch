@@ -215,7 +215,31 @@ func (s *Store) AuthorizeByKey(r *http.Request) *User {
 // --- персонажи -------------------------------------------------------------
 
 func (s *Store) charPath(userID, charID string) string {
-	return filepath.Join(s.charDir, userID, charID+".json")
+	return filepath.Join(s.charDir, userID, sanitizeID(charID)+".json")
+}
+
+// sanitizeID — безопасное имя файла из id персонажа: только буквы, цифры,
+// «-» и «_»; прочие символы (включая кириллицу) заменяются на «-».
+func sanitizeID(id string) string {
+	var b strings.Builder
+	prevDash := false
+	for _, r := range id {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+			prevDash = false
+		default:
+			if !prevDash {
+				b.WriteByte('-')
+				prevDash = true
+			}
+		}
+	}
+	out := strings.Trim(b.String(), "-")
+	if out == "" {
+		out = "c"
+	}
+	return out
 }
 
 func (s *Store) ListCharacters(userID string) ([]CharacterMeta, error) {
@@ -400,13 +424,19 @@ func (srv *Server) requireUser(w http.ResponseWriter, r *http.Request) (*User, b
 }
 
 func (srv *Server) routes() http.Handler {
-	mux := http.NewServeMux()
+	mux := newMux()
 
-	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
+	// pathID извлекает id персонажа из URL вида /api/characters/<id>.
+	// (Совместимо с Go < 1.22, где нет r.PathValue.)
+	pathID := func(r *http.Request) string {
+		return strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/characters/"), "/")
+	}
+
+	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSONResp(w, 200, map[string]interface{}{"ok": true, "uptime": time.Since(srv.startTime).String()})
 	})
 
-	mux.HandleFunc("POST /api/register", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/register", func(w http.ResponseWriter, r *http.Request) {
 		var in struct{ Username, Password string }
 		if err := json.NewDecoder(io.LimitReader(r.Body, 64<<10)).Decode(&in); err != nil {
 			writeErr(w, 400, "ожидался JSON {username,password}")
@@ -426,7 +456,7 @@ func (srv *Server) routes() http.Handler {
 		writeJSONResp(w, 201, map[string]string{"status": "created", "username": u.Username})
 	})
 
-	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
 		var in struct{ Username, Password string }
 		if err := json.NewDecoder(io.LimitReader(r.Body, 64<<10)).Decode(&in); err != nil {
 			writeErr(w, 400, "ожидался JSON {username,password}")
@@ -441,14 +471,14 @@ func (srv *Server) routes() http.Handler {
 		writeJSONResp(w, 200, map[string]string{"status": "ok", "username": u.Username})
 	})
 
-	mux.HandleFunc("POST /api/logout", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/logout", func(w http.ResponseWriter, r *http.Request) {
 		cl := srv.sessionCookie("")
 		cl.MaxAge = -1
 		http.SetCookie(w, cl)
 		writeJSONResp(w, 200, map[string]string{"status": "ok"})
 	})
 
-	mux.HandleFunc("GET /api/me", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/me", func(w http.ResponseWriter, r *http.Request) {
 		u, ok := srv.requireUser(w, r)
 		if !ok {
 			return
@@ -461,96 +491,102 @@ func (srv *Server) routes() http.Handler {
 	})
 
 	// --- персонажи ---
-	mux.HandleFunc("GET /api/characters", func(w http.ResponseWriter, r *http.Request) {
-		u, ok := srv.requireUser(w, r)
-		if !ok {
-			return
+	mux.HandleFunc("/api/characters", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			u, ok := srv.requireUser(w, r)
+			if !ok {
+				return
+			}
+			chars, err := srv.store.ListCharacters(u.ID)
+			if err != nil {
+				writeErr(w, 500, err.Error())
+				return
+			}
+			if chars == nil {
+				chars = []CharacterMeta{}
+			}
+			writeJSONResp(w, 200, chars)
+		case "POST":
+			u, ok := srv.requireUser(w, r)
+			if !ok {
+				return
+			}
+			body, err := readCapped(r.Body)
+			if err != nil {
+				writeErr(w, 400, "не удалось прочитать тело")
+				return
+			}
+			meta, err := srv.store.SaveCharacter(u.ID, body, "")
+			if err != nil {
+				writeErr(w, 400, err.Error())
+				return
+			}
+			writeJSONResp(w, 201, map[string]interface{}{"status": "created", "character": meta})
+		default:
+			writeErr(w, 405, "метод не поддерживается")
 		}
-		chars, err := srv.store.ListCharacters(u.ID)
-		if err != nil {
-			writeErr(w, 500, err.Error())
-			return
-		}
-		if chars == nil {
-			chars = []CharacterMeta{}
-		}
-		writeJSONResp(w, 200, chars)
 	})
 
-	mux.HandleFunc("POST /api/characters", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/characters/", func(w http.ResponseWriter, r *http.Request) {
 		u, ok := srv.requireUser(w, r)
 		if !ok {
 			return
 		}
-		body, err := readCapped(r.Body)
-		if err != nil {
-			writeErr(w, 400, "не удалось прочитать тело")
-			return
-		}
-		meta, err := srv.store.SaveCharacter(u.ID, body, "")
-		if err != nil {
-			writeErr(w, 400, err.Error())
-			return
-		}
-		writeJSONResp(w, 201, map[string]interface{}{"status": "created", "character": meta})
-	})
-
-	mux.HandleFunc("GET /api/characters/{id}", func(w http.ResponseWriter, r *http.Request) {
-		u, ok := srv.requireUser(w, r)
-		if !ok {
-			return
-		}
-		raw, err := srv.store.GetCharacter(u.ID, r.PathValue("id"))
-		if err != nil {
+		id := pathID(r)
+		if id == "" {
 			writeErr(w, 404, "персонаж не найден")
 			return
 		}
-		w.Header().Set("Content-Disposition", `attachment; filename="`+r.PathValue("id")+`.json"`)
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.Write(raw)
-	})
-
-	mux.HandleFunc("PUT /api/characters/{id}", func(w http.ResponseWriter, r *http.Request) {
-		u, ok := srv.requireUser(w, r)
-		if !ok {
-			return
+		switch r.Method {
+		case "GET":
+			raw, err := srv.store.GetCharacter(u.ID, id)
+			if err != nil {
+				writeErr(w, 404, "персонаж не найден")
+				return
+			}
+			w.Header().Set("Content-Disposition", `attachment; filename="`+id+`.json"`)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.Write(raw)
+		case "PUT":
+			body, err := readCapped(r.Body)
+			if err != nil {
+				writeErr(w, 400, "не удалось прочитать тело")
+				return
+			}
+			meta, err := srv.store.SaveCharacter(u.ID, body, id)
+			if err != nil {
+				writeErr(w, 400, err.Error())
+				return
+			}
+			writeJSONResp(w, 200, map[string]interface{}{"status": "updated", "character": meta})
+		case "DELETE":
+			if err := srv.store.DeleteCharacter(u.ID, id); err != nil {
+				writeErr(w, 404, err.Error())
+				return
+			}
+			writeJSONResp(w, 200, map[string]string{"status": "deleted"})
+		default:
+			writeErr(w, 405, "метод не поддерживается")
 		}
-		body, err := readCapped(r.Body)
-		if err != nil {
-			writeErr(w, 400, "не удалось прочитать тело")
-			return
-		}
-		meta, err := srv.store.SaveCharacter(u.ID, body, r.PathValue("id"))
-		if err != nil {
-			writeErr(w, 400, err.Error())
-			return
-		}
-		writeJSONResp(w, 200, map[string]interface{}{"status": "updated", "character": meta})
-	})
-
-	mux.HandleFunc("DELETE /api/characters/{id}", func(w http.ResponseWriter, r *http.Request) {
-		u, ok := srv.requireUser(w, r)
-		if !ok {
-			return
-		}
-		if err := srv.store.DeleteCharacter(u.ID, r.PathValue("id")); err != nil {
-			writeErr(w, 404, err.Error())
-			return
-		}
-		writeJSONResp(w, 200, map[string]string{"status": "deleted"})
 	})
 
 	// --- HTML-страницы ---
-	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			// статика фронтенда (style.css/app.js при разработке)
+			frontendFileServer().ServeHTTP(w, r)
+			return
+		}
 		http.Redirect(w, r, "/sheet.html", http.StatusFound)
 	})
-	mux.HandleFunc("GET /sheet.html", srv.serveSheet(false))
-	mux.HandleFunc("GET /sheet-empty.html", srv.serveSheet(true))
-	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/sheet.html", srv.serveSheet(false))
+	mux.HandleFunc("/sheet-empty.html", srv.serveSheet(true))
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, loginPageHTML)
 	})
-	mux.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
 		u := srv.currentUser(r)
 		if u == nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -564,7 +600,11 @@ func (srv *Server) routes() http.Handler {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, userPageHTML(u, chars, keys))
 	})
-	mux.HandleFunc("POST /user/keys/create", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/user/keys/create", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			writeErr(w, 405, "метод не поддерживается")
+			return
+		}
 		u := srv.currentUser(r)
 		if u == nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -577,7 +617,11 @@ func (srv *Server) routes() http.Handler {
 		srv.store.AddKey(u.ID, label)
 		http.Redirect(w, r, "/user", http.StatusFound)
 	})
-	mux.HandleFunc("POST /user/keys/delete", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/user/keys/delete", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			writeErr(w, 405, "метод не поддерживается")
+			return
+		}
 		u := srv.currentUser(r)
 		if u == nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -586,18 +630,28 @@ func (srv *Server) routes() http.Handler {
 		srv.store.DeleteKey(r.FormValue("token"))
 		http.Redirect(w, r, "/user", http.StatusFound)
 	})
-	mux.HandleFunc("POST /user/logout", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			writeErr(w, 405, "метод не поддерживается")
+			return
+		}
 		cl := srv.sessionCookie("")
 		cl.MaxAge = -1
 		http.SetCookie(w, cl)
 		http.Redirect(w, r, "/login", http.StatusFound)
 	})
 
-	// статика фронтенда (style.css/app.js при разработке)
-	mux.Handle("GET /", http.StripPrefix("/", http.FileServer(http.Dir(frontendDir))))
-
 	return corsMiddleware(mux)
 }
+
+// frontendFileServer — раздача статики фронтенда (для разработки).
+func frontendFileServer() http.Handler {
+	return http.StripPrefix("/", http.FileServer(http.Dir(frontendDir)))
+}
+
+// newMux — обычный http.ServeMux; маршрутизация по методу выполняется в хендлерах,
+// чтобы код собирался под Go < 1.22 (без "METHOD /path" синтаксиса и r.PathValue).
+func newMux() *http.ServeMux { return http.NewServeMux() }
 
 // serveSheet раздаёт собранный sheet.html; empty=true — без встроенных данных.
 func (srv *Server) serveSheet(empty bool) http.HandlerFunc {

@@ -18,6 +18,7 @@ import re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'frontend', 'src')
 OUT = os.path.join(ROOT, 'frontend', 'sheet.html')
+OUT_EMPTY = os.path.join(ROOT, 'frontend', 'sheet-empty.html')
 
 
 def load_embedded():
@@ -35,24 +36,12 @@ def load_embedded():
     return {'schema': 1, 'characters': chars}
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--no-data', action='store_true')
-    args = ap.parse_args()
-
-    with open(os.path.join(SRC, 'index.template.html'), encoding='utf-8') as fh:
-        html = fh.read()
-    with open(os.path.join(SRC, 'style.css'), encoding='utf-8') as fh:
-        css = fh.read()
-    with open(os.path.join(SRC, 'app.js'), encoding='utf-8') as fh:
-        js = fh.read()
-
+def build_html(html, css, js, payload):
     # инлайн CSS
     html = html.replace('<link rel="stylesheet" href="style.css">',
                         '<style>\n' + css.replace('</style>', '<\\/style>') + '\n</style>')
 
     # встроенные данные
-    payload = {'schema': 1, 'characters': []} if args.no_data else load_embedded()
     payload_txt = json.dumps(payload, ensure_ascii=False, indent=1).replace('</', '<\\/')
     block = ('<!-- PF2E-SHEET-DATA:START -->\n'
              '<script id="pf2e-embedded-data" type="application/json">\n'
@@ -64,11 +53,38 @@ def main():
     # инлайн JS
     html = html.replace('<script src="app.js"></script>',
                         '<script>\n' + js.replace('</script>', '<\\/script>') + '\n</script>')
+    return html
 
-    with open(OUT, 'w', encoding='utf-8') as fh:
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--no-data', action='store_true')
+    args = ap.parse_args()
+
+    with open(os.path.join(SRC, 'index.template.html'), encoding='utf-8') as fh:
+        html_tpl = fh.read()
+    with open(os.path.join(SRC, 'style.css'), encoding='utf-8') as fh:
+        css = fh.read()
+    with open(os.path.join(SRC, 'app.js'), encoding='utf-8') as fh:
+        js = fh.read()
+
+    empty_payload = {'schema': 1, 'characters': []}
+    payload = empty_payload if args.no_data else load_embedded()
+
+    out = OUT_EMPTY if args.no_data else OUT
+    html = build_html(html_tpl, css, js, payload)
+    with open(out, 'w', encoding='utf-8') as fh:
         fh.write(html)
     n = len(payload['characters'])
-    print(f'sheet.html собран: {OUT} ({os.path.getsize(OUT)} байт, персонажей встроено: {n})')
+    print(f'sheet собран: {out} ({os.path.getsize(out)} байт, персонажей встроено: {n})')
+
+    # за --no-data также пересобираем и обычный лист, чтобы сервер мог
+    # раздавать обе страницы (sheet.html и sheet-empty.html)
+    if args.no_data:
+        full = build_html(html_tpl, css, js, load_embedded())
+        with open(OUT, 'w', encoding='utf-8') as fh:
+            fh.write(full)
+        print(f'sheet собран: {OUT} ({os.path.getsize(OUT)} байт)')
 
 
 if __name__ == '__main__':
