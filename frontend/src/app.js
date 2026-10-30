@@ -15,18 +15,28 @@ var LS_THEME = 'pf2e.theme.v1';
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
 /* Каждая тема задаёт и цветовое оформление, и РАСПОЛОЖЕНИЕ блоков вкладки
-   «Лист» (layout): набор секций (.sheet-sec) и колонки с их распределением.
-   Раскладка перестраивается через CSS Grid order/grid-area — DOM не дублируется. */
+   «Лист» (layout). Секции листа помечены class="sheet-sec sec-<id>"; узлы с
+   одним sec-id — одна логическая секция (переносится целиком).
+   Раскладка описывается так:
+     cols — число колонок (2 или 3);
+     map  — состав и порядок секций в колонках left/mid/right (для cols=2
+            содержимое mid дописывается после left в первую grid-колонку);
+     strip — показывать верхнюю горизонтальную ленту ПЗ/щита (VTT);
+     hide — селекторы панелей, скрываемых в этой раскладке (дубликаты). */
 var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'feats', 'actions'];
 var THEMES = [
   { id: 'default', name: 'Классический', layout: { cols: 3, map: {
-      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'combat'], right: ['magic', 'feats', 'actions'] } } },
+      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'combat'], right: ['magic', 'feats', 'actions'] },
+      hide: ['#hp-shield-panel'] } },
   { id: 'official', name: 'Официальный (Paizo)', layout: { cols: 2, map: {
-      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'magic'] } } },
+      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'magic'] },
+      hide: [] } },
   { id: 'sanych', name: 'Лист персонажа (Саныч)', layout: { cols: 3, map: {
-      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes'], right: ['magic', 'feats', 'actions'] } } },
+      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes'], right: ['magic', 'feats', 'actions'] },
+      hide: ['#hp-shield-panel'] } },
   { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
-      left: ['abil', 'skills'], mid: ['def', 'strikes', 'feats'], right: ['magic', 'actions'] } } }
+      left: ['abil', 'skills'], mid: ['def', 'strikes', 'feats'], right: ['magic', 'actions'] },
+      hide: ['#hp-shield-panel'] } }
 ];
 
 /* ---------------- утилиты ---------------- */
@@ -379,7 +389,7 @@ function renderAbilities() {
       numInp.addEventListener('input', function () { a.score = Number(numInp.value) || 0; markDirty(); updateComputed(); renderAbilities(); });
       var chk = el('input', { type: 'checkbox', title: '+2 улучшение' }); chk.checked = !!a.boost;
       chk.addEventListener('change', function () { a.boost = chk.checked; markDirty(); updateComputed(); renderAbilities(); });
-      var card = el('div', { class: 'abil-card sec-abil' }, [
+      var card = el('div', { class: 'abil-card' }, [
         el('span', { class: 'card-abbr', text: pair[1] }),
         el('b', { class: 'card-mod', text: modStr(abilityMod(a)) }),
         numInp,
@@ -853,7 +863,7 @@ function syncCombatStrip() {
   var src = $('#hp-shield-panel');
   var stripBox = $('.combat-strip', grid);
   if (!src || !stripBox) return;
-  if (grid.classList.contains('layout-strip')) {
+  if (grid.dataset.strip === '1') {
     // пересобираем копию при каждом рендере, чтобы цифры были актуальны
     stripBox.innerHTML = '';
     var clone = src.cloneNode(true);
@@ -1333,26 +1343,74 @@ function themeById(id) {
   return THEMES[0];
 }
 
-/* Раскладка вкладки «Лист»: каждой секции (.sheet-sec) назначается CSS-переменная
-   --area (имя колонки) и --ord (порядок внутри колонки). Grid расставляет блоки. */
+/* Раскладка вкладки «Лист». Физически переносим узлы секций (.sheet-sec)
+   в нужные колонки-контейнеры (.sheet-area-left/mid/right) и задаём порядок
+   через inline order. Никаких display:contents / grid-area: var() — именно
+   они раньше приводили к наложению блоков друг на друга. Колонки — flex-столбики
+   с gap, поэтому перекрытие вертикали невозможно; горизонталь регулируется
+   data-col + data-cols в CSS Grid. Дублирующиеся панели скрываются .sec-hidden. */
 function applyLayout(themeId) {
   var grid = $('#sheet-grid'); if (!grid) return;
-  var lay = themeById(themeId).layout;
-  grid.classList.toggle('layout-strip', !!(lay && lay.strip));
-  grid.style.gridTemplateColumns =
-    lay.cols === 2 ? 'minmax(0,1fr) minmax(0,1.15fr)' : 'minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr)';
+  var lay = themeById(themeId).layout || {};
+  var cols = lay.cols === 2 ? 2 : 3;
+
+  // контейнеры колонок
+  var areas = {
+    left: $('.sheet-area-left', grid),
+    mid: $('.sheet-area-mid', grid),
+    right: $('.sheet-area-right', grid)
+  };
+  // для двухколоночной раскладки средняя колонка физически не нужна:
+  // её содержимое дописываем в левую (grid-column:1), саму прячем
+  if (cols === 2) {
+    areas.mid.style.display = 'none';
+  } else {
+    areas.mid.style.display = '';
+  }
+
+  // назначаем grid-позиции контейнерам
+  grid.dataset.cols = String(cols);
+  grid.dataset.strip = lay.strip ? '1' : '0';
+  if (areas.left) areas.left.dataset.col = 'left';
+  if (areas.mid) areas.mid.dataset.col = 'mid';
+  if (areas.right) areas.right.dataset.col = 'right';
+  var strip = $('.combat-strip', grid);
+  if (strip) strip.dataset.col = 'strip';
+  var info = $('.info-block', grid);
+  if (info) info.dataset.col = 'full';
+
+  // карта sec-id -> [area, ord]
+  var map = lay.map || {};
+  function placeOf(sec) {
+    var found = null;
+    ['left', 'mid', 'right'].forEach(function (col) {
+      var idx = (map[col] || []).indexOf(sec);
+      if (idx >= 0) found = { col: col, ord: idx };
+    });
+    return found || { col: 'right', ord: 99 };
+  }
+
+  // переносим каждую секцию в нужный контейнер и ставим order
   SECTIONS.forEach(function (sec) {
     $all('.sec-' + sec, grid).forEach(function (node) {
-      var found = null;
-      ['left', 'mid', 'right'].forEach(function (col) {
-        var idx = lay.map[col].indexOf(sec);
-        if (idx >= 0) found = { col: col, ord: idx };
-      });
-      if (!found) found = { col: 'right', ord: 9 };
-      node.style.setProperty('--area', found.col);
-      node.style.setProperty('--ord', String(found.ord));
+      var p = placeOf(sec);
+      // в 2-колоночной раскладке mid-секции идут в левый контейнер
+      var targetCol = (cols === 2 && p.col === 'mid') ? 'left' : p.col;
+      var container = areas[targetCol];
+      if (container && node.parentNode !== container) container.appendChild(node);
+      // order внутри контейнера: left+mid сливаются => offset по индексу в map
+      var ord = p.ord;
+      if (cols === 2 && p.col === 'mid') ord += (map.left || []).length;
+      node.style.order = String(ord);
     });
   });
+
+  // скрытие дублирующихся панелей (например, панель ПЗ/щит при ленте strip)
+  $all('.sheet-sec', grid).forEach(function (n) { n.classList.remove('sec-hidden'); });
+  (lay.hide || []).forEach(function (sel) {
+    var n = $(sel, grid); if (n) n.classList.add('sec-hidden');
+  });
+
   grid.dataset.layoutApplied = themeId;
   syncCombatStrip();
 }

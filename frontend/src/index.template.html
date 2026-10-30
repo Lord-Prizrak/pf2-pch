@@ -31,9 +31,9 @@
   <section id="tab-sheet" class="tabpage">
     <div class="grid sheet-grid" id="sheet-grid">
       <!-- лента для раскладки "Тёмный VTT" (strip): в неё JS копирует панель ПЗ/щита -->
-      <div class="combat-strip"></div>
+      <div class="combat-strip" aria-hidden="true"></div>
 
-      <div class="col left">
+      <div class="sheet-area sheet-area-left">
         <fieldset class="info-block"><legend>Основное</legend>
           <div class="row"><label>Имя персонажа<input data-bind="name"></label>
             <label>Игрок<input data-bind="player"></label></div>
@@ -96,7 +96,7 @@
         </fieldset>
       </div>
 
-      <div class="col mid">
+      <div class="sheet-area sheet-area-mid">
         <fieldset class="sheet-sec sec-skills"><legend>Навыки</legend>
           <div class="row"><label>Восприятие<input type="number" data-bind="perception.total" class="xs"></label>
             <span id="perception-prof"></span></div>
@@ -113,7 +113,7 @@
         </fieldset>
       </div>
 
-      <div class="col right">
+      <div class="sheet-area sheet-area-right">
         <!-- верхняя панель: ПЗ + щит (раскладка "official") -->
         <fieldset class="sheet-sec sec-hp" id="hp-shield-panel"><legend>ПЗ и щит</legend>
           <div class="hps-row">
