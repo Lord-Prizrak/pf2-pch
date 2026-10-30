@@ -1,0 +1,508 @@
+{
+  "schema": 1,
+  "id": "талатэль",
+  "name": "Талатэль",
+  "player": "Саныч",
+  "core": {
+    "level": 1,
+    "xp": 560,
+    "ancestry": "Эльф",
+    "heritage": "Лесной эльф",
+    "size": "Ср",
+    "background": "Магический торговец",
+    "class": "Алхимик",
+    "classNotes": "",
+    "alignment": "ХН",
+    "deity": "Кайдэн Кайлин, ХН",
+    "languages": "Всеобщий, эльфийский, Драконий, гоблинский, гномий",
+    "speed": {
+      "feet": 30,
+      "notes": ""
+    },
+    "heroPoints": 0
+  },
+  "abilities": {
+    "str": {
+      "boost": false,
+      "score": 10
+    },
+    "dex": {
+      "boost": false,
+      "score": 18
+    },
+    "con": {
+      "boost": false,
+      "score": 12
+    },
+    "int": {
+      "boost": false,
+      "score": 16
+    },
+    "wis": {
+      "boost": false,
+      "score": 12
+    },
+    "cha": {
+      "boost": false,
+      "score": 16
+    }
+  },
+  "armor": {
+    "ac": 15,
+    "dexOrCap": 1,
+    "prof": "t",
+    "item": 1,
+    "checkPenalty": 0,
+    "shield": {
+      "ac": 0,
+      "hardness": 0,
+      "hp": 0,
+      "bt": 0,
+      "current": 0
+    },
+    "groups": {
+      "unarmored": "u",
+      "light": "t",
+      "medium": "t",
+      "heavy": "u"
+    }
+  },
+  "classDC": {
+    "value": 18,
+    "key": 3,
+    "prof": "u",
+    "item": 0
+  },
+  "saves": {
+    "fortitude": {
+      "total": 4,
+      "prof": "e",
+      "keyAttr": "con",
+      "item": 0
+    },
+    "reflex": {
+      "total": 6,
+      "prof": "e",
+      "keyAttr": "dex",
+      "item": 0
+    },
+    "will": {
+      "total": 4,
+      "prof": "t",
+      "keyAttr": "wis",
+      "item": 0
+    }
+  },
+  "perception": {
+    "total": 4,
+    "prof": "t",
+    "keyAttr": "wis",
+    "item": 0,
+    "notes": ""
+  },
+  "skills": [
+    {
+      "total": 4,
+      "prof": "t",
+      "keyAttr": "dex",
+      "item": 0,
+      "name": "Акробатика",
+      "attr": "dex",
+      "key": "acrobatics"
+    },
+    {
+      "total": 3,
+      "prof": "u",
+      "keyAttr": "int",
+      "item": 0,
+      "name": "Аркана",
+      "attr": "int",
+      "key": "arcana"
+    },
+    {
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "str",
+      "item": 0,
+      "name": "Атлетика",
+      "attr": "str",
+      "key": "athletics"
+    },
+    {
+      "total": 8,
+      "prof": "e",
+      "keyAttr": "int",
+      "item": 0,
+      "name": "Ремесло",
+      "attr": "int",
+      "key": "crafting"
+    },
+    {
+      "total": 2,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 1,
+      "name": "Обман",
+      "attr": "cha",
+      "key": "deception"
+    },
+    {
+      "total": 6,
+      "prof": "e",
+      "keyAttr": "cha",
+      "item": 0,
+      "name": "Дипломатия",
+      "attr": "cha",
+      "key": "diplomacy"
+    },
+    {
+      "total": 2,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 1,
+      "name": "Запугивание",
+      "attr": "cha",
+      "key": "intimidation"
+    },
+    {
+      "total": 1,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0,
+      "name": "Медицина",
+      "attr": "wis",
+      "key": "medicine"
+    },
+    {
+      "total": 4,
+      "prof": "t",
+      "keyAttr": "wis",
+      "item": 0,
+      "name": "Природа",
+      "attr": "wis",
+      "key": "nature"
+    },
+    {
+      "total": 3,
+      "prof": "u",
+      "keyAttr": "int",
+      "item": 0,
+      "name": "Оккультизм",
+      "attr": "int",
+      "key": "occultism"
+    },
+    {
+      "total": 1,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 0,
+      "name": "Выступление",
+      "attr": "cha",
+      "key": "performance"
+    },
+    {
+      "total": 1,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0,
+      "name": "Религия",
+      "attr": "wis",
+      "key": "religion"
+    },
+    {
+      "total": 8,
+      "prof": "e",
+      "keyAttr": "int",
+      "item": 0,
+      "name": "Общество",
+      "attr": "int",
+      "key": "society"
+    },
+    {
+      "total": 1,
+      "prof": "u",
+      "keyAttr": "dex",
+      "item": 0,
+      "name": "Скрытность",
+      "attr": "dex",
+      "key": "stealth"
+    },
+    {
+      "total": 1,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0,
+      "name": "Выживание",
+      "attr": "wis",
+      "key": "survival"
+    },
+    {
+      "total": 1,
+      "prof": "u",
+      "keyAttr": "dex",
+      "item": 0,
+      "name": "Воровство",
+      "attr": "dex",
+      "key": "thievery"
+    },
+    {
+      "total": 6,
+      "prof": "t",
+      "keyAttr": "int",
+      "item": 0,
+      "key": "lore1",
+      "name": "Знание (комерция)",
+      "attr": "int"
+    }
+  ],
+  "hitPoints": {
+    "max": 13,
+    "current": 13,
+    "temp": 0,
+    "dying": 0,
+    "wounded": 0,
+    "hardness": 0,
+    "bt": 0
+  },
+  "strikes": {
+    "melee": [
+      {
+        "name": "Рапира",
+        "attack": 3,
+        "ability": "0",
+        "prof": "t",
+        "item": 0,
+        "damage": "1d6",
+        "traits": "точное, смертельное d8, разоружение",
+        "range": "",
+        "reload": "",
+        "agile": false,
+        "fatal": "",
+        "map": [
+          "-5",
+          "-10"
+        ]
+      }
+    ],
+    "ranged": []
+  },
+  "weaponProficiencies": {
+    "unarm": "t",
+    "simple": "t",
+    "martial": "u",
+    "advanced": "u",
+    "other": "u"
+  },
+  "weaponProfNotes": "Бомбы И.",
+  "spellcasting": {
+    "tradition": "",
+    "method": "Подготовленный",
+    "keyAttr": "int",
+    "attack": {
+      "total": 3,
+      "prof": "t",
+      "keyAttr": "int",
+      "item": 0
+    },
+    "dc": {
+      "total": 13,
+      "prof": "t",
+      "keyAttr": "int",
+      "item": 0
+    },
+    "focusPoints": {
+      "max": 0,
+      "current": 0
+    },
+    "slots": [
+      {
+        "rank": 1,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 2,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 3,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 4,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 5,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 6,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 7,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 8,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 9,
+        "perDay": 0,
+        "used": 0
+      },
+      {
+        "rank": 10,
+        "perDay": 0,
+        "used": 0
+      }
+    ],
+    "spells": [
+      {
+        "name": "Исцеление",
+        "rank": 1,
+        "prepared": 2,
+        "heights": []
+      }
+    ],
+    "rituals": []
+  },
+  "inventory": {
+    "worn": [
+      {
+        "name": "Кожаный доспех",
+        "bulk": "",
+        "invested": false
+      },
+      {
+        "name": "Пояс",
+        "bulk": "",
+        "invested": false
+      },
+      {
+        "name": "Набор алхимика",
+        "bulk": "",
+        "invested": false
+      },
+      {
+        "name": "Рюкзак",
+        "bulk": "",
+        "invested": false
+      },
+      {
+        "name": "4 мешочка",
+        "bulk": "",
+        "invested": false
+      }
+    ],
+    "held": [
+      {
+        "name": "Посох",
+        "bulk": "1"
+      }
+    ],
+    "consumables": [
+      {
+        "name": "Книга формул"
+      },
+      {
+        "name": "4 насыщенные реагенты"
+      },
+      {
+        "name": "весы торговца"
+      },
+      {
+        "name": "10 факел"
+      },
+      {
+        "name": "10 бутылёк"
+      },
+      {
+        "name": "Порошок"
+      },
+      {
+        "name": "рацион на 2 недели"
+      },
+      {
+        "name": "малый Алхимический огонь"
+      },
+      {
+        "name": "малая Морозная склянка"
+      }
+    ],
+    "other": [],
+    "coins": {
+      "pp": 0,
+      "gp": 13,
+      "sp": 20,
+      "cp": 0
+    },
+    "bulkMax": 4,
+    "notes": ""
+  },
+  "feats": [
+    {
+      "name": "Лесной эльф",
+      "level": 1,
+      "category": "ancestry",
+      "text": "Лесной эльф"
+    },
+    {
+      "name": "Сумеречное зрение, Эльфийская живость",
+      "level": 1,
+      "category": "ancestry",
+      "text": "Сумеречное зрение, Эльфийская живость"
+    },
+    {
+      "name": "Алхимия ",
+      "level": 1,
+      "category": "class",
+      "text": "Алхимия \nАлхимическое ремесло\nБыстрая алхимия / 1\nКнига формул\nМутагенист\nМутагенный флэшбэк / св.\nИдентификация алхимии"
+    },
+    {
+      "name": "Оценка ремесленником",
+      "level": 1,
+      "category": "skill",
+      "text": "Оценка ремесленником"
+    }
+  ],
+  "actions": [],
+  "resistances": "",
+  "conditions": "",
+  "defenseNotes": "",
+  "biography": {
+    "portrait": "",
+    "ethnicity": "",
+    "birthplace": "",
+    "age": "79",
+    "gender": "Муж, Он/его",
+    "height": "190",
+    "weight": "70",
+    "appearance": "",
+    "attitude": "",
+    "edicts": "выпивать, освобождать рабов и помогать угнетенным, искать славы и приключений",
+    "anathema": "понапрасну тратить алкоголь, быть злым или нетерпеливым когда пьян, владеть рабом",
+    "likes": "",
+    "dislikes": "",
+    "catchphrases": "",
+    "backstory": "ФАМИЛЬЯР!!!\n\nИсцеление (Особое)\nБыстрый шаг\n\nМалая дымовая шашка (Lesser smokestick)\nСолнечный жезл (Sunrod)   нас 2\nБомба-липучка, малая (Tanglefoot bag, lesser) нас 2\nМалое противоядие (Lesser antidote)\nСлабый эликсир жизни (Minor elixir of life)   нас 1\nВодная бомба (Water Bomb)\n\nЭнергетический мутаген \nМутаген красноречия",
+    "allies": "",
+    "enemies": "",
+    "organizations": "",
+    "notes": ""
+  },
+  "meta": {
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "source": "manual"
+  }
+}

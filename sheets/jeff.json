@@ -1,0 +1,328 @@
+{
+  "schema": 1,
+  "id": "jeff",
+  "name": "Джефф",
+  "player": "Jerry",
+  "core": {
+    "level": 1,
+    "xp": 0,
+    "ancestry": "Gnome",
+    "heritage": "",
+    "size": "",
+    "background": "",
+    "class": "Druid",
+    "classNotes": "",
+    "alignment": "",
+    "deity": "Deity",
+    "languages": "Common (Taldane), \n\n[Racial, +1 for each INT mod]",
+    "speed": {
+      "feet": 25,
+      "notes": ""
+    },
+    "heroPoints": 0
+  },
+  "abilities": {
+    "str": {
+      "score": 10,
+      "boost": false
+    },
+    "dex": {
+      "score": 10,
+      "boost": false
+    },
+    "con": {
+      "score": 10,
+      "boost": false
+    },
+    "int": {
+      "score": 10,
+      "boost": false
+    },
+    "wis": {
+      "score": 10,
+      "boost": false
+    },
+    "cha": {
+      "score": 10,
+      "boost": false
+    }
+  },
+  "armor": {
+    "ac": 14,
+    "dexOrCap": 0,
+    "prof": "u",
+    "item": 1,
+    "checkPenalty": 0,
+    "shield": {
+      "ac": 0,
+      "hardness": 3,
+      "hp": 6,
+      "bt": 3,
+      "current": 0
+    },
+    "groups": {}
+  },
+  "classDC": {
+    "value": 13,
+    "key": 0,
+    "prof": "u",
+    "item": 0
+  },
+  "saves": {
+    "fortitude": {
+      "total": 3,
+      "prof": "u",
+      "keyAttr": "con",
+      "item": 0
+    },
+    "reflex": {
+      "total": 3,
+      "prof": "u",
+      "keyAttr": "dex",
+      "item": 0
+    },
+    "will": {
+      "total": 3,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    }
+  },
+  "perception": {
+    "total": 3,
+    "prof": "u",
+    "keyAttr": "wis",
+    "item": 0,
+    "notes": ""
+  },
+  "skills": [
+    {
+      "key": "acrobatics",
+      "name": "Акробатика",
+      "attr": "dex",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "dex",
+      "item": 0
+    },
+    {
+      "key": "arcana",
+      "name": "Аркана",
+      "attr": "int",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "int",
+      "item": 0
+    },
+    {
+      "key": "athletics",
+      "name": "Атлетика",
+      "attr": "str",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "str",
+      "item": 0
+    },
+    {
+      "key": "crafting",
+      "name": "Ремесло",
+      "attr": "int",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "int",
+      "item": 0
+    },
+    {
+      "key": "deception",
+      "name": "Обман",
+      "attr": "cha",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 0
+    },
+    {
+      "key": "diplomacy",
+      "name": "Дипломатия",
+      "attr": "cha",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 0
+    },
+    {
+      "key": "intimidation",
+      "name": "Запугивание",
+      "attr": "cha",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 0
+    },
+    {
+      "key": "medicine",
+      "name": "Медицина",
+      "attr": "wis",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    },
+    {
+      "key": "nature",
+      "name": "Природа",
+      "attr": "wis",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    },
+    {
+      "key": "occultism",
+      "name": "Оккультизм",
+      "attr": "int",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "int",
+      "item": 0
+    },
+    {
+      "key": "performance",
+      "name": "Выступление",
+      "attr": "cha",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "cha",
+      "item": 0
+    },
+    {
+      "key": "religion",
+      "name": "Религия",
+      "attr": "wis",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    },
+    {
+      "key": "society",
+      "name": "Общество",
+      "attr": "int",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "int",
+      "item": 0
+    },
+    {
+      "key": "stealth",
+      "name": "Скрытность",
+      "attr": "dex",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "dex",
+      "item": 0
+    },
+    {
+      "key": "survival",
+      "name": "Выживание",
+      "attr": "wis",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    },
+    {
+      "key": "thievery",
+      "name": "Воровство",
+      "attr": "dex",
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "dex",
+      "item": 0
+    }
+  ],
+  "hitPoints": {
+    "max": 16,
+    "current": 0,
+    "temp": 0,
+    "dying": 0,
+    "wounded": 0,
+    "hardness": 3,
+    "bt": 3
+  },
+  "strikes": {
+    "melee": [],
+    "ranged": []
+  },
+  "weaponProficiencies": {},
+  "weaponProfNotes": "",
+  "spellcasting": {
+    "tradition": "Primal",
+    "method": "",
+    "keyAttr": "wis",
+    "attack": {
+      "total": 0,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    },
+    "dc": {
+      "total": 10,
+      "prof": "u",
+      "keyAttr": "wis",
+      "item": 0
+    },
+    "focusPoints": {
+      "max": 0,
+      "current": 0
+    },
+    "slots": [],
+    "spells": [],
+    "rituals": []
+  },
+  "inventory": {
+    "worn": [],
+    "held": [],
+    "consumables": [],
+    "other": [],
+    "coins": {
+      "pp": 0,
+      "gp": 0,
+      "sp": 0,
+      "cp": 0
+    },
+    "bulkMax": 0,
+    "notes": ""
+  },
+  "feats": [],
+  "actions": [],
+  "resistances": "",
+  "conditions": "",
+  "defenseNotes": "",
+  "biography": {
+    "portrait": "",
+    "ethnicity": "",
+    "birthplace": "",
+    "age": "",
+    "gender": "",
+    "height": "",
+    "weight": "",
+    "appearance": "",
+    "attitude": "",
+    "edicts": "",
+    "anathema": "",
+    "likes": "",
+    "dislikes": "",
+    "catchphrases": "",
+    "backstory": "",
+    "allies": "",
+    "enemies": "",
+    "organizations": "",
+    "notes": ""
+  },
+  "meta": {
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "source": "manual"
+  }
+}
