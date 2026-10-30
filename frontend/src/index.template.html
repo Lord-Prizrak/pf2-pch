@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PF2e — интерактивный лист персонажа</title>
+<!-- PF2E-SHEET-DATA:START -->
+<script id="pf2e-embedded-data" type="application/json">null</script>
+<!-- PF2E-SHEET-DATA:END -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">PF<b>2e</b> Лист персонажа</div>
+  <div id="char-switcher">
+    <select id="character-select" title="Переключение персонажей"></select>
+    <button id="btn-new-char" class="btn small" title="Новый персонаж">＋</button>
+    <button id="btn-del-char" class="btn small danger" title="Удалить текущего персонажа">🗑</button>
+  </div>
+  <div class="save-state" id="save-state">—</div>
+  <nav id="tabs-nav"></nav>
+</header>
+
+<main id="main">
+  <!-- ==================== ВКЛАДКА: ЛИСТ ==================== -->
+  <section id="tab-sheet" class="tabpage">
+    <div class="grid">
+      <div class="col left">
+        <fieldset><legend>Основное</legend>
+          <div class="row"><label>Имя персонажа<input data-bind="name"></label>
+            <label>Игрок<input data-bind="player"></label></div>
+          <div class="row"><label>Народ<input data-bind="core.ancestry"></label>
+            <label>Происхождение<input data-bind="core.heritage"></label>
+            <label>Размер<input data-bind="core.size" class="xs"></label></div>
+          <div class="row"><label>Занятие<input data-bind="core.background"></label>
+            <label>Класс<input data-bind="core.class"></label>
+            <label>Мировоззрение<input data-bind="core.alignment" class="xs"></label></div>
+          <div class="row"><label>Божество<input data-bind="core.deity"></label>
+            <label>Уровень<input type="number" data-bind="core.level" class="xs"></label>
+            <label>Опыт<input type="number" data-bind="core.xp" class="s"></label></div>
+          <div class="row"><label class="grow">Языки<textarea rows="2" data-bind="core.languages"></textarea></label></div>
+          <div class="row"><label>Скорость, футов<input type="number" data-bind="core.speed.feet" class="xs"></label>
+            <label class="grow">Особые перемещения<input data-bind="core.speed.notes"></label></div>
+          <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
+        </fieldset>
+
+        <fieldset><legend>Характеристики</legend>
+          <table class="abil-table"><thead><tr><th></th><th>Хар</th><th>Мод</th><th>+2 ув.</th></tr></thead>
+          <tbody id="abilities-body"></tbody></table>
+        </fieldset>
+
+        <fieldset><legend>Защиты</legend>
+          <div class="bigstats">
+            <div class="stat"><span>КБ</span><b id="ac-total">0</b></div>
+            <div class="stat"><span>Классовая КС</span><b id="classdc-total">0</b></div>
+            <div class="stat"><span>Внимание</span><b id="perc-total">0</b></div>
+          </div>
+          <div class="row"><label>КБ: базовая+10<input type="number" data-bind="armor.acBase" class="xs"></label>
+            <label>Лвк/макс.мод ЛВК<input type="number" data-bind="armor.dexOrCap" class="xs"></label>
+            <label>Штраф проверки<input type="number" data-bind="armor.checkPenalty" class="xs"></label>
+            <label>Предмет<input type="number" data-bind="armor.item" class="xs"></label></div>
+          <div id="armor-block"></div>
+          <div id="saves-block"></div>
+          <div class="row"><label>Классовая КС: ключ. мод<input type="number" data-bind="classDC.key" class="xs"></label>
+            <label>Предмет<input type="number" data-bind="classDC.item" class="xs"></label></div>
+          <div class="row"><label>Щит: твёрдость<input type="number" data-bind="armor.shield.hardness" class="xs"></label>
+            <label>Макс.ПЗ<input type="number" data-bind="armor.shield.hp" class="xs"></label>
+            <label>ПП<input type="number" data-bind="armor.shield.bt" class="xs"></label>
+            <label>Текущие ПЗ щита<input type="number" data-bind="armor.shield.current" class="xs"></label></div>
+          <div class="row"><label class="grow">Устойчивости/невосприимчивости<textarea rows="2" data-bind="resistances"></textarea></label></div>
+        </fieldset>
+
+        <fieldset><legend>Пункты здоровья</legend>
+          <div class="row">
+            <label>Макс<input type="number" data-bind="hitPoints.max" class="xs"></label>
+            <label>Тек<input type="number" data-bind="hitPoints.current" class="xs"></label>
+            <label>Врем<input type="number" data-bind="hitPoints.temp" class="xs"></label>
+          </div>
+          <div id="hp-bar-wrap"><div id="hp-bar"></div><span id="hp-text"></span></div>
+          <div class="row hp-controls">
+            <button class="btn" data-hp="-1">−1</button><button class="btn" data-hp="-5">−5</button>
+            <button class="btn" data-hp="1">+1</button><button class="btn" data-hp="5">+5</button>
+            <button class="btn" data-hp="full">Отдых</button>
+            <span>Умирает: <b id="dying-val">0</b> Ранен: <b id="wounded-val">0</b></span>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="col mid">
+        <fieldset><legend>Навыки</legend>
+          <div class="row"><label>Восприятие<input type="number" data-bind="perception.total" class="xs"></label>
+            <span id="perception-prof"></span></div>
+          <div id="skills-block"></div>
+        </fieldset>
+
+        <fieldset><legend>Удары</legend>
+          <div id="strikes-block"></div>
+        </fieldset>
+
+        <fieldset><legend>Профичности оружия</legend>
+          <div id="weapon-prof-block"></div>
+          <div class="row"><label class="grow">Примечания<input data-bind="weaponProfNotes"></label></div>
+        </fieldset>
+      </div>
+
+      <div class="col right">
+        <fieldset><legend>Магия</legend>
+          <div id="spellcasting-block"></div>
+        </fieldset>
+
+        <fieldset><legend>Черты и умения</legend>
+          <div id="feats-block"></div>
+        </fieldset>
+
+        <fieldset><legend>Действия</legend>
+          <div id="actions-block"></div>
+        </fieldset>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ВКЛАДКА: ИНВЕНТАРЬ ==================== -->
+  <section id="tab-inventory" class="tabpage hidden">
+    <fieldset><legend>Богатство</legend>
+      <div class="row">
+        <label>Пп<input type="number" data-bind="inventory.coins.pp" class="xs"></label>
+        <label>Зл<input type="number" data-bind="inventory.coins.gp" class="xs"></label>
+        <label>Ср<input type="number" data-bind="inventory.coins.sp" class="xs"></label>
+        <label>Мд<input type="number" data-bind="inventory.coins.cp" class="xs"></label>
+        <label>Макс. вес (bulk)<input type="number" data-bind="inventory.bulkMax" class="xs"></label>
+      </div>
+    </fieldset>
+    <div class="grid3">
+      <fieldset><legend>Надето / Носится</legend><div id="inv-worn"></div></fieldset>
+      <fieldset><legend>В руках</legend><div id="inv-held"></div></fieldset>
+      <fieldset><legend>Расходники</legend><div id="inv-consumables"></div></fieldset>
+      <fieldset><legend>Прочее</legend><div id="inv-other"></div></fieldset>
+    </div>
+    <div class="row"><label class="grow">Примечания<textarea rows="3" data-bind="inventory.notes"></textarea></label></div>
+  </section>
+
+  <!-- ==================== ВКЛАДКА: БИОГРАФИЯ ==================== -->
+  <section id="tab-bio" class="tabpage hidden">
+    <fieldset><legend>Происхождение</legend>
+      <div class="row"><label>Этническая принадлежность<input data-bind="biography.ethnicity"></label>
+        <label>Место рождения<input data-bind="biography.birthplace"></label>
+        <label>Возраст<input data-bind="biography.age" class="xs"></label>
+        <label>Пол/мест.<input data-bind="biography.gender" class="m"></label></div>
+      <div class="row"><label>Рост<input data-bind="biography.height" class="xs"></label>
+        <label>Вес<input data-bind="biography.weight" class="xs"></label></div>
+      <div class="row"><label class="grow">Внешность<textarea rows="3" data-bind="biography.appearance"></textarea></label></div>
+    </fieldset>
+    <fieldset><legend>Личность</legend>
+      <div class="row"><label>Отношение<input data-bind="biography.attitude" class="m"></label>
+        <label>Девиз/фраза<input data-bind="biography.catchphrases"></label></div>
+      <div class="row"><label class="half">Эдикты<textarea rows="2" data-bind="biography.edicts"></textarea></label>
+        <label class="half">Анафемы<textarea rows="2" data-bind="biography.anathema"></textarea></label></div>
+      <div class="row"><label class="half">Нравится<textarea rows="2" data-bind="biography.likes"></textarea></label>
+        <label class="half">Не нравится<textarea rows="2" data-bind="biography.dislikes"></textarea></label></div>
+    </fieldset>
+    <fieldset><legend>История и мир</legend>
+      <div class="row"><label class="grow">Предыстория / заметки кампании<textarea rows="6" data-bind="biography.backstory"></textarea></label></div>
+      <div class="row"><label class="half">Союзники<textarea rows="2" data-bind="biography.allies"></textarea></label>
+        <label class="half">Враги<textarea rows="2" data-bind="biography.enemies"></textarea></label></div>
+      <div class="row"><label class="half">Организации<textarea rows="2" data-bind="biography.organizations"></textarea></label>
+        <label class="half">Прочие заметки<textarea rows="2" data-bind="biography.notes"></textarea></label></div>
+    </fieldset>
+  </section>
+
+  <!-- ==================== ВКЛАДКА: СЕРВЕРЫ ==================== -->
+  <section id="tab-servers" class="tabpage hidden">
+    <div class="srv-layout">
+      <div class="srv-left">
+        <fieldset><legend>Серверы</legend>
+          <div class="row">
+            <input id="srv-url" placeholder="https://my-server.example:8443" size="28">
+            <button class="btn" id="srv-add">Добавить сервер</button>
+          </div>
+          <div id="server-list" class="server-list"></div>
+        </fieldset>
+        <fieldset><legend>Подключение (логин / API-ключ)</legend>
+          <div id="srv-auth"></div>
+        </fieldset>
+      </div>
+      <div class="srv-right">
+        <fieldset><legend>Персонажи на сервере</legend>
+          <div id="srv-chars" class="srv-chars">Выберите сервер слева.</div>
+        </fieldset>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ВКЛАДКА: ИМПОРТ/ЭКСПОРТ ==================== -->
+  <section id="tab-io" class="tabpage hidden">
+    <div class="grid3">
+      <fieldset><legend>Экспорт</legend>
+        <button class="btn block" id="exp-json-clipboard">Скопировать JSON в буфер</button>
+        <button class="btn block" id="exp-json-file">Скачать JSON-файл</button>
+        <button class="btn block" id="exp-html">Скачать HTML с персонажем</button>
+        <button class="btn block" id="exp-all-json">Скачать все персонажи (JSON)</button>
+        <button class="btn block" id="exp-all-html">Скачать HTML со всеми</button>
+      </fieldset>
+      <fieldset><legend>Импорт</legend>
+        <button class="btn block" id="imp-json-clipboard">Из буфера обмена</button>
+        <button class="btn block" id="imp-json-file-btn">Из JSON-файла</button>
+        <input type="file" id="imp-json-file" accept=".json,application/json" class="hidden">
+        <button class="btn block" id="imp-html-btn">Из HTML-файла листа</button>
+        <input type="file" id="imp-html-file" accept=".html,text/html" class="hidden">
+        <button class="btn block" id="imp-pdf-btn">Из PDF-листа (fields→JSON)</button>
+        <input type="file" id="imp-pdf-file" accept=".pdf" class="hidden">
+      </fieldset>
+      <fieldset><legend>Сервер</legend>
+        <button class="btn block" id="push-server">Загрузить текущего на сервер ⤴</button>
+        <button class="btn block" id="pull-server">Обновить текущего с сервера ⤓</button>
+        <div class="hint">Подробное управление серверами — на вкладке «Серверы».</div>
+      </fieldset>
+    </div>
+    <fieldset><legend>JSON данных текущего персонажа</legend>
+      <textarea id="json-editor" rows="14" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="btn" id="json-apply">Применить из текстового поля</button>
+        <button class="btn" id="json-refresh">Обновить поле из листа</button>
+      </div>
+    </fieldset>
+  </section>
+</main>
+
+<div id="toast-wrap"></div>
+<div id="modal-back" class="hidden"><div id="modal"></div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
