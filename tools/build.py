@@ -7,8 +7,12 @@
 как по http(s), так и с file://.
 
 Использование:
-    python3 tools/build.py            # собрать frontend/sheet.html
-    python3 tools/build.py --no-data  # без встроенных персонажей
+    python3 tools/build.py                     # собрать frontend/sheet.html (тема default)
+    python3 tools/build.py --no-data           # без встроенных персонажей
+    python3 tools/build.py --theme official    # вариант оформления: официальный лист Paizo
+    python3 tools/build.py --theme sanych      # в стиле листа существующего персонажа (Саныч)
+    python3 tools/build.py --theme dark        # тёмный «VTT»-вариант из интернета
+    python3 tools/build.py --list-themes       # показать доступные темы
 """
 import argparse
 import json
@@ -19,6 +23,28 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'frontend', 'src')
 OUT = os.path.join(ROOT, 'frontend', 'sheet.html')
 OUT_EMPTY = os.path.join(ROOT, 'frontend', 'sheet-empty.html')
+
+# id темы -> имя файла CSS-дополнения в frontend/src (default — только style.css)
+THEMES = {
+    'default': None,
+    'official': 'theme-official.css',   # официальный Character Sheet Paizo
+    'sanych': 'theme-sanych.css',       # лист существующего персонажа (Саныч.pdf)
+    'dark': 'theme-dark.css',           # фанатский тёмный лист из интернета
+}
+
+
+def load_css():
+    """Базовый style.css + дополнения всех тем: в собранном файле присутствуют
+    все варианты, поэтому пользователь может переключать тему на лету."""
+    with open(os.path.join(SRC, 'style.css'), encoding='utf-8') as fh:
+        css = fh.read()
+    for tid in sorted(THEMES):
+        extra = THEMES[tid]
+        if not extra:
+            continue
+        with open(os.path.join(SRC, extra), encoding='utf-8') as fh:
+            css += '\n\n/* === тема: %s === */\n' % tid + fh.read()
+    return css
 
 
 def load_embedded():
@@ -36,10 +62,16 @@ def load_embedded():
     return {'schema': 1, 'characters': chars}
 
 
-def build_html(html, css, js, payload):
-    # инлайн CSS
+def build_html(html, css, js, payload, theme='default'):
+    # инлайн CSS: все темы присутствуют в файле — переключение возможно на лету;
+    # --theme задаёт тему сборки (класс на <body> и __PF2E_BUILD_THEME__)
     html = html.replace('<link rel="stylesheet" href="style.css">',
                         '<style>\n' + css.replace('</style>', '<\\/style>') + '\n</style>')
+
+    # тема сборки: значение для JS и класс на <body> (для default — без класса)
+    html = html.replace("'__PF2E_THEME__'", json.dumps(theme))
+    body_cls = ' class="theme-%s"' % theme if theme != 'default' else ''
+    html = html.replace('<body class="theme-__PF2E_THEME_BODY__">', '<body%s>' % body_cls)
 
     # встроенные данные
     payload_txt = json.dumps(payload, ensure_ascii=False, indent=1).replace('</', '<\\/')
@@ -59,12 +91,20 @@ def build_html(html, css, js, payload):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--no-data', action='store_true')
+    ap.add_argument('--theme', choices=sorted(THEMES), default='default',
+                    help='вариант оформления листа (по умолчанию default)')
+    ap.add_argument('--list-themes', action='store_true',
+                    help='показать доступные темы и выйти')
     args = ap.parse_args()
+
+    if args.list_themes:
+        for tid in sorted(THEMES):
+            print(f'{tid}: {THEMES[tid] or "style.css (базовая тема)"}')
+        return
 
     with open(os.path.join(SRC, 'index.template.html'), encoding='utf-8') as fh:
         html_tpl = fh.read()
-    with open(os.path.join(SRC, 'style.css'), encoding='utf-8') as fh:
-        css = fh.read()
+    css = load_css()
     with open(os.path.join(SRC, 'app.js'), encoding='utf-8') as fh:
         js = fh.read()
 
@@ -72,19 +112,19 @@ def main():
     payload = empty_payload if args.no_data else load_embedded()
 
     out = OUT_EMPTY if args.no_data else OUT
-    html = build_html(html_tpl, css, js, payload)
+    html = build_html(html_tpl, css, js, payload, theme=args.theme)
     with open(out, 'w', encoding='utf-8') as fh:
         fh.write(html)
     n = len(payload['characters'])
-    print(f'sheet собран: {out} ({os.path.getsize(out)} байт, персонажей встроено: {n})')
+    print(f'sheet собран: {out} ({os.path.getsize(out)} байт, персонажей встроено: {n}, тема: {args.theme})')
 
     # за --no-data также пересобираем и обычный лист, чтобы сервер мог
     # раздавать обе страницы (sheet.html и sheet-empty.html)
     if args.no_data:
-        full = build_html(html_tpl, css, js, load_embedded())
+        full = build_html(html_tpl, css, js, load_embedded(), theme=args.theme)
         with open(OUT, 'w', encoding='utf-8') as fh:
             fh.write(full)
-        print(f'sheet собран: {OUT} ({os.path.getsize(OUT)} байт)')
+        print(f'sheet собран: {OUT} ({os.path.getsize(OUT)} байт, тема: {args.theme})')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Тема "dark" — тёмный «компактный VTT» в духе фанатских листов из интернета
+   (Reddit r/Pathfinder2e, Overchat/Dicejoy-подобные оверлеи):
+   почти чёрный фон, янтарные акценты, крупные кликабельные броски, sans-serif.
+   ========================================================================== */
+
+body.theme-dark {
+  --bg: #0d0f14;
+  --panel: #161a22;
+  --ink: #cfd6e1;
+  --accent: #e8a33d;
+  --accent2: #5b8dd6;
+  --line: #2a303c;
+  --muted: #727b8a;
+  background: var(--bg);
+  font-size: 13.5px;
+}
+
+body.theme-dark #topbar {
+  background: #10131a;
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+body.theme-dark .brand b { color: var(--accent); }
+body.theme-dark #character-select { background: #1c212b; color: var(--ink); border-color: var(--line); }
+body.theme-dark #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+body.theme-dark fieldset {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45);
+}
+body.theme-dark legend {
+  color: var(--accent);
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+body.theme-dark input, body.theme-dark textarea, body.theme-dark select {
+  background: #10141b; color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+}
+body.theme-dark input:focus, body.theme-dark textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,163,61,.2);
+}
+body.theme-dark label { color: var(--muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: .05em; }
+
+body.theme-dark .stat { background: #10141b; border-radius: 10px; border-color: var(--line); }
+body.theme-dark .stat span { color: var(--muted); }
+body.theme-dark .stat b { color: var(--accent); font-size: 26px; }
+
+body.theme-dark .btn {
+  background: #1c212b; color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+}
+body.theme-dark .btn:hover { background: #242b37; border-color: var(--accent); }
+body.theme-dark .btn.primary { background: var(--accent); color: #14100a; border-color: var(--accent); font-weight: 700; }
+body.theme-dark .btn.danger { background: #2b1a1d; border-color: #5a2e33; color: #eab9bd; }
+
+body.theme-dark #hp-bar-wrap { background: #10141b; border-color: var(--line); border-radius: 8px; }
+body.theme-dark #hp-bar { background: linear-gradient(#e8a33d, #b5722a); }
+body.theme-dark #hp-text { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+
+body.theme-dark table.mini td { border-top-color: var(--line); }
+body.theme-dark table.mini th { color: var(--muted); }
+body.theme-dark .abil-table td { border-top-color: var(--line); }
+body.theme-dark .mod-badge { background: #242b37; color: var(--accent); border-radius: 6px; }
+
+body.theme-dark .prof-pick button { background: #10141b; color: var(--muted); border-color: var(--line); border-radius: 4px; }
+body.theme-dark .prof-pick button.on { background: var(--accent2); color: #0d1220; border-color: var(--accent2); }
+
+body.theme-dark .dot { background: #10141b; border-color: var(--accent2); }
+body.theme-dark .dot.used { background: var(--accent2); }
+
+body.theme-dark .roll-btn {
+  background: #10141b; color: var(--accent); border: 1px solid var(--line); border-radius: 6px;
+  font-weight: 700;
+}
+body.theme-dark .roll-btn:hover { background: #242b37; border-color: var(--accent); }
+
+body.theme-dark .feat-item { background: #10141b; border-left: 3px solid var(--accent2); border-radius: 6px; }
+body.theme-dark .feats-cat { color: var(--accent2); }
+body.theme-dark #modal { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
+body.theme-dark #json-editor { background: #10141b; color: var(--ink); }
+body.theme-dark code.inline { background: #242b37; color: var(--accent); }
+body.theme-dark .server-list .srv-item { background: var(--panel); }
+body.theme-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
+body.theme-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
+body.theme-dark .hint { color: var(--muted); }

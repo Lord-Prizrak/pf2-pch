@@ -30,6 +30,8 @@ open frontend/sheet.html
 
 ```bash
 python3 tools/build.py                                   # пересобрать frontend/sheet.html
+python3 tools/build.py --theme official                  # тема по умолчанию: официальный лист Paizo
+                                                         # (default | official | sanych | dark)
 python3 tools/extract.py "Саныч.pdf" -o sheets/x.json    # извлечение из PDF-листа
 cd server && go build -o pf2e-server .                   # сборка бинарника
 ./pf2e-server -addr :8090 -data ./data -frontend ../frontend

@@ -11,6 +11,15 @@ var SCHEMA = 1;
 var LS_CHARS = 'pf2e.characters.v1';     // {id: sheetJson}
 var LS_CURRENT = 'pf2e.currentId';
 var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
+var LS_THEME = 'pf2e.theme.v1';
+/* Варианты оформления листа. Тема может быть задана сборщиком build.py
+   (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
+var THEMES = [
+  { id: 'default', name: 'Классический' },
+  { id: 'official', name: 'Официальный (Paizo)' },
+  { id: 'sanych', name: 'Лист персонажа (Саныч)' },
+  { id: 'dark', name: 'Тёмный VTT' }
+];
 
 /* ---------------- утилиты ---------------- */
 function $(sel, root) { return (root || document).querySelector(sel); }
@@ -1184,9 +1193,41 @@ function wireTopbar() {
   });
 }
 
+/* ---------------- темы оформления ---------------- */
+var BUILD_THEME = (typeof window !== 'undefined' && window.__PF2E_BUILD_THEME__) || '';
+
+function validTheme(t) {
+  return THEMES.some(function (x) { return x.id === t; }) ? t : 'default';
+}
+function currentTheme() {
+  // приоритет: сохранённый выбор пользователя > тема, вшитая сборщиком > default
+  return validTheme(localStorage.getItem(LS_THEME) || BUILD_THEME);
+}
+function applyTheme(t) {
+  THEMES.forEach(function (x) {
+    if (x.id !== 'default') document.body.classList.remove('theme-' + x.id);
+  });
+  if (t !== 'default') document.body.classList.add('theme-' + t);
+  var sel = $('#theme-select');
+  if (sel) sel.value = t;
+}
+function wireThemePicker() {
+  var sel = $('#theme-select');
+  if (!sel) return;
+  THEMES.forEach(function (x) {
+    sel.appendChild(el('option', { value: x.id, text: x.name }));
+  });
+  sel.addEventListener('change', function () {
+    localStorage.setItem(LS_THEME, sel.value);
+    applyTheme(sel.value);
+  });
+  applyTheme(currentTheme());
+}
+
 /* ---------------- инициализация ---------------- */
 function boot() {
   renderTabs();
+  wireThemePicker();
   wireTopbar();
   wireIOButtons();
 

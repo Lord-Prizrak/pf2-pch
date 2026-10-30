@@ -32,15 +32,34 @@ python3 tools/extract.py --xlsx "PF2E Easy Character Sheet v1.1.xlsx" -o sheets/
 `frontend/sheet.html`:
 
 ```bash
-python3 tools/build.py            # sheet.html с встроенными персонажами из sheets/*.json
-python3 tools/build.py --no-data  # sheet-empty.html без данных
-                                  # (заодно пересобирает и sheet.html — обе страницы нужны серверу)
+python3 tools/build.py                     # sheet.html с встроенными персонажами из sheets/*.json
+python3 tools/build.py --no-data           # sheet-empty.html без данных
+                                           # (заодно пересобирает и sheet.html — обе страницы нужны серверу)
+python3 tools/build.py --theme official    # собрать лист в варианте оформления «официальный Paizo»
+python3 tools/build.py --list-themes       # список доступных тем
 ```
 
+### Варианты оформления (`--theme`)
+
+Тема сборки задаёт **тему по умолчанию** для собранного файла (класс на `<body>`
+и `window.__PF2E_BUILD_THEME__`). Все CSS-темы всегда инлайнятся в файл целиком,
+поэтому пользователь может переключить оформление на лету — селектором в шапке
+листа (выбор сохраняется в localStorage).
+
+| id | описание |
+|---|---|
+| `default` | классическое «пергаментное» оформление (базовый `style.css`) |
+| `official` | по образцу официального Character Sheet Paizo: две колонки, cream-фон, красные плашки-заголовки, шрифт с засечками (`theme-official.css`) |
+| `sanych` | в стиле листа существующего персонажа (Саныч.pdf): тёмная «ночная» палитра, зелёные акценты (`theme-sanych.css`) |
+| `dark` | фанатский тёмный лист из интернета (в духе Reddit/VTT-оверлеев): почти чёрный фон, янтарные акценты (`theme-dark.css`) |
+
 Шаги сборки:
-1. Инлайн `<link rel="stylesheet" href="style.css">` → содержимое `style.css` в `<style>`.
-2. Инлайн `<script src="app.js"></script>` → содержимое `app.js` в `<script>`.
-3. Замена блока между маркерами `<!-- PF2E-SHEET-DATA:START/END -->` на
+1. Инлайн `<link rel="stylesheet" href="style.css">` → содержимое `style.css`
+   плюс все дополнения тем `theme-*.css` в один `<style>`.
+2. Подстановка темы сборки: `'__PF2E_THEME__'` → id темы, `<body class="theme-…">`
+   (для `default` — без класса).
+3. Инлайн `<script src="app.js"></script>` → содержимое `app.js` в `<script>`.
+4. Замена блока между маркерами `<!-- PF2E-SHEET-DATA:START/END -->` на
    `<script id="pf2e-embedded-data" type="application/json">` с объектом
    `{schema:1, characters:[…]}` (все JSON'ы из `sheets/`, `</` экранируется).
 
