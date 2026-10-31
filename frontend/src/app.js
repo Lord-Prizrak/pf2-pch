@@ -31,18 +31,24 @@ var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'fe
    Каждый блок получает data-bid по порядку обхода DOM; это стабильный ключ
    раскладки: блоки больше не путаются из-за одинаковых sec-* классов и
    никогда не переносятся внутрь друг друга. */
+/* Все раскладки строятся на 12-колоночной сетке (#sheet-grid — grid из
+   12 равных колонок). Каждому блоку в map соответствует span (число
+   колонок сетки): по умолчанию блоки занимают 4 колонки (три столбца),
+   в официальной теме Paizo — 6 колонок (два столбца). */
+function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
+
 var THEMES = [
   { id: 'default', name: 'Классический', layout: { cols: 3, map: {
-      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'combat'], right: ['magic', 'feats', 'actions'] },
+      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
   { id: 'official', name: 'Официальный (Paizo)', layout: { cols: 2, map: {
-      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'magic'] },
+      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
       hide: [] } },
   { id: 'sanych', name: 'Лист персонажа (Саныч)', layout: { cols: 3, map: {
-      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes'], right: ['magic', 'feats', 'actions'] },
+      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
   { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
-      left: ['abil', 'skills'], mid: ['def', 'strikes', 'feats'], right: ['magic', 'actions'] },
+      left: ['abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
 
@@ -73,6 +79,26 @@ function uid() {
   return 'c-' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 }
 function nowISO() { return new Date().toISOString(); }
+
+/* ---------------- автоскрытие текстовых полей (растягивание вниз) --------
+   Функция была потеряна при рефакторинге раскладок — восстановлена.
+   wireAutogrow вешает обработчик на textarea; refreshAllTextareas
+   пересчитывает высоты всех полей после программной смены значений,
+   перемещения блоков и применения раскладки. */
+function autogrowTa(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(28, ta.scrollHeight + 2) + 'px';
+}
+function wireAutogrow(ta) {
+  if (ta._autogrow) { autogrowTa(ta); return; }
+  ta._autogrow = true;
+  ta.addEventListener('input', function () { autogrowTa(ta); });
+  requestAnimationFrame(function () { autogrowTa(ta); });
+}
+function refreshAllTextareas(root) {
+  $all('textarea', root || document).forEach(autogrowTa);
+}
+
 function toast(msg, isErr) {
   var t = el('div', { class: 'toast' + (isErr ? ' err' : ''), text: msg });
   $('#toast-wrap').appendChild(t);
@@ -1619,9 +1645,9 @@ function ensureBlockIds() {
   // отдельные панели по id (их порядок в DOM зависит от раскладки темы).
   var grid = $('#sheet-grid');
   if (grid) $all(':scope > .sheet-area > fieldset', grid).forEach(mark);
-  [['#hp-shield-panel', 'hp-top'], ['#weapon-prof-block', 'wpnprof']].forEach(function (p) {
+  [['#hp-shield-panel', 'hp-top'], ['#weapon-prof-panel', 'wpnprof']].forEach(function (p) {
     var elx = $(p[0]);
-    if (elx) { var fs = elx.closest ? elx.closest('fieldset') : null; if (fs && !fs.dataset.bid) fs.dataset.bid = p[1]; }
+    if (elx && elx.tagName === 'FIELDSET' && !elx.dataset.bid) elx.dataset.bid = p[1];
   });
   if (grid) {
     var info = $('.info-block', grid);
@@ -1719,9 +1745,17 @@ function baseSheetMap(themeId) {
   var out = { left: [], mid: [], right: [] };
   var grid = $('#sheet-grid');
   if (!grid) return out;
+  /* Особые случаи именных блоков (до общего правила по sec-* классам):
+     панель «ПЗ и щит» (sec-hp) в official-раскладке живёт в правой колонке,
+     блок «Профичности оружия» делит sec-strikes с блоком «Удары». */
+  function specialCol(f) {
+    if (f.id === 'hp-shield-panel') return m.hp || 'right';
+    if (f.id === 'weapon-prof-panel') return m.wpnprof || null;
+    return null;
+  }
   $all(':scope > .sheet-area > fieldset', grid).forEach(function (f) {
-    var col = null;
-    f.classList.forEach(function (cl) {
+    var col = specialCol(f);
+    if (!col) f.classList.forEach(function (cl) {
       if (cl.indexOf('sec-') === 0 && m[cl.slice(4)]) col = m[cl.slice(4)];
     });
     if (f.classList.contains('info-block')) col = 'full';
@@ -1785,13 +1819,15 @@ function insertBlock(node, container, before) {
   else container.appendChild(node);
 }
 
-/* ---------- применение раскладки вкладки «Лист» ---------- */
-/* Раскладка вкладки «Лист». Физически переносим блоки (fieldset) в нужные
-   колонки-контейнеры (.sheet-area[data-col]) и задаём порядок через inline
-   order. Никаких display:contents / grid-area: var(). Дублирующиеся панели
+/* ---------- применение раскладки вкладки «Лист» (12-колоночная сетка) ----
+   Блоки физически переносятся в колонки-контейнеры (.sheet-area); каждой
+   колонке назначается span: 4 колонки сетки (три столбца — все темы, кроме
+   official) или 6 колонок (два столбца — официальный лист Paizo).
+   Никаких display:contents / grid-area: var(). Дублирующиеся панели
    скрываются .sec-hidden. Поверх базовой раскладки темы — пользовательские
-   правки (effectiveLayout): состав/порядок колонок, ширина блока (data-width)
-   и число колонок текста (data-cols). */
+   правки (effectiveLayout): состав/порядок колонок и число колонок текста
+   (data-cols). ПАНЕЛЬ ИЗМЕНЕНИЯ ШИРИНЫ БЛОКОВ УБРАНА из режима
+   «Редактирование»: ширина задаётся только темой. */
 function applyLayout(themeId) {
   var grid = $('#sheet-grid'); if (!grid) return;
   var lay = effectiveLayout(themeId);
@@ -1808,9 +1844,10 @@ function applyLayout(themeId) {
 
   grid.dataset.cols = String(cols);
   grid.dataset.strip = lay.strip ? '1' : '0';
-  if (areas.left) areas.left.dataset.col = 'left';
-  if (areas.mid) areas.mid.dataset.col = 'mid';
-  if (areas.right) areas.right.dataset.col = 'right';
+  var span = colSpan(themeId);            // 4 (три столбца) или 6 (Paizo)
+  ['left', 'mid', 'right'].forEach(function (c) {
+    if (areas[c]) { areas[c].dataset.col = c; areas[c].style.setProperty('--span', String(span)); }
+  });
   var strip = $('.combat-strip', grid);
   if (strip) strip.dataset.col = 'strip';
   var info = $('.info-block', grid);
@@ -1841,13 +1878,14 @@ function applyLayout(themeId) {
     }
   });
 
-  // ширина блока и число колонок текста
+  // число колонок текста; ширина блока НЕ регулируется — удаляем data-width
+  // (старые сохранённые widths игнорируются), но оставляем выбор колонок
   $all('fieldset[data-bid]', grid).forEach(function (node) {
-    var bid = node.dataset.bid;
-    node.dataset.width = lay.widths[bid] || 'normal';
-    node.dataset.cols = String(lay.textCols[bid] || 1);
+    node.removeAttribute('data-width');
+    node.dataset.cols = String(lay.textCols[node.dataset.bid] || 1);
     ensureBodyWrap(node);
-    ensureSecControls(node, bid);
+    if (isEditMode()) ensureSecControls(node, node.dataset.bid);
+    else removeSecControls(node);
     wireBlockDrag(node);
   });
 
@@ -1899,6 +1937,14 @@ function ensureBodyWrap(node) {
   }
 }
 
+/* Управление блоками в режиме «Редактирование»: панель с числом колонок
+   текста. ИЗМЕНЕНИЕ ШИРИНЫ БЛОКОВ УБРАНО по требованию — ширина задаётся
+   только раскладкой темы (12-колоночная сетка: span 4 или 6). */
+function removeSecControls(node) {
+  var box = node.querySelector(':scope > .sec-controls');
+  if (box) box.remove();
+}
+
 function ensureSecControls(node, bid) {
   var box = node.querySelector(':scope > .sec-controls');
   if (!box) {
@@ -1907,23 +1953,16 @@ function ensureSecControls(node, bid) {
     if (lg && lg.nextSibling) node.insertBefore(box, lg.nextSibling);
     else node.insertBefore(box, node.firstChild);
   }
-  if (box.dataset.theme !== currentTheme()) {
+  if (box.dataset.built !== '2') {
     box.innerHTML = '';
     box.appendChild(secControls(bid));
-    box.dataset.theme = currentTheme();
+    box.dataset.built = '2';
   }
 }
 
-/* Панель управления шириной/колонками блока (видна только в edit-mode). */
+/* Панель управления колонками блока (видна только в edit-mode). */
 function secControls(bid) {
   var box = el('div', { class: 'sec-controls' });
-  var wSel = el('select', { title: 'Ширина блока' });
-  [['narrow', 'узкий'], ['normal', 'обычный'], ['wide', 'широкий']].forEach(function (p) {
-    wSel.appendChild(el('option', { value: p[0], text: '⬌ ' + p[1] }));
-  });
-  wSel.value = currentSecWidth(bid);
-  wSel.addEventListener('change', function () { setSecWidth(bid, wSel.value); });
-  box.appendChild(wSel);
   var cSel = el('select', { title: 'Колонок текста в блоке' });
   [1, 2, 3].forEach(function (n) { cSel.appendChild(el('option', { value: String(n), text: n + ' кол.' })); });
   cSel.value = String(currentSecTextCols(bid));
@@ -1931,17 +1970,9 @@ function secControls(bid) {
   box.appendChild(cSel);
   return box;
 }
-function currentSecWidth(bid) {
-  var u = userLayoutFor(currentTheme());
-  return (u && u.widths && u.widths[bid]) || 'normal';
-}
 function currentSecTextCols(bid) {
   var u = userLayoutFor(currentTheme());
   return (u && u.textCols && u.textCols[bid]) || 1;
-}
-function setSecWidth(bid, w) {
-  mutateSheetLayout(function (u) { u.widths = u.widths || {}; u.widths[bid] = w; });
-  applyLayout(currentTheme());
 }
 function setSecTextCols(bid, n) {
   mutateSheetLayout(function (u) { u.textCols = u.textCols || {}; u.textCols[bid] = n; });
