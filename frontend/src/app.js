@@ -1644,16 +1644,18 @@ function ensureBlockIds() {
   // Вкладка «Лист»: сначала обход DOM (стабильно между темами), затем
   // отдельные панели по id (их порядок в DOM зависит от раскладки темы).
   var grid = $('#sheet-grid');
-  if (grid) $all(':scope > .sheet-area > fieldset', grid).forEach(mark);
+  if (grid) {
+    /* «Основное» — прямой ребёнок #sheet-grid, помечаем первым, чтобы bid
+       был стабильным независимо от порядка обхода колонок. */
+    var info = $('.info-block', grid);
+    if (info && !info.dataset.bid) info.dataset.bid = 'info';
+    $all(':scope > .sheet-area > fieldset', grid).forEach(mark);
+  }
   [['#hp-shield-panel', 'hp-top'], ['#weapon-prof-panel', 'wpnprof']].forEach(function (p) {
     var elx = $(p[0]);
     if (elx && elx.tagName === 'FIELDSET' && !elx.dataset.bid) elx.dataset.bid = p[1];
   });
-  if (grid) {
-    var info = $('.info-block', grid);
-    if (info && !info.dataset.bid) info.dataset.bid = 'info';
-    $all('fieldset', grid).forEach(mark);
-  }
+  if (grid) $all('fieldset', grid).forEach(mark);
   // Остальные вкладки: все fieldset в порядке DOM.
   $all('.tabpage').forEach(function (page) {
     if (page.id === 'tab-sheet') return;
@@ -1684,6 +1686,9 @@ function tabContainers(tabId) {
   var out = [];
   for (var n = page.firstElementChild; n; n = n.nextElementSibling) {
     if (n.classList.contains('grid3') || n.classList.contains('srv-layout')) {
+      /* grid3: fieldset-и — прямые дети ряда, сам ряд и есть контейнер.
+         srv-layout: children div-колонки (.srv-left/.srv-right). */
+      if (n.classList.contains('grid3')) { out.push(n); continue; }
       for (var k = n.firstElementChild; k; k = k.nextElementSibling) {
         if (k.classList.contains('srv-left') || k.classList.contains('srv-right')) out.push(k);
       }
@@ -1742,7 +1747,7 @@ function baseSheetMap(themeId) {
   ['left', 'mid', 'right'].forEach(function (col) {
     ((base.map && base.map[col]) || []).forEach(function (sec) { m[sec] = col; });
   });
-  var out = { left: [], mid: [], right: [] };
+  var out = { left: [], mid: [], right: [], full: [] };
   var grid = $('#sheet-grid');
   if (!grid) return out;
   /* Особые случаи именных блоков (до общего правила по sec-* классам):
@@ -1753,12 +1758,16 @@ function baseSheetMap(themeId) {
     if (f.id === 'weapon-prof-panel') return m.wpnprof || null;
     return null;
   }
+  /* Прямые fieldset-дети сетки (например, «Основное») — всегда во всю ширину. */
+  $all(':scope > fieldset', grid).forEach(function (f) {
+    f.dataset.col = 'full';
+    out.full.push(f.dataset.bid);
+  });
   $all(':scope > .sheet-area > fieldset', grid).forEach(function (f) {
     var col = specialCol(f);
     if (!col) f.classList.forEach(function (cl) {
       if (cl.indexOf('sec-') === 0 && m[cl.slice(4)]) col = m[cl.slice(4)];
     });
-    if (f.classList.contains('info-block')) col = 'full';
     if (!col) col = 'right';
     out[col].push(f.dataset.bid);
   });
@@ -1985,7 +1994,24 @@ function applyTabStructure(tabId) {
   ensureBlockIds();
   var st = loadTabStructures()[tabId];
   var conts = tabContainers(tabId);
-  if (!conts.length) return;
+  if (!conts.length) {
+    /* Вкладки без колоночных контейнеров (Биография, Импорт/экспорт):
+       drag меняет порядок ПРЯМЫХ fieldset-детей страницы — цель для drop
+       должна быть самой страницей, иначе блоки уезжают в конец DOM main. */
+    var page = $('#tab-' + tabId);
+    if (page) {
+      if (st && Array.isArray(st.cols)) {
+        var order = [];
+        st.cols.forEach(function (keys) { order = order.concat(keys); });
+        order.forEach(function (k) {
+          var node = page.querySelector(':scope > [data-bid="' + k + '"]');
+          if (node) page.appendChild(node);   // перестановка в запомненном порядке
+        });
+      }
+      $all(':scope > fieldset', page).forEach(wireBlockDrag);
+    }
+    return;
+  }
   if (st && Array.isArray(st.cols)) {
     st.cols.forEach(function (keys, ci) {
       var container = conts[Math.min(ci, conts.length - 1)];

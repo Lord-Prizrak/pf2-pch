@@ -38,8 +38,7 @@
       <!-- лента для раскладки "Тёмный VTT" (strip): в неё JS копирует панель ПЗ/щита -->
       <div class="combat-strip" aria-hidden="true"></div>
 
-      <div class="sheet-area sheet-area-left">
-        <fieldset class="info-block"><legend>Основное</legend>
+      <fieldset class="info-block"><legend>Основное</legend>
           <div class="row"><label>Имя персонажа<input data-bind="name"></label>
             <label>Игрок<input data-bind="player"></label></div>
           <div class="row"><label>Народ<input data-bind="core.ancestry"></label>
@@ -55,8 +54,9 @@
           <div class="row"><label>Скорость, футов<input type="number" data-bind="core.speed.feet" class="xs"></label>
             <label class="grow">Особые перемещения<input data-bind="core.speed.notes"></label></div>
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
-        </fieldset>
+      </fieldset>
 
+      <div class="sheet-area" data-col="left">
         <fieldset class="sheet-sec sec-abil"><legend>Характеристики</legend>
           <table class="abil-table"><thead><tr><th></th><th>Хар</th><th>Мод</th><th>+2 ув.</th></tr></thead>
           <tbody id="abilities-body"></tbody></table>
@@ -101,7 +101,7 @@
         </fieldset>
       </div>
 
-      <div class="sheet-area sheet-area-mid">
+      <div class="sheet-area" data-col="mid">
         <fieldset class="sheet-sec sec-skills"><legend>Навыки</legend>
           <div class="row"><label>Восприятие<input type="number" data-bind="perception.total" class="xs"></label>
             <span id="perception-prof"></span></div>
@@ -118,7 +118,7 @@
         </fieldset>
       </div>
 
-      <div class="sheet-area sheet-area-right">
+      <div class="sheet-area" data-col="right">
         <!-- верхняя панель: ПЗ + щит (раскладка "official") -->
         <fieldset class="sheet-sec sec-hp" id="hp-shield-panel"><legend>ПЗ и щит</legend>
           <div class="hps-row">
