@@ -592,6 +592,75 @@ function renderHeroPoints() {
   }
 }
 
+/* ---------------- известные языки: список, а не текст ------------------- */
+/* Хранимся по-прежнему в core.languages (строка через запятую — совместимость
+   с JSON-форматом и сервером), но отображаем как редактируемый список:
+   каждый язык отдельной строкой, кнопка ＋ добавляет язык из справочника
+   PF2e или произвольный, ✕ удаляет. */
+var KNOWN_LANGUAGES = ['Общий', 'Эльфийский', 'Гномий', 'Гоблинский', 'Огрский',
+  'Полуросликовый', 'Козлитин', 'Дварфский', 'Драконий', 'Сквозной', 'Небесный',
+  'Адский', 'Язык демонов', 'Феей', 'Акван', 'Азlantian', 'Валутский', 'Юни',
+  'Икс', 'Тengu', 'Jotun', 'Ундинский', 'Терраский', 'Циклопский'];
+function splitLanguages(str) {
+  return String(str || '').split(/[,;\n]+/).map(function (s) { return s.trim(); })
+    .filter(function (s) { return s.length; });
+}
+function renderLanguages() {
+  var box = $('#languages-list'); if (!box) return;
+  box.innerHTML = '';
+  var langs = splitLanguages(State.sheet.core.languages);
+  var ul = el('ul', { class: 'lang-items' });
+  if (!langs.length) ul.appendChild(el('li', { class: 'lang-empty', text: '(нет)' }));
+  langs.forEach(function (name, idx) {
+    var li = el('li', { class: 'lang-item' });
+    var inp = el('input', { value: name, class: 'lang-name', size: Math.max(6, name.length) });
+    inp.addEventListener('input', function () {
+      langs[idx] = inp.value.trim();
+      State.sheet.core.languages = langs.filter(Boolean).join(', ');
+      inp.setAttribute('size', Math.max(6, inp.value.length));
+      markDirty();
+    });
+    li.appendChild(inp);
+    var del = el('button', { class: 'btn small danger lang-del', text: '✕', title: 'Убрать язык' });
+    del.addEventListener('click', function () {
+      langs.splice(idx, 1);
+      State.sheet.core.languages = langs.join(', ');
+      markDirty(); renderLanguages();
+    });
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+  var addRow = el('div', { class: 'lang-add' });
+  var sel = el('select', { class: 'lang-pick' });
+  sel.appendChild(el('option', { value: '', text: '— добавить язык —' }));
+  KNOWN_LANGUAGES.forEach(function (l) {
+    if (langs.indexOf(l) < 0) sel.appendChild(el('option', { value: l, text: l }));
+  });
+  sel.addEventListener('change', function () {
+    if (!sel.value) return;
+    langs.push(sel.value);
+    State.sheet.core.languages = langs.join(', ');
+    markDirty(); renderLanguages();
+  });
+  addRow.appendChild(sel);
+  var custom = el('input', { class: 'lang-custom', placeholder: 'свой язык…' });
+  var btnAdd = el('button', { class: 'btn small', text: '＋', title: 'Добавить указанный язык' });
+  function addCustom() {
+    var v = custom.value.trim();
+    if (!v) return;
+    langs.push(v);
+    State.sheet.core.languages = langs.join(', ');
+    custom.value = '';
+    markDirty(); renderLanguages();
+  }
+  btnAdd.addEventListener('click', addCustom);
+  custom.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); addCustom(); } });
+  addRow.appendChild(custom);
+  addRow.appendChild(btnAdd);
+  box.appendChild(addRow);
+}
+
 function renderSpells() {
   var box = $('#spellcasting-block'); box.innerHTML = '';
   var sc = State.sheet.spellcasting;
@@ -960,6 +1029,7 @@ function renderAll() {
   renderStrikes();
   renderWeaponProf();
   renderHeroPoints();
+  renderLanguages();
   renderCombatSummary();
   renderSpells();
   renderFeats();
@@ -1531,6 +1601,7 @@ function applyLayout(themeId) {
       node.dataset.width = w;
       var tc = (lay.textCols && lay.textCols[sec]) || 1;
       node.dataset.cols = String(tc);
+      ensureBodyWrap(node);
       // панель управления блоком (видна только в edit-mode, см. CSS)
       ensureSecControls(node, sec);
       // drag за заголовок
@@ -1550,6 +1621,34 @@ function applyLayout(themeId) {
 }
 
 /* Одна панель управления на секцию; пересоздаётся при смене темы. */
+/* Обёртка содержимого секции (.sec-body-wrap) для multi-column: собираем в
+   неё все дочерние узлы fieldset, кроме legend и панели управления. При
+   1 колонке обёртка display:contents — не влияет на верстку. */
+function ensureBodyWrap(node) {
+  var wrap = node.querySelector(':scope > .sec-body-wrap');
+  if (!wrap) {
+    wrap = el('div', { class: 'sec-body-wrap' });
+    var kids = [];
+    for (var n = node.firstChild; n; n = n.nextSibling) {
+      if (n.tagName === 'LEGEND') continue;
+      if (n.nodeType === 1 && n.classList.contains('sec-controls')) continue;
+      kids.push(n);
+    }
+    var lg = node.querySelector('legend');
+    var ctrl = node.querySelector(':scope > .sec-controls');
+    var ref = ctrl || null;
+    if (lg) {
+      // вставляем сразу после legend (или перед панелью управления)
+      node.insertBefore(wrap, ref || (lg.nextSibling ? lg.nextSibling : null));
+    } else if (ref) {
+      node.insertBefore(wrap, ref);
+    } else {
+      node.appendChild(wrap);
+    }
+    kids.forEach(function (k) { wrap.appendChild(k); });
+  }
+}
+
 function ensureSecControls(node, secId) {
   var box = node.querySelector(':scope > .sec-controls');
   if (!box) {

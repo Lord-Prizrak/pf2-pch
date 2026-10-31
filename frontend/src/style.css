@@ -202,3 +202,62 @@ body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .abil-table { disp
 
 /* панель ПЗ/щит видна в классической и official-раскладках */
 body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
+
+/* ==========================================================================
+   Режим «Редактирование» (чек-бокс в шапке рядом с выбором темы)
+   1) секции можно таскать за заголовки (legend) между колонками;
+   2) панель управления блоком (.sec-controls): ширина блока и число колонок
+      текста внутри него. Всё это видимо/доступно только при body.edit-mode.
+   ========================================================================== */
+.topbar-appearance { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
+#theme-select { padding: 3px 6px; border-radius: 6px; border: 1px solid #6b543a;
+  background: #f3e9d6; color: #2b2117; font-size: 12.5px; }
+.edit-mode-label { display: flex; flex-direction: row; align-items: center; gap: 5px;
+  font-size: 11.5px; color: #d9c9a8; cursor: pointer; text-transform: none; margin: 0; }
+.edit-mode-label input { accent-color: #e0a45e; margin: 0; }
+
+.sec-controls { display: none; gap: 6px; align-items: center; margin: 2px 0 6px;
+  padding: 4px 6px; border: 1px dashed var(--line); border-radius: 6px; background: rgba(0,0,0,.03); }
+.sec-controls select { font-size: 11px; padding: 2px 4px; }
+body.edit-mode .sec-controls { display: inline-flex; }
+body.edit-mode legend.drag-handle { cursor: grab; }
+body.edit-mode legend.drag-handle:hover { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 4px; }
+body:not(.edit-mode) legend.drag-handle { cursor: default; }
+.sheet-sec.dragging { opacity: .45; }
+body.dragging-active { user-select: none; cursor: grabbing; }
+.sheet-area.drop-over { outline: 3px dashed var(--accent2); outline-offset: -3px;
+  border-radius: 10px; background: rgba(59,91,58,.06); }
+
+/* ширина отдельного блока (нормализуется к ширине колонки, чтобы не вылезать) */
+.sheet-sec[data-width="narrow"] { width: 66%; min-width: 0; max-width: 100%; align-self: flex-start; }
+.sheet-sec[data-width="wide"]   { width: 100%; }
+.sheet-sec[data-width="normal"] { width: auto; }
+
+/* число колонок текста внутри блока: JS оборачивает содержимое fieldset
+   (кроме legend и панели управления) в .sec-body-wrap, которой задаётся
+   CSS multi-column. Обёртка не влияет на верстку при 1 колонке
+   (display:contents), поэтому блоки не ломаются и не наезжают друг на друга. */
+.sec-body-wrap { display: contents; }
+.sheet-sec[data-cols="2"] > .sec-body-wrap { display: block; columns: 2; column-gap: 14px; }
+.sheet-sec[data-cols="3"] > .sec-body-wrap { display: block; columns: 3; column-gap: 14px; }
+.sec-body-wrap > * { break-inside: avoid; margin-top: 0; }
+
+@media print {
+  .sec-controls, .topbar-appearance { display: none !important; }
+}
+
+/* ---------------- список известных языков (блок «Основное») ------------- */
+.lang-list { display: block; margin-left: 6px; }
+.lang-items { list-style: none; margin: 2px 0 4px; padding: 0; display: flex;
+  flex-wrap: wrap; gap: 4px 6px; }
+.lang-item { display: inline-flex; align-items: center; gap: 2px;
+  border: 1px solid var(--line); border-radius: 999px; background: #faf4e8; padding: 1px 4px 1px 8px; }
+.lang-item input.lang-name { border: none; background: transparent; padding: 1px 2px;
+  font-size: 12.5px; color: var(--ink); }
+.lang-item input.lang-name:focus { outline: none; background: #fff; border-radius: 4px; }
+.lang-del { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 3px; }
+.lang-del:hover { color: var(--accent); }
+.lang-empty { color: var(--muted); font-size: 12px; font-style: italic; }
+.lang-add { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.lang-pick { font-size: 11.5px; padding: 2px 4px; }
+.lang-custom { font-size: 11.5px; width: 110px; }

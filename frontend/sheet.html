@@ -1059,6 +1059,65 @@ body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .abil-table { disp
 /* панель ПЗ/щит видна в классической и official-раскладках */
 body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
 
+/* ==========================================================================
+   Режим «Редактирование» (чек-бокс в шапке рядом с выбором темы)
+   1) секции можно таскать за заголовки (legend) между колонками;
+   2) панель управления блоком (.sec-controls): ширина блока и число колонок
+      текста внутри него. Всё это видимо/доступно только при body.edit-mode.
+   ========================================================================== */
+.topbar-appearance { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
+#theme-select { padding: 3px 6px; border-radius: 6px; border: 1px solid #6b543a;
+  background: #f3e9d6; color: #2b2117; font-size: 12.5px; }
+.edit-mode-label { display: flex; flex-direction: row; align-items: center; gap: 5px;
+  font-size: 11.5px; color: #d9c9a8; cursor: pointer; text-transform: none; margin: 0; }
+.edit-mode-label input { accent-color: #e0a45e; margin: 0; }
+
+.sec-controls { display: none; gap: 6px; align-items: center; margin: 2px 0 6px;
+  padding: 4px 6px; border: 1px dashed var(--line); border-radius: 6px; background: rgba(0,0,0,.03); }
+.sec-controls select { font-size: 11px; padding: 2px 4px; }
+body.edit-mode .sec-controls { display: inline-flex; }
+body.edit-mode legend.drag-handle { cursor: grab; }
+body.edit-mode legend.drag-handle:hover { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 4px; }
+body:not(.edit-mode) legend.drag-handle { cursor: default; }
+.sheet-sec.dragging { opacity: .45; }
+body.dragging-active { user-select: none; cursor: grabbing; }
+.sheet-area.drop-over { outline: 3px dashed var(--accent2); outline-offset: -3px;
+  border-radius: 10px; background: rgba(59,91,58,.06); }
+
+/* ширина отдельного блока (нормализуется к ширине колонки, чтобы не вылезать) */
+.sheet-sec[data-width="narrow"] { width: 66%; min-width: 0; max-width: 100%; align-self: flex-start; }
+.sheet-sec[data-width="wide"]   { width: 100%; }
+.sheet-sec[data-width="normal"] { width: auto; }
+
+/* число колонок текста внутри блока: JS оборачивает содержимое fieldset
+   (кроме legend и панели управления) в .sec-body-wrap, которой задаётся
+   CSS multi-column. Обёртка не влияет на верстку при 1 колонке
+   (display:contents), поэтому блоки не ломаются и не наезжают друг на друга. */
+.sec-body-wrap { display: contents; }
+.sheet-sec[data-cols="2"] > .sec-body-wrap { display: block; columns: 2; column-gap: 14px; }
+.sheet-sec[data-cols="3"] > .sec-body-wrap { display: block; columns: 3; column-gap: 14px; }
+.sec-body-wrap > * { break-inside: avoid; margin-top: 0; }
+
+@media print {
+  .sec-controls, .topbar-appearance { display: none !important; }
+}
+
+/* ---------------- список известных языков (блок «Основное») ------------- */
+.lang-list { display: block; margin-left: 6px; }
+.lang-items { list-style: none; margin: 2px 0 4px; padding: 0; display: flex;
+  flex-wrap: wrap; gap: 4px 6px; }
+.lang-item { display: inline-flex; align-items: center; gap: 2px;
+  border: 1px solid var(--line); border-radius: 999px; background: #faf4e8; padding: 1px 4px 1px 8px; }
+.lang-item input.lang-name { border: none; background: transparent; padding: 1px 2px;
+  font-size: 12.5px; color: var(--ink); }
+.lang-item input.lang-name:focus { outline: none; background: #fff; border-radius: 4px; }
+.lang-del { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 3px; }
+.lang-del:hover { color: var(--accent); }
+.lang-empty { color: var(--muted); font-size: 12px; font-style: italic; }
+.lang-add { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.lang-pick { font-size: 11.5px; padding: 2px 4px; }
+.lang-custom { font-size: 11.5px; width: 110px; }
+
 
 /* === тема: dark === */
 /* ==========================================================================
@@ -1402,7 +1461,12 @@ body.theme-sanych .combat-strike small { color: var(--muted); margin-left: auto;
     <button id="btn-del-char" class="btn small danger" title="Удалить текущего персонажа">🗑</button>
   </div>
   <div class="save-state" id="save-state">—</div>
-  <select id="theme-select" title="Вариант оформления листа"></select>
+  <div class="topbar-appearance">
+    <select id="theme-select" title="Вариант оформления листа"></select>
+    <label class="edit-mode-label" title="Разрешить перетаскивание блоков за заголовки и изменение ширины/колонок текста">
+      <input type="checkbox" id="edit-mode-check"> Редактирование
+    </label>
+  </div>
   <nav id="tabs-nav"></nav>
 </header>
 
@@ -1426,7 +1490,7 @@ body.theme-sanych .combat-strike small { color: var(--muted); margin-left: auto;
           <div class="row"><label>Божество<input data-bind="core.deity"></label>
             <label>Уровень<input type="number" data-bind="core.level" class="xs"></label>
             <label>Опыт<input type="number" data-bind="core.xp" class="s"></label></div>
-          <div class="row"><label class="grow">Языки<textarea rows="2" data-bind="core.languages"></textarea></label></div>
+          <div class="row"><span class="grow">Языки<span id="languages-list" class="lang-list"></span></span></div>
           <div class="row"><label>Скорость, футов<input type="number" data-bind="core.speed.feet" class="xs"></label>
             <label class="grow">Особые перемещения<input data-bind="core.speed.notes"></label></div>
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
@@ -1646,6 +1710,7 @@ var LS_CHARS = 'pf2e.characters.v1';     // {id: sheetJson}
 var LS_CURRENT = 'pf2e.currentId';
 var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
 var LS_THEME = 'pf2e.theme.v1';
+var LS_EDITMODE = 'pf2e.editmode.v1';   // чек-бокс «режим редактирования раскладки»
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
 /* Каждая тема задаёт и цветовое оформление, и РАСПОЛОЖЕНИЕ блоков вкладки
@@ -1672,6 +1737,12 @@ var THEMES = [
       left: ['abil', 'skills'], mid: ['def', 'strikes', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
+
+/* Пользовательская раскладка (режим редактирования): куда перетащили секции
+   и какая у них ширина. Хранится в localStorage по каждой теме отдельно,
+   чтобы правки не «текли» между вариантами оформления. */
+var LS_LAYOUT = 'pf2e.layout.v1';        // {themeId: {map:{left:[..],mid:[..],right:[..]}, widths:{secId:'wide|normal|narrow'}}}
+var LAYOUT_WIDTHS = ['narrow', 'normal', 'wide'];
 
 /* ---------------- утилиты ---------------- */
 function $(sel, root) { return (root || document).querySelector(sel); }
@@ -1957,6 +2028,7 @@ function bindInputs(root) {
       markDirty();
       updateComputed();
     });
+    if (inp.tagName === 'TEXTAREA') wireAutogrow(inp);   // растягивание вниз по содержимому
   });
 }
 function markDirty() {
@@ -2132,7 +2204,8 @@ function renderSkills() {
     sel.addEventListener('change', function () { sk.keyAttr = sel.value; markDirty(); updateComputed(); });
     row.appendChild(sel);
     row.appendChild(el('b', { id: 'skill-total-' + sk.key, text: '' }));
-    row.appendChild(el('button', { class: 'roll-btn', text: '🎲', onclick: function () { rollCheck(sk.name, getComputed().skills[sk.key]); } }));
+    // броски кубиков в навыках намеренно отсутствуют — проверка бросается
+    // кнопкой «🎲 Проверка» в сводке боя и через контекстные меню атак
     box.appendChild(row);
   });
   var addBtn = el('button', { class: 'btn small', text: '＋ Знание (Lore)', onclick: function () {
@@ -2215,6 +2288,75 @@ function renderHeroPoints() {
       box.appendChild(b);
     })(i);
   }
+}
+
+/* ---------------- известные языки: список, а не текст ------------------- */
+/* Хранимся по-прежнему в core.languages (строка через запятую — совместимость
+   с JSON-форматом и сервером), но отображаем как редактируемый список:
+   каждый язык отдельной строкой, кнопка ＋ добавляет язык из справочника
+   PF2e или произвольный, ✕ удаляет. */
+var KNOWN_LANGUAGES = ['Общий', 'Эльфийский', 'Гномий', 'Гоблинский', 'Огрский',
+  'Полуросликовый', 'Козлитин', 'Дварфский', 'Драконий', 'Сквозной', 'Небесный',
+  'Адский', 'Язык демонов', 'Феей', 'Акван', 'Азlantian', 'Валутский', 'Юни',
+  'Икс', 'Тengu', 'Jotun', 'Ундинский', 'Терраский', 'Циклопский'];
+function splitLanguages(str) {
+  return String(str || '').split(/[,;\n]+/).map(function (s) { return s.trim(); })
+    .filter(function (s) { return s.length; });
+}
+function renderLanguages() {
+  var box = $('#languages-list'); if (!box) return;
+  box.innerHTML = '';
+  var langs = splitLanguages(State.sheet.core.languages);
+  var ul = el('ul', { class: 'lang-items' });
+  if (!langs.length) ul.appendChild(el('li', { class: 'lang-empty', text: '(нет)' }));
+  langs.forEach(function (name, idx) {
+    var li = el('li', { class: 'lang-item' });
+    var inp = el('input', { value: name, class: 'lang-name', size: Math.max(6, name.length) });
+    inp.addEventListener('input', function () {
+      langs[idx] = inp.value.trim();
+      State.sheet.core.languages = langs.filter(Boolean).join(', ');
+      inp.setAttribute('size', Math.max(6, inp.value.length));
+      markDirty();
+    });
+    li.appendChild(inp);
+    var del = el('button', { class: 'btn small danger lang-del', text: '✕', title: 'Убрать язык' });
+    del.addEventListener('click', function () {
+      langs.splice(idx, 1);
+      State.sheet.core.languages = langs.join(', ');
+      markDirty(); renderLanguages();
+    });
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+  var addRow = el('div', { class: 'lang-add' });
+  var sel = el('select', { class: 'lang-pick' });
+  sel.appendChild(el('option', { value: '', text: '— добавить язык —' }));
+  KNOWN_LANGUAGES.forEach(function (l) {
+    if (langs.indexOf(l) < 0) sel.appendChild(el('option', { value: l, text: l }));
+  });
+  sel.addEventListener('change', function () {
+    if (!sel.value) return;
+    langs.push(sel.value);
+    State.sheet.core.languages = langs.join(', ');
+    markDirty(); renderLanguages();
+  });
+  addRow.appendChild(sel);
+  var custom = el('input', { class: 'lang-custom', placeholder: 'свой язык…' });
+  var btnAdd = el('button', { class: 'btn small', text: '＋', title: 'Добавить указанный язык' });
+  function addCustom() {
+    var v = custom.value.trim();
+    if (!v) return;
+    langs.push(v);
+    State.sheet.core.languages = langs.join(', ');
+    custom.value = '';
+    markDirty(); renderLanguages();
+  }
+  btnAdd.addEventListener('click', addCustom);
+  custom.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); addCustom(); } });
+  addRow.appendChild(custom);
+  addRow.appendChild(btnAdd);
+  box.appendChild(addRow);
 }
 
 function renderSpells() {
@@ -2308,61 +2450,170 @@ function renderSpells() {
   }
 }
 
-function renderFeats() {
-  var box = $('#feats-block'); box.innerHTML = '';
-  var cats = { ancestry: 'Народа', class: 'Класса', skill: 'Навыков', general: 'Общие', bonus: 'Бонусные' };
-  var byCat = {};
-  State.sheet.feats.forEach(function (ft) { (byCat[ft.category] = byCat[ft.category] || []).push(ft); });
-  Object.keys(cats).forEach(function (cat) {
-    var items = byCat[cat] || [];
-    box.appendChild(el('div', { class: 'feats-cat', text: cats[cat] + ' черты' }));
-    items.forEach(function (ft) {
-      var div = el('div', { class: 'feat-item' });
-      var nm = el('input', { value: ft.name, style: 'border:none;background:transparent;font-weight:600;width:70%' });
-      nm.addEventListener('input', function () { ft.name = nm.value; markDirty(); });
-      div.appendChild(nm);
-      div.appendChild(el('span', { class: 'lvl', text: ' ур. ' }));
-      var lv = el('input', { type: 'number', value: ft.level, class: 'xs', style: 'width:48px' });
-      lv.addEventListener('input', function () { ft.level = Number(lv.value) || 0; markDirty(); });
-      div.appendChild(lv);
-      var tx = el('textarea', { rows: 2, style: 'width:100%' });
-      tx.value = ft.text || '';
-      tx.addEventListener('input', function () { ft.text = tx.value; markDirty(); });
-      div.appendChild(tx);
-      var rm = el('button', { class: 'rm', text: '✕ удалить', onclick: function () {
-        State.sheet.feats.splice(State.sheet.feats.indexOf(ft), 1); markDirty(); renderFeats();
-      }});
-      div.appendChild(rm);
-      box.appendChild(div);
+/* ---------------- «Черты и умения»: списки, а не текстовые поля ---------- */
+var FEAT_CATS = { ancestry: 'Народа', class: 'Класса', skill: 'Навыков', general: 'Общие', bonus: 'Бонусные' };
+
+/* Черта как элемент списка. В обычном режиме — компактный <li>: название,
+   уровень, категория; клик по строке разворачивает описание (details/summary).
+   В режиме редактирования добавляются ✎ (правка имени/уровня/категории inline)
+   и ✕ (удаление). Данные при этом остаются в State.sheet.feats как раньше. */
+function featListItem(ft, editMode) {
+  var li = el('li', { class: 'feat-li' });
+  var det = el('details', { class: 'feat-det' });
+  var sum = el('summary', { class: 'feat-sum' });
+  sum.appendChild(el('span', { class: 'feat-name', text: ft.name || '(без названия)' }));
+  sum.appendChild(el('span', { class: 'feat-meta', text: 'ур. ' + (ft.level != null ? ft.level : 0) +
+    ' · ' + (FEAT_CATS[ft.category] || ft.category || 'общ.') }));
+  if (editMode) {
+    var editBtn = el('button', { class: 'mini-btn', text: '✎', title: 'Редактировать черту' });
+    editBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      openFeatEditor(ft);
     });
-  });
-  box.appendChild(el('button', { class: 'btn small', text: '＋ Черта', onclick: function () {
-    State.sheet.feats.push({ name: 'Новая черта', level: State.sheet.core.level, category: 'general', text: '' });
-    markDirty(); renderFeats();
-  }}));
+    var rmBtn = el('button', { class: 'mini-btn danger', text: '✕', title: 'Удалить черту' });
+    rmBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      State.sheet.feats.splice(State.sheet.feats.indexOf(ft), 1);
+      markDirty(); renderFeats();
+    });
+    sum.appendChild(editBtn); sum.appendChild(rmBtn);
+  }
+  det.appendChild(sum);
+  var body = el('div', { class: 'feat-body' });
+  // описание — обычный текст (не textarea): read-only вне редактора
+  body.appendChild(el('p', { class: 'feat-text', text: ft.text || 'Описание отсутствует.' }));
+  if (ft.actions) body.appendChild(el('p', { class: 'feat-traits', text: 'Действия: ' + ft.actions }));
+  if (ft.traits) body.appendChild(el('p', { class: 'feat-traits', text: 'Черты: ' + ft.traits }));
+  det.appendChild(body);
+  li.appendChild(det);
+  return li;
 }
 
+/* Редактор одной черты — модальное окно с полями (единственное место, где
+   текст черты вводится через поле ввода; на листе остаются только списки). */
+function openFeatEditor(ft) {
+  var nameI = el('input', { value: ft.name || '', class: 'grow' });
+  var lvlI = el('input', { type: 'number', value: ft.level != null ? ft.level : 0, class: 'xs' });
+  var catS = el('select');
+  Object.keys(FEAT_CATS).forEach(function (c) { catS.appendChild(el('option', { value: c, text: FEAT_CATS[c] })); });
+  catS.value = FEAT_CATS[ft.category] ? ft.category : 'general';
+  var txtA = el('textarea', { rows: 5, class: 'autogrow', placeholder: 'Текст черты' });
+  txtA.value = ft.text || '';
+  wireAutogrow(txtA);
+  var saveB = el('button', { class: 'btn primary', text: 'Сохранить' });
+  saveB.addEventListener('click', function () {
+    ft.name = nameI.value.trim() || '(без названия)';
+    ft.level = Number(lvlI.value) || 0;
+    ft.category = catS.value;
+    ft.text = txtA.value;
+    markDirty(); closeModal(); renderFeats();
+  });
+  var cancelB = el('button', { class: 'btn', text: 'Отмена' });
+  cancelB.addEventListener('click', closeModal);
+  modal([
+    el('h3', { text: 'Черта: ' + (ft.name || '') }),
+    el('div', { class: 'row' }, [el('label', {}, [nameI]), el('label', {}, [lvlI]), el('label', {}, [catS])]),
+    el('div', { class: 'row' }, [el('label', { class: 'grow' }, [txtA])]),
+    el('div', { class: 'row' }, [saveB, cancelB])
+  ]);
+  wireAutogrow(txtA);
+}
+
+function renderFeats() {
+  var box = $('#feats-block'); box.innerHTML = '';
+  var editMode = isEditMode();
+  var byCat = {};
+  State.sheet.feats.forEach(function (ft) { (byCat[ft.category] = byCat[ft.category] || []).push(ft); });
+  Object.keys(FEAT_CATS).forEach(function (cat) {
+    var items = byCat[cat] || [];
+    box.appendChild(el('div', { class: 'feats-cat', text: FEAT_CATS[cat] + ' черты' }));
+    var ul = el('ul', { class: 'feat-list' });
+    if (!items.length && editMode) ul.appendChild(el('li', { class: 'feat-empty', text: '— пусто —' }));
+    items.forEach(function (ft) { ul.appendChild(featListItem(ft, editMode)); });
+    box.appendChild(ul);
+  });
+  if (editMode) {
+    box.appendChild(el('button', { class: 'btn small', text: '＋ Черта', onclick: function () {
+      var ft = { name: 'Новая черта', level: State.sheet.core.level, category: 'general', text: '' };
+      State.sheet.feats.push(ft);
+      markDirty(); renderFeats(); openFeatEditor(ft);
+    }}));
+  }
+}
+
+/* Действия — тоже список. Строка: значок кол-ва действий, название, черты;
+   клик разворачивает описание. Правка/удаление — только в режиме редактирования. */
+var ACTION_GLYPH = { '1': '◆', '2': '◆◆', '3': '◆◆◆', 'free': '⟁', 'reaction': '↺' };
+function actionGlyph(a) {
+  var key = String(a == null ? '' : a).trim().toLowerCase();
+  if (ACTION_GLYPH[key]) return ACTION_GLYPH[key];
+  var n = parseInt(key, 10);
+  if (n >= 1 && n <= 3) return Array(n + 1).join('◆');
+  return key ? '(' + key + ')' : '';
+}
+function actionListItem(act, idx, editMode) {
+  var li = el('li', { class: 'act-li' });
+  var det = el('details', { class: 'feat-det' });
+  var sum = el('summary', { class: 'feat-sum' });
+  sum.appendChild(el('span', { class: 'act-glyph', text: actionGlyph(act.actions) }));
+  sum.appendChild(el('span', { class: 'feat-name', text: act.name || '(без названия)' }));
+  if (act.traits) sum.appendChild(el('span', { class: 'feat-meta', text: act.traits }));
+  if (editMode) {
+    var editBtn = el('button', { class: 'mini-btn', text: '✎', title: 'Редактировать действие' });
+    editBtn.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); openActionEditor(act); });
+    var rmBtn = el('button', { class: 'mini-btn danger', text: '✕', title: 'Удалить действие' });
+    rmBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      State.sheet.actions.splice(idx, 1); markDirty(); renderActions();
+    });
+    sum.appendChild(editBtn); sum.appendChild(rmBtn);
+  }
+  det.appendChild(sum);
+  var body = el('div', { class: 'feat-body' });
+  body.appendChild(el('p', { class: 'feat-text', text: act.text || 'Описание отсутствует.' }));
+  if (act.source) body.appendChild(el('p', { class: 'feat-traits', text: 'Источник: ' + act.source }));
+  det.appendChild(body);
+  li.appendChild(det);
+  return li;
+}
+function openActionEditor(act) {
+  var nameI = el('input', { value: act.name || '', class: 'grow' });
+  var actI = el('input', { value: act.actions || '', class: 'xs', title: 'Кол-во действий: 1/2/3/free/reaction' });
+  var traitsI = el('input', { value: act.traits || '', class: 's' });
+  var srcI = el('input', { value: act.source || '', class: 's' });
+  var txtA = el('textarea', { rows: 5, class: 'autogrow', placeholder: 'Описание' });
+  txtA.value = act.text || '';
+  var saveB = el('button', { class: 'btn primary', text: 'Сохранить' });
+  saveB.addEventListener('click', function () {
+    act.name = nameI.value.trim() || '(без названия)';
+    act.actions = actI.value.trim(); act.traits = traitsI.value.trim();
+    act.source = srcI.value.trim(); act.text = txtA.value;
+    markDirty(); closeModal(); renderActions();
+  });
+  var cancelB = el('button', { class: 'btn', text: 'Отмена' });
+  cancelB.addEventListener('click', closeModal);
+  modal([
+    el('h3', { text: 'Действие' }),
+    el('div', { class: 'row' }, [el('label', {}, [nameI]), el('label', {}, [actI]), el('label', {}, [traitsI]), el('label', {}, [srcI])]),
+    el('div', { class: 'row' }, [el('label', { class: 'grow' }, [txtA])]),
+    el('div', { class: 'row' }, [saveB, cancelB])
+  ]);
+  wireAutogrow(txtA);
+}
 function renderActions() {
   var box = $('#actions-block'); box.innerHTML = '';
-  State.sheet.actions.forEach(function (act, idx) {
-    var div = el('div', { class: 'feat-item' });
-    var nm = el('input', { value: act.name, placeholder: 'Название', style: 'width:60%' });
-    nm.addEventListener('input', function () { act.name = nm.value; markDirty(); });
-    var ac = el('input', { value: act.actions || '', placeholder: 'Действия', style: 'width:90px' });
-    ac.addEventListener('input', function () { act.actions = ac.value; markDirty(); });
-    div.append(nm, ac);
-    var tx = el('textarea', { rows: 2, style: 'width:100%', placeholder: 'Описание' });
-    tx.value = act.text || '';
-    tx.addEventListener('input', function () { act.text = tx.value; markDirty(); });
-    div.appendChild(tx);
-    var rm = el('button', { class: 'rm', text: '✕', onclick: function () { State.sheet.actions.splice(idx, 1); markDirty(); renderActions(); } });
-    div.appendChild(rm);
-    box.appendChild(div);
-  });
-  box.appendChild(el('button', { class: 'btn small', text: '＋ Действие', onclick: function () {
-    State.sheet.actions.push({ name: '', actions: '1', traits: '', source: '', text: '' });
-    markDirty(); renderActions();
-  }}));
+  var editMode = isEditMode();
+  var ul = el('ul', { class: 'feat-list act-list' });
+  if (!State.sheet.actions.length && editMode) ul.appendChild(el('li', { class: 'feat-empty', text: '— пусто —' }));
+  State.sheet.actions.forEach(function (act, idx) { ul.appendChild(actionListItem(act, idx, editMode)); });
+  box.appendChild(ul);
+  if (editMode) {
+    box.appendChild(el('button', { class: 'btn small', text: '＋ Действие', onclick: function () {
+      var act = { name: 'Новое действие', actions: '1', traits: '', source: '', text: '' };
+      State.sheet.actions.push(act);
+      markDirty(); renderActions(); openActionEditor(act);
+    }}));
+  }
 }
 
 function renderInventory() {
@@ -2476,6 +2727,7 @@ function renderAll() {
   renderStrikes();
   renderWeaponProf();
   renderHeroPoints();
+  renderLanguages();
   renderCombatSummary();
   renderSpells();
   renderFeats();
@@ -2487,6 +2739,7 @@ function renderAll() {
   /* Пересобираем раскладку, если пользователь сменил тему между рендерами */
   var grid = $('#sheet-grid');
   if (grid && grid.dataset.layoutApplied !== currentTheme()) applyLayout(currentTheme());
+  refreshAllTextareas();   // после подстановки значений data-bind
 }
 
 /* Раскладка «Тёмный VTT» (strip): панель «ПЗ и щит» дублируется в верхнюю
@@ -2503,6 +2756,9 @@ function syncCombatStrip() {
     var clone = src.cloneNode(true);
     clone.removeAttribute('id');
     $all('[id]', clone).forEach(function (n) { n.removeAttribute('id'); });
+    // в копии не нужны элементы управления блоком и drag-обработчики
+    $all('.sec-controls', clone).forEach(function (n) { n.remove(); });
+    $all('legend.drag-handle', clone).forEach(function (n) { n.classList.remove('drag-handle'); });
     stripBox.appendChild(clone);
   } else {
     stripBox.innerHTML = '';
@@ -2982,10 +3238,12 @@ function themeById(id) {
    через inline order. Никаких display:contents / grid-area: var() — именно
    они раньше приводили к наложению блоков друг на друга. Колонки — flex-столбики
    с gap, поэтому перекрытие вертикали невозможно; горизонталь регулируется
-   data-col + data-cols в CSS Grid. Дублирующиеся панели скрываются .sec-hidden. */
+   data-col + data-cols в CSS Grid. Дублирующиеся панели скрываются .sec-hidden.
+   Поверх базовой раскладки темы накладываются пользовательские правки
+   (effectiveLayout): ширина блока (data-width) и число колонок текста (cols=N). */
 function applyLayout(themeId) {
   var grid = $('#sheet-grid'); if (!grid) return;
-  var lay = themeById(themeId).layout || {};
+  var lay = effectiveLayout(themeId);
   var cols = lay.cols === 2 ? 2 : 3;
 
   // контейнеры колонок
@@ -3036,6 +3294,16 @@ function applyLayout(themeId) {
       var ord = p.ord;
       if (cols === 2 && p.col === 'mid') ord += (map.left || []).length;
       node.style.order = String(ord);
+      // пользовательская ширина блока и число колонок текста
+      var w = (lay.widths && lay.widths[sec]) || 'normal';
+      node.dataset.width = w;
+      var tc = (lay.textCols && lay.textCols[sec]) || 1;
+      node.dataset.cols = String(tc);
+      ensureBodyWrap(node);
+      // панель управления блоком (видна только в edit-mode, см. CSS)
+      ensureSecControls(node, sec);
+      // drag за заголовок
+      makeDraggable(node, sec);
     });
   });
 
@@ -3047,6 +3315,52 @@ function applyLayout(themeId) {
 
   grid.dataset.layoutApplied = themeId;
   syncCombatStrip();
+  refreshAllTextareas();
+}
+
+/* Одна панель управления на секцию; пересоздаётся при смене темы. */
+/* Обёртка содержимого секции (.sec-body-wrap) для multi-column: собираем в
+   неё все дочерние узлы fieldset, кроме legend и панели управления. При
+   1 колонке обёртка display:contents — не влияет на верстку. */
+function ensureBodyWrap(node) {
+  var wrap = node.querySelector(':scope > .sec-body-wrap');
+  if (!wrap) {
+    wrap = el('div', { class: 'sec-body-wrap' });
+    var kids = [];
+    for (var n = node.firstChild; n; n = n.nextSibling) {
+      if (n.tagName === 'LEGEND') continue;
+      if (n.nodeType === 1 && n.classList.contains('sec-controls')) continue;
+      kids.push(n);
+    }
+    var lg = node.querySelector('legend');
+    var ctrl = node.querySelector(':scope > .sec-controls');
+    var ref = ctrl || null;
+    if (lg) {
+      // вставляем сразу после legend (или перед панелью управления)
+      node.insertBefore(wrap, ref || (lg.nextSibling ? lg.nextSibling : null));
+    } else if (ref) {
+      node.insertBefore(wrap, ref);
+    } else {
+      node.appendChild(wrap);
+    }
+    kids.forEach(function (k) { wrap.appendChild(k); });
+  }
+}
+
+function ensureSecControls(node, secId) {
+  var box = node.querySelector(':scope > .sec-controls');
+  if (!box) {
+    box = el('div', { class: 'sec-controls', 'data-for': secId });
+    // вставляем сразу после legend, чтобы не уезжало при переносах
+    var lg = node.querySelector('legend');
+    if (lg && lg.nextSibling) node.insertBefore(box, lg.nextSibling);
+    else node.insertBefore(box, node.firstChild);
+  }
+  if (box.dataset.theme !== currentTheme()) {
+    box.innerHTML = '';
+    box.appendChild(secControls(secId));
+    box.dataset.theme = currentTheme();
+  }
 }
 
 function applyTheme(t) {
@@ -3072,12 +3386,218 @@ function wireThemePicker() {
   applyTheme(currentTheme());
 }
 
+/* ---------------- авторастягивание текстовых полей ---------------------- */
+/* Любое <textarea> (в т.ч. с data-bind) растягивается вниз по содержимому:
+   height подгоняется под scrollHeight при вводе, загрузке данных и смене
+   ширины колонки. Ограничение max-height — чтобы поле не вытягивало лист. */
+function autogrowTextarea(ta) {
+  ta.style.height = 'auto';
+  var max = parseInt(getComputedStyle(ta).maxHeight || '0', 10) || 480;
+  var h = Math.max(32, Math.min(ta.scrollHeight + 2, max));
+  ta.style.height = h + 'px';
+  ta.style.overflowY = ta.scrollHeight > max ? 'auto' : 'hidden';
+}
+function wireAutogrow(ta) {
+  if (ta._autogrow) return;
+  ta._autogrow = true;
+  ta.addEventListener('input', function () { autogrowTextarea(ta); });
+  requestAnimationFrame(function () { autogrowTextarea(ta); });
+}
+function refreshAllTextareas() {
+  $all('textarea').forEach(function (ta) { wireAutogrow(ta); autogrowTextarea(ta); });
+}
+window.addEventListener('resize', function () {
+  clearTimeout(window.__agTimer); window.__agTimer = setTimeout(refreshAllTextareas, 150);
+});
+
+/* ---------------- режим редактирования раскладки ------------------------ */
+/* Включается чек-боксом под выбором темы («Разрешить настройку блоков»):
+   1) секции листа можно таскать мышью за заголовки (legend) между колонками;
+   2) для каждого блока текста можно менять ширину (узкий/обычный/широкий) и
+   число колонок внутри блока (1..3). Результат сохраняется в localStorage
+   отдельно для каждой темы (LS_LAYOUT), кнопка «Сброс» возвращает раскладку
+   темы. Без включённого чек-бокса drag/resize недоступны. */
+function isEditMode() {
+  var cb = $('#edit-mode-check');
+  return !!(cb && cb.checked);
+}
+function loadUserLayouts() {
+  try { return JSON.parse(localStorage.getItem(LS_LAYOUT) || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveUserLayouts(obj) { localStorage.setItem(LS_LAYOUT, JSON.stringify(obj)); }
+function userLayoutFor(themeId) {
+  var all = loadUserLayouts();
+  return all[themeId] || null;
+}
+function setUserLayout(themeId, lay) {
+  var all = loadUserLayouts();
+  if (!lay) delete all[themeId]; else all[themeId] = lay;
+  saveUserLayouts(all);
+}
+/* Эффективная раскладка: базовая от темы + пользовательские правки поверх. */
+function effectiveLayout(themeId) {
+  var base = themeById(themeId).layout || {};
+  var u = userLayoutFor(themeId);
+  var map = { left: (base.map && base.map.left || []).slice(),
+              mid: (base.map && base.map.mid || []).slice(),
+              right: (base.map && base.map.right || []).slice() };
+  var widths = {};
+  if (u) {
+    if (u.map) ['left', 'mid', 'right'].forEach(function (c) {
+      if (Array.isArray(u.map[c])) map[c] = u.map[c].slice();
+    });
+    if (u.widths) widths = u.widths;
+  }
+  // контроль: каждая секция ровно в одной колонке; пропавшие дописываем в right
+  SECTIONS.forEach(function (sec) {
+    var inCol = ['left', 'mid', 'right'].some(function (c) { return map[c].indexOf(sec) >= 0; });
+    if (!inCol) map.right.push(sec);
+  });
+  return { cols: u && u.cols ? u.cols : (base.cols === 2 ? 2 : 3), map: map, widths: widths,
+           strip: base.strip, hide: base.hide, textCols: u && u.textCols };
+}
+
+/* Панель управления шириной блока (видна только в режиме редактирования). */
+function secControls(secId) {
+  var box = el('div', { class: 'sec-controls' });
+  var wSel = el('select', { title: 'Ширина блока' });
+  [['narrow', 'узкий'], ['normal', 'обычный'], ['wide', 'широкий']].forEach(function (p) {
+    wSel.appendChild(el('option', { value: p[0], text: '⬌ ' + p[1] }));
+  });
+  var cur = currentSecWidth(secId);
+  wSel.value = cur;
+  wSel.addEventListener('change', function () {
+    setSecWidth(secId, wSel.value);
+  });
+  box.appendChild(wSel);
+  var cSel = el('select', { title: 'Колонок текста в блоке' });
+  [1, 2, 3].forEach(function (n) { cSel.appendChild(el('option', { value: String(n), text: n + ' кол.' })); });
+  cSel.value = String(currentSecTextCols(secId));
+  cSel.addEventListener('change', function () {
+    setSecTextCols(secId, Number(cSel.value));
+  });
+  box.appendChild(cSel);
+  return box;
+}
+function currentSecWidth(secId) {
+  var u = userLayoutFor(currentTheme());
+  return (u && u.widths && u.widths[secId]) || 'normal';
+}
+function currentSecTextCols(secId) {
+  var u = userLayoutFor(currentTheme());
+  return (u && u.textCols && u.textCols[secId]) || 1;
+}
+function mutateUserLayout(fn) {
+  var themeId = currentTheme();
+  var all = loadUserLayouts();
+  var u = all[themeId] || (all[themeId] = {});
+  var base = themeById(themeId).layout || {};
+  if (!u.map) u.map = { left: (base.map && base.map.left || []).slice(),
+                        mid: (base.map && base.map.mid || []).slice(),
+                        right: (base.map && base.map.right || []).slice() };
+  fn(u);
+  saveUserLayouts(all);
+}
+function setSecWidth(secId, w) {
+  mutateUserLayout(function (u) { u.widths = u.widths || {}; u.widths[secId] = w; });
+  applyLayout(currentTheme());
+}
+function setSecTextCols(secId, n) {
+  mutateUserLayout(function (u) { u.textCols = u.textCols || {}; u.textCols[secId] = n; });
+  applyLayout(currentTheme());
+}
+function moveSectionToColumn(secId, targetCol, beforeNode) {
+  mutateUserLayout(function (u) {
+    ['left', 'mid', 'right'].forEach(function (c) {
+      var i = u.map[c].indexOf(secId);
+      if (i >= 0) u.map[c].splice(i, 1);
+    });
+    u.map[targetCol].push(secId);
+  });
+  applyLayout(currentTheme());
+}
+
+/* Drag&drop секций за legend между колонками. */
+var dragState = null;
+function makeDraggable(node, secId) {
+  var head = node.querySelector('legend');
+  if (!head) { head = node; }        // у некоторых панелей legend нет — тянем за верхнюю часть
+  head.classList.add('drag-handle');
+  head.setAttribute('title', 'Зажмите и перетащите в другую колонку');
+  head.addEventListener('mousedown', function (ev) {
+    if (!isEditMode()) return;
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    dragState = { sec: secId, node: node };
+    node.classList.add('dragging');
+    document.body.classList.add('dragging-active');
+  });
+}
+function initDragEvents() {
+  document.addEventListener('mousemove', function (ev) {
+    if (!dragState) return;
+    var over = dropTargetAt(ev.clientX, ev.clientY);
+    $all('.sheet-area.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
+    if (over) over.classList.add('drop-over');
+  });
+  document.addEventListener('mouseup', function (ev) {
+    if (!dragState) return;
+    var over = dropTargetAt(ev.clientX, ev.clientY);
+    $all('.sheet-area.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
+    dragState.node.classList.remove('dragging');
+    document.body.classList.remove('dragging-active');
+    if (over && dragState) {
+      var col = over.dataset.col;
+      var cur = placeOfInSection(dragState.sec);
+      if (col && col !== cur) moveSectionToColumn(dragState.sec, col);
+    }
+    dragState = null;
+  });
+}
+function dropTargetAt(x, y) {
+  var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+  for (var i = 0; i < els.length; i++) {
+    var area = els[i].closest ? els[i].closest('.sheet-area') : null;
+    if (area && area.dataset.col) return area;
+  }
+  return null;
+}
+function placeOfInSection(secId) {
+  var lay = effectiveLayout(currentTheme());
+  var found = null;
+  ['left', 'mid', 'right'].forEach(function (c) {
+    if ((lay.map[c] || []).indexOf(secId) >= 0) found = c;
+  });
+  return found;
+}
+
+function wireEditMode() {
+  var cb = $('#edit-mode-check');
+  if (!cb) return;
+  cb.checked = localStorage.getItem(LS_EDITMODE) === '1';
+  cb.addEventListener('change', function () {
+    localStorage.setItem(LS_EDITMODE, cb.checked ? '1' : '0');
+    document.body.classList.toggle('edit-mode', cb.checked);
+    renderAll();
+  });
+  document.body.classList.toggle('edit-mode', cb.checked);
+  var resetBtn = $('#layout-reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', function () {
+    setUserLayout(currentTheme(), null);
+    applyLayout(currentTheme());
+    toast('Раскладка темы сброшена к исходной');
+  });
+  initDragEvents();
+}
+
 /* ---------------- инициализация ---------------- */
 function boot() {
   renderTabs();
   wireThemePicker();
   wireTopbar();
   wireIOButtons();
+  wireEditMode();
 
   // 1) загружаем персонажей: localStorage + встроенные в HTML данные
   var map = Store.loadAll();

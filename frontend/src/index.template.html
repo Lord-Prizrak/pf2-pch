@@ -22,7 +22,12 @@
     <button id="btn-del-char" class="btn small danger" title="Удалить текущего персонажа">🗑</button>
   </div>
   <div class="save-state" id="save-state">—</div>
-  <select id="theme-select" title="Вариант оформления листа"></select>
+  <div class="topbar-appearance">
+    <select id="theme-select" title="Вариант оформления листа"></select>
+    <label class="edit-mode-label" title="Разрешить перетаскивание блоков за заголовки и изменение ширины/колонок текста">
+      <input type="checkbox" id="edit-mode-check"> Редактирование
+    </label>
+  </div>
   <nav id="tabs-nav"></nav>
 </header>
 
@@ -46,7 +51,7 @@
           <div class="row"><label>Божество<input data-bind="core.deity"></label>
             <label>Уровень<input type="number" data-bind="core.level" class="xs"></label>
             <label>Опыт<input type="number" data-bind="core.xp" class="s"></label></div>
-          <div class="row"><label class="grow">Языки<textarea rows="2" data-bind="core.languages"></textarea></label></div>
+          <div class="row"><span class="grow">Языки<span id="languages-list" class="lang-list"></span></span></div>
           <div class="row"><label>Скорость, футов<input type="number" data-bind="core.speed.feet" class="xs"></label>
             <label class="grow">Особые перемещения<input data-bind="core.speed.notes"></label></div>
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
