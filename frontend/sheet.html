@@ -1102,10 +1102,9 @@ body.edit-mode .tabpage .area-empty {
   box-shadow: 0 -4px 0 0 var(--accent2); border-radius: 8px; }
 .dragging { opacity: .45; }
 
-/* ширина отдельного блока (нормализуется к ширине колонки, чтобы не вылезать) */
-.sheet-sec[data-width="narrow"] { width: 66%; min-width: 0; max-width: 100%; align-self: flex-start; }
-.sheet-sec[data-width="wide"]   { width: 100%; }
-.sheet-sec[data-width="normal"] { width: auto; }
+/* Ширина блока НЕ регулируется пользователем (по требованию) — она задаётся
+   только раскладкой темы (12-колоночная сетка: span 4 / 6). Правила
+   [data-width] удалены; JS снимает атрибут data-width со старых сохранений. */
 
 /* число колонок текста внутри блока: JS оборачивает содержимое fieldset
    (кроме legend и панели управления) в .sec-body-wrap, которой задаётся
