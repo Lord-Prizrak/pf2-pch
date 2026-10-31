@@ -1706,8 +1706,14 @@ function tabContainers(tabId) {
   if (!page) return [];
   // раскладка вкладки запоминается ТОЛЬКО когда её контейнеры — колонки одного
   // grid-ряда (.grid3/.srv-layout): блоки можно менять местами между колонками.
-  // Вкладки с вертикальным списком секций (Биография, Импорт/экспорт) не
-  // перестраиваются: там drag меняет порядок блоков внутри той же зоны.
+  // Вкладки с запрещённым переносом («Серверы», «Импорт/экспорт») не имеют зон.
+  if (NO_DRAG_TABS[tabId]) return [];
+  // «Биография»: каждая секция — ячейка фиксированной 12-колоночной сетки
+  // (span 4 = три столбца); drag меняет только порядок секций внутри ряда.
+  if (tabId === 'bio') {
+    var row = $('.bio-grid', page);
+    return row ? [row] : [];
+  }
   var out = [];
   for (var n = page.firstElementChild; n; n = n.nextElementSibling) {
     if (n.classList.contains('grid3') || n.classList.contains('srv-layout')) {
@@ -1895,8 +1901,32 @@ function applyLayout(themeId) {
   var strip = $('.combat-strip', grid);
   if (strip) strip.dataset.col = 'strip';
   var info = $('.info-block', grid);
-  if (info) info.dataset.col = 'full';
+  if (info) { info.dataset.col = 'full'; info.classList.add('sheet-sec'); }
 
+  /* Санация структуры ДО нормализации: блоки, «убежавшие» прямыми детьми
+     #sheet-grid или вложившиеся в чужой fieldset, возвращаем в домашние
+     колонки (иначе map-нормализация их не найдёт и они уедут в конец). */
+  function homeColOf(bid) {
+    for (var ci = 0; ci < SHEET_AREA_COLS.length; ci++) {
+      if ((lay.map[SHEET_AREA_COLS[ci]] || []).indexOf(bid) >= 0) return SHEET_AREA_COLS[ci];
+    }
+    return null;
+  }
+  $all(':scope > fieldset[data-bid]', grid).forEach(function (f) {
+    if (f.dataset.col === 'full') return;
+    var home = homeColOf(f.dataset.bid);
+    var cont = home && !(home === 'mid' && cols === 2) ? areas[home] : areas.left;
+    if (f.parentNode !== cont) { delete f._dragWire; cont.appendChild(f); }
+  });
+  $all('fieldset fieldset[data-bid]', grid).forEach(function (f) {   // вложение — недопустимо
+    var host = f.closest('.sheet-area');
+    if (host) { delete f._dragWire; host.appendChild(f); }
+    else {
+      var home2 = homeColOf(f.dataset.bid);
+      var cont2 = home2 && areas[home2] ? areas[home2] : areas.right;
+      delete f._dragWire; cont2.appendChild(f);
+    }
+  });
   /* Нормализация: каждый блок кладём КОНЦЕМ своей колонки согласно map
      (последовательный обход map задаёт точный порядок). В 2-колоночной
      теме блоки mid физически переезжают в левую колонку; скрытая mid-
@@ -1914,23 +1944,6 @@ function applyLayout(themeId) {
       else { delete node._dragWire; node.remove(); cont.appendChild(node); }
     });
   });
-  /* Очистка после drop «на якорь»: блок мог остаться прямым ребёнком
-     #sheet-grid или внутри чужого fieldset (вложение) — возвращаем его в
-     домашнюю колонку по порядку якорей/карты, всё остальное — в правую. */
-  $all(':scope > fieldset[data-bid]', grid).forEach(function (f) {
-    if (f.dataset.col === 'full') return;
-    var home = null;
-    SHEET_AREA_COLS.forEach(function (c) {
-      if ((lay.map[c] || []).indexOf(f.dataset.bid) >= 0) home = c;
-    });
-    var cont = home && !(home === 'mid' && cols === 2) ? areas[home] : areas.left;
-    if (f.parentNode !== cont) { delete f._dragWire; cont.appendChild(f); }
-  });
-  $all('fieldset fieldset[data-bid]', grid).forEach(function (f) {   // вложение — недопустимо
-    var host = f.closest('.sheet-area');
-    if (host) { delete f._dragWire; host.appendChild(f); }
-    else { delete f._dragWire; areas.right.appendChild(f); }
-  });
   // «Основное» и прочие full-блоки — прямые дети сетки, во всю ширину
   (lay.map.full || []).forEach(function (bid) {
     var node = $('[data-bid="' + bid + '"]', grid);
@@ -1946,13 +1959,14 @@ function applyLayout(themeId) {
   });
   areas.mid.style.display = cols === 2 ? 'none' : '';
 
-  // число колонок текста; размер блока не регулируется — старые data-width
-  // и панели .sec-controls из прежних версий удаляем
+  // число колонок текста; РАЗМЕР БЛОКОВ НЕ РЕГУЛИРУЕТСЯ: старые атрибуты
+  // data-cols/data-width и панели .sec-controls удаляем со всех блоков —
+  // ширина задаётся только раскладкой темы (12-колоночная сетка, span 4/6)
   $all('fieldset[data-bid]', grid).forEach(function (node) {
     if (node.closest('#sheet-grid') !== grid) return;
     node.removeAttribute('data-width');
+    node.removeAttribute('data-cols');
     removeSecControls(node);
-    node.dataset.cols = String(lay.textCols[node.dataset.bid] || 1);
     ensureBodyWrap(node);
     wireBlockDrag(node);
   });
@@ -1961,6 +1975,21 @@ function applyLayout(themeId) {
   $all('.sheet-sec', grid).forEach(function (n) { n.classList.remove('sec-hidden'); });
   (lay.hide || []).forEach(function (sel) {
     var n = $(sel, grid); if (n) n.classList.add('sec-hidden');
+  });
+
+  /* Якоря колонок: пустая колонка схлопнулась бы в нулевую ширину и блоки
+     некуда было бы возвращать — поэтому в каждую .sheet-area кладётся
+     невидимый anchor (не fieldset → blocksOf его игнорирует). Он же служит
+     зоной drop под последним блоком. */
+  SHEET_AREA_COLS.forEach(function (c) {
+    if (!areas[c]) return;
+    var anc = areas[c].querySelector(':scope > .area-anchor');
+    if (!anc) {
+      anc = el('div', { class: 'area-anchor' });
+      areas[c].appendChild(anc);
+    } else {
+      areas[c].appendChild(anc);          // всегда последним
+    }
   });
 
   markEmptyAreas();
@@ -1979,7 +2008,8 @@ function markEmptyAreas() {
 
 /* Обёртка содержимого секции (.sec-body-wrap) для multi-column: собираем в
    неё все дочерние узлы fieldset, кроме legend и старой панели управления.
-   При 1 колонке обёртка display:contents — не влияет на верстку. */
+   display:contents — не влияет на верстку (число колонок текста больше НЕ
+   регулируется, правила [data-cols] удалены). */
 function ensureBodyWrap(node) {
   var wrap = node.querySelector(':scope > .sec-body-wrap');
   if (!wrap) {
@@ -2005,28 +2035,45 @@ function removeSecControls(node) {
   if (box) box.remove();
 }
 
+/* Вкладки с запрещённым переносом блоков (структура фиксирована). */
+var NO_DRAG_TABS = { servers: true, io: true };
+function tabDragAllowed(tabId) { return !NO_DRAG_TABS[tabId]; }
+
+/* Все fieldset-детей контейнера, включая временно скрытые (.sec-hidden):
+   display:none не мешает appendChild/insertBefore, поэтому санация
+   «убежавших» и вложенных блоков работает без снятия классов. */
+function allBlocksOf(container) { return blocksOf(container); }
+
 /* Применение сохранённой раскладки произвольной вкладки (не «Листа»). */
 function applyTabStructure(tabId) {
   if (tabId === 'sheet') return;
+  var page = $('#tab-' + tabId);
+  if (!tabDragAllowed(tabId)) {
+    /* «Серверы» и «Импорт/экспорт»: перенос блоков запрещён — снимаем
+       drag-обработчики и скрытую пользовательскую раскладку этой вкладки. */
+    if (page) {
+      $all('fieldset', page).forEach(function (f) {
+        f._dragWire = false;
+        var lg = f.querySelector(':scope > legend');
+        if (lg) { lg.classList.remove('drag-handle'); lg.removeAttribute('title'); }
+      });
+      var stAll = loadTabStructures();
+      if (stAll[tabId]) { delete stAll[tabId]; saveTabStructures(stAll); }
+    }
+    return;
+  }
   ensureBlockIds();
   var st = loadTabStructures()[tabId];
   var conts = tabContainers(tabId);
   if (!conts.length) {
-    /* Вкладки без колоночных контейнеров (Биография, Импорт/экспорт):
-       drag меняет порядок ПРЯМЫХ fieldset-детей страницы — цель для drop
-       должна быть самой страницей, иначе блоки уезжают в конец DOM main. */
-    var page = $('#tab-' + tabId);
-    if (page) {
-      if (st && Array.isArray(st.cols)) {
-        var order = [];
-        st.cols.forEach(function (keys) { order = order.concat(keys); });
-        order.forEach(function (k) {
-          var node = page.querySelector(':scope > [data-bid="' + k + '"]');
-          if (node) page.appendChild(node);   // перестановка в запомненном порядке
-        });
-      }
-      $all(':scope > fieldset', page).forEach(wireBlockDrag);
-    }
+    /* Вкладка без зон drag: снимаем обработчики, чтобы блоки не «убегали»
+       в конец DOM при случайном перетаскивании. */
+    $all('fieldset', page || document).forEach(function (f) {
+      if (!page || !page.contains(f)) return;
+      f._dragWire = false;
+      var lg = f.querySelector(':scope > legend');
+      if (lg) { lg.classList.remove('drag-handle'); lg.removeAttribute('title'); }
+    });
     return;
   }
   if (st && Array.isArray(st.cols)) {
@@ -2039,7 +2086,21 @@ function applyTabStructure(tabId) {
         }
       });
     });
-    reflowGridRow(conts);   // число колонок ряда = числу непустых контейнеров
+  }
+  /* Санация: прямые fieldset-дети страницы вне контейнеров (последствие
+     старых багов) возвращаем в единственную/первую зону вкладки. */
+  if (page && conts.length === 1) {
+    $all(':scope > fieldset[data-bid]', page).forEach(function (f) {
+      delete f._dragWire;
+      conts[0].appendChild(f);
+    });
+  }
+  /* Инвентарь: ряд .inv-grid — часть 12-колоночной сетки (см. CSS).
+     reflowGridRow меняет число столбцов ряда по числу НЕпустых колонок;
+     если блоки перенесли в одну колонку — остальные схлопываются. */
+  if (tabId === 'inventory') {
+    var invRow = $('.inv-grid', page);
+    if (invRow) reflowGridRow([invRow]);
   }
   conts.forEach(function (c) {
     c.classList.toggle('area-empty', blocksOf(c).length === 0);
@@ -2063,6 +2124,9 @@ function reflowGridRow(conts) {
 var dragState = null;
 
 function wireBlockDrag(node) {
+  var tabEl = node.closest ? node.closest('.tabpage') : null;
+  var tabId = tabEl ? tabEl.id.replace('tab-', '') : 'sheet';
+  if (!tabDragAllowed(tabId)) return;      // вкладки с запретом переноса
   if (node._dragWire) return;
   node._dragWire = true;
   var head = node.querySelector(':scope > legend');
@@ -2082,6 +2146,9 @@ function wireBlockDrag(node) {
 
 function startBlockDrag(ev, node) {
   if (!isEditMode()) return;
+  var tabEl = node.closest ? node.closest('.tabpage') : null;
+  var tabId = tabEl ? tabEl.id.replace('tab-', '') : visibleTabId();
+  if (!tabDragAllowed(tabId)) return;      // «Серверы»/«Импорт-экспорт» — таскать нельзя
   if (ev.button !== 0) return;
   ev.preventDefault();
   dragState = { node: node, tab: visibleTabId(), moved: false, sx: ev.clientX, sy: ev.clientY };

@@ -167,10 +167,22 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
 #sheet-grid > [data-col="strip"], #sheet-grid > [data-col="full"] { grid-column: 1 / -1; }
 #sheet-grid > [data-col="strip"] { order: -2; }
 #sheet-grid > .info-block { order: -1; }
+/* якорь пустой колонки: не даёт ей схлопнуться и служит зоной возврата */
+.area-anchor { height: 8px; flex: none; }
 
 @media (max-width: 1100px) {                /* планшет/мобильный — одна колонка */
   #sheet-grid { grid-template-columns: minmax(0, 1fr); }
   #sheet-grid > .sheet-area { grid-column: 1 / -1; }
+}
+
+/* Вкладки «Инвентарь» и «Биография» — те же 12 колонок, блоки по умолчанию
+   span 4 (три столбца). reflowGridRow() может переопределить число столбцов
+   inline-стилем, если пользователь собрал блоки в меньшее число колонок. */
+.inv-grid, .bio-grid { display: grid; gap: 12px; align-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.inv-grid > fieldset, .bio-grid > fieldset { margin: 0; min-width: 0; }
+@media (max-width: 1100px) {
+  .inv-grid, .bio-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* карточки характеристик (по умолчанию скрыты — включаются раскладками classic/official) */
@@ -244,8 +256,7 @@ body.edit-mode .tabpage .area-empty {
    CSS multi-column. Обёртка не влияет на верстку при 1 колонке
    (display:contents), поэтому блоки не ломаются и не наезжают друг на друга. */
 .sec-body-wrap { display: contents; }
-.sheet-sec[data-cols="2"] > .sec-body-wrap { display: block; columns: 2; column-gap: 14px; }
-.sheet-sec[data-cols="3"] > .sec-body-wrap { display: block; columns: 3; column-gap: 14px; }
+/* Число колонок текста в блоке НЕ регулируется — правила [data-cols] удалены. */
 .sec-body-wrap > * { break-inside: avoid; margin-top: 0; }
 
 @media print {

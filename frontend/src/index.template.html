@@ -159,7 +159,7 @@
         <label>Макс. вес (bulk)<input type="number" data-bind="inventory.bulkMax" class="xs"></label>
       </div>
     </fieldset>
-    <div class="grid3">
+    <div class="grid3 inv-grid">
       <fieldset><legend>Надето / Носится</legend><div id="inv-worn"></div></fieldset>
       <fieldset><legend>В руках</legend><div id="inv-held"></div></fieldset>
       <fieldset><legend>Расходники</legend><div id="inv-consumables"></div></fieldset>
@@ -172,6 +172,7 @@
 
   <!-- ==================== ВКЛАДКА: БИОГРАФИЯ ==================== -->
   <section id="tab-bio" class="tabpage hidden">
+    <div class="bio-grid">
     <fieldset><legend>Происхождение</legend>
       <div class="row"><label>Этническая принадлежность<input data-bind="biography.ethnicity"></label>
         <label>Место рождения<input data-bind="biography.birthplace"></label>
@@ -196,6 +197,7 @@
       <div class="row"><label class="half">Организации<textarea rows="2" data-bind="biography.organizations"></textarea></label>
         <label class="half">Прочие заметки<textarea rows="2" data-bind="biography.notes"></textarea></label></div>
     </fieldset>
+    </div>
   </section>
 
   <!-- ==================== ВКЛАДКА: СЕРВЕРЫ ==================== -->
