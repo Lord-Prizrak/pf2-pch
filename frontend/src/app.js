@@ -44,6 +44,7 @@ var THEMES = [
    и какая у них ширина. Хранится в localStorage по каждой теме отдельно,
    чтобы правки не «текли» между вариантами оформления. */
 var LS_LAYOUT = 'pf2e.layout.v1';        // {themeId: {map:{left:[..],mid:[..],right:[..]}, widths:{secId:'wide|normal|narrow'}}}
+var LS_TABSTRUCT = 'pf2e.tabstruct.v1';  // {tabId: {cols:[[dkey,...],[...]]}} — раскладка блоков на вкладках Инвентарь/Биография/Серверы
 var LAYOUT_WIDTHS = ['narrow', 'normal', 'wide'];
 
 /* ---------------- утилиты ---------------- */
@@ -289,6 +290,7 @@ function switchTab(id) {
   $all('.tabpage').forEach(function (p) { p.classList.add('hidden'); });
   $('#tab-' + id).classList.remove('hidden');
   renderTabs();
+  applyTabStructure(id);   // восстанавливаем пользовательскую раскладку блоков вкладки
   if (id === 'servers') renderServersUI();
   if (id === 'io') refreshJsonEditor();
 }
@@ -1061,6 +1063,7 @@ function syncCombatStrip() {
     // в копии не нужны элементы управления блоком и drag-обработчики
     $all('.sec-controls', clone).forEach(function (n) { n.remove(); });
     $all('legend.drag-handle', clone).forEach(function (n) { n.classList.remove('drag-handle'); });
+    $all('[data-dkey]', clone).forEach(function (n) { delete n.dataset.dkey; });
     stripBox.appendChild(clone);
   } else {
     stripBox.innerHTML = '';
@@ -1820,58 +1823,191 @@ function moveSectionToColumn(secId, targetCol, beforeNode) {
   applyLayout(currentTheme());
 }
 
-/* Drag&drop секций за legend между колонками. */
-var dragState = null;
-function makeDraggable(node, secId) {
-  var head = node.querySelector('legend');
-  if (!head) { head = node; }        // у некоторых панелей legend нет — тянем за верхнюю часть
-  head.classList.add('drag-handle');
-  head.setAttribute('title', 'Зажмите и перетащите в другую колонку');
-  head.addEventListener('mousedown', function (ev) {
-    if (!isEditMode()) return;
-    if (ev.button !== 0) return;
-    ev.preventDefault();
-    dragState = { sec: secId, node: node };
-    node.classList.add('dragging');
-    document.body.classList.add('dragging-active');
-  });
+/* Drag&drop блоков за legend между колонками. Работает на всех вкладках:
+   - «Лист»: секции SECTIONS между .sheet-area (map раскладки темы);
+   - «Инвентарь»/«Биография»: блоки между контейнерами .tabpage/.grid3
+     (порядок и состав колонок сохраняются отдельно для каждой вкладки). */
+
+/* ---------- generic helpers ---------- */
+function blockKey(node) {
+  if (!node.dataset.dkey) node.dataset.dkey = 'b' + (++blockKey._n);
+  return node.dataset.dkey;
 }
-function initDragEvents() {
-  document.addEventListener('mousemove', function (ev) {
-    if (!dragState) return;
-    var over = dropTargetAt(ev.clientX, ev.clientY);
-    $all('.sheet-area.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
-    if (over) over.classList.add('drop-over');
-  });
-  document.addEventListener('mouseup', function (ev) {
-    if (!dragState) return;
-    var over = dropTargetAt(ev.clientX, ev.clientY);
-    $all('.sheet-area.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
-    dragState.node.classList.remove('dragging');
-    document.body.classList.remove('dragging-active');
-    if (over && dragState) {
-      var col = over.dataset.col;
-      var cur = placeOfInSection(dragState.sec);
-      if (col && col !== cur) moveSectionToColumn(dragState.sec, col);
-    }
-    dragState = null;
-  });
+blockKey._n = 0;
+
+function isDragBlock(node) {
+  return !!(node.classList.contains('sheet-sec') || node.tagName === 'FIELDSET');
 }
-function dropTargetAt(x, y) {
-  var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
-  for (var i = 0; i < els.length; i++) {
-    var area = els[i].closest ? els[i].closest('.sheet-area') : null;
-    if (area && area.dataset.col) return area;
+
+/* Контейнеры-зоны текущей видимой вкладки. */
+function tabContainers(tabId) {
+  if (tabId === 'sheet') {
+    return ['left', 'mid', 'right'].map(function (c) {
+      return $('.sheet-area[data-col="' + c + '"]');
+    }).filter(Boolean);
   }
-  return null;
+  var page = $('#tab-' + tabId);
+  if (!page) return [];
+  var out = [];
+  for (var n = page.firstElementChild; n; n = n.nextElementSibling) {
+    if (n.tagName === 'FIELDSET') out.push(n);                 // одиночные блоки = одна колонка
+    else if (n.classList.contains('grid2') || n.classList.contains('grid3') ||
+             n.classList.contains('srv-layout')) {
+      for (var k = n.firstElementChild; k; k = k.nextElementSibling) {
+        if (k.tagName === 'FIELDSET' || k.classList.contains('srv-left') ||
+            k.classList.contains('srv-right')) out.push(k);
+      }
+    }
+  }
+  return out;
 }
-function placeOfInSection(secId) {
+
+function visibleTabId() {
+  var p = $('#main > .tabpage:not(.hidden)');
+  return p ? p.id.replace('tab-', '') : 'sheet';
+}
+
+/* Сохранение текущего расположения блоков вкладки в localStorage. */
+function saveTabStructure(tabId) {
+  var conts = tabContainers(tabId);
+  var cols = conts.map(function (c) {
+    return Array.prototype.filter.call(c.children, isDragBlock)
+      .map(function (b) { return blockKey(b); });
+  });
+  var all = loadTabStructures();
+  if (conts.length <= 1) delete all[tabId];
+  else all[tabId] = { cols: cols };
+  saveTabStructures(all);
+}
+function loadTabStructures() {
+  try { return JSON.parse(localStorage.getItem(LS_TABSTRUCT) || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveTabStructures(obj) { localStorage.setItem(LS_TABSTRUCT, JSON.stringify(obj)); }
+
+/* Применение сохранённой раскладки вкладки: перенос блоков между колонками. */
+function applyTabStructure(tabId) {
+  var st = loadTabStructures()[tabId];
+  if (!st || !Array.isArray(st.cols)) return;
+  var conts = tabContainers(tabId);
+  if (!conts.length) return;
+  st.cols.forEach(function (keys, ci) {
+    var container = conts[Math.min(ci, conts.length - 1)];
+    keys.forEach(function (k) {
+      var node = document.querySelector('[data-dkey="' + k + '"]');
+      if (node && isDragBlock(node) && node.parentNode !== container) {
+        container.appendChild(node);
+      }
+    });
+  });
+}
+
+/* Перемещение произвольного блока в конец контейнера-цели. */
+function moveBlockToContainer(node, target) {
+  var tabId = visibleTabId();
+  if (tabId === 'sheet' && node.classList.contains('sheet-sec')) {
+    var col = target.dataset.col;
+    if (col) {
+      var cur = placeOfInSection(node.className);
+      if (col !== cur) moveSectionToColumn(nodeClassSec(node), col);
+      return;
+    }
+  }
+  target.appendChild(node);
+  saveTabStructure(tabId);
+}
+function nodeClassSec(node) {
+  var m = /(?:^|\s)sec-([\w-]+)/.exec(node.className || '');
+  return m ? m[1] : '';
+}
+function placeOfInSection(classStr) {
+  var sec = /(?:^|\s)sec-([\w-]+)/.exec(classStr || '');
+  if (!sec) return null;
   var lay = effectiveLayout(currentTheme());
   var found = null;
   ['left', 'mid', 'right'].forEach(function (c) {
-    if ((lay.map[c] || []).indexOf(secId) >= 0) found = c;
+    if ((lay.map[c] || []).indexOf(sec[1]) >= 0) found = c;
   });
   return found;
+}
+
+/* ---------- drag engine ---------- */
+var dragState = null;
+
+function makeDraggable(node, secId) {
+  wireBlockDrag(node, secId);
+}
+
+function wireBlockDrag(node, secHint) {
+  if (node._dragWire) return;
+  node._dragWire = true;
+  var head = node.querySelector(':scope > legend');
+  if (head) {
+    head.classList.add('drag-handle');
+    head.setAttribute('title', 'Зажмите и перетащите в другую колонку');
+    head.addEventListener('mousedown', function (ev) { startBlockDrag(ev, node, secHint); });
+  }
+  // по body блока таскаем только если это не формы-инпуты (иначе мешает вводу)
+  node.addEventListener('mousedown', function (ev) {
+    if (!isEditMode() || ev.button !== 0) return;
+    if (ev.target.closest('input,select,textarea,button,a,label,.sec-controls')) return;
+    if (ev.target.tagName === 'LEGEND') return; // уже обработано выше
+    startBlockDrag(ev, node, secHint);
+  });
+}
+
+function startBlockDrag(ev, node, secHint) {
+  if (!isEditMode()) return;
+  if (ev.button !== 0) return;
+  ev.preventDefault();
+  dragState = { node: node, sec: secHint || nodeClassSec(node), tab: visibleTabId() };
+  node.classList.add('dragging');
+  document.body.classList.add('dragging-active');
+}
+
+function initDragEvents() {
+  document.addEventListener('mousemove', function (ev) {
+    if (!dragState) return;
+    var over = dropTargetAt(ev.clientX, ev.clientY, dragState);
+    $all('.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
+    if (over && over !== dragState.node.parentNode) over.classList.add('drop-over');
+  });
+  document.addEventListener('mouseup', function (ev) {
+    if (!dragState) return;
+    var over = dropTargetAt(ev.clientX, ev.clientY, dragState);
+    $all('.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
+    dragState.node.classList.remove('dragging');
+    document.body.classList.remove('dragging-active');
+    if (over && over !== dragState.node.parentNode) {
+      moveBlockToContainer(dragState.node, over);
+    }
+    dragState = null;
+  });
+  // при переключении вкладки — применяем её сохранённую раскладку блоков
+  document.addEventListener('click', function (ev) {
+    var tb = ev.target.closest ? ev.target.closest('#tabs-nav button') : null;
+    if (tb) setTimeout(function () { applyTabStructure(visibleTabId()); refreshAllTextareas(); }, 0);
+  });
+}
+
+function dropTargetAt(x, y, ds) {
+  var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+  for (var i = 0; i < els.length; i++) {
+    var e = els[i];
+    // зона листовой раскладки
+    if (ds.tab === 'sheet') {
+      var area = e.closest ? e.closest('.sheet-area') : null;
+      if (area && area.dataset.col) return area;
+    }
+    // контейнер блоков текущей вкладки
+    if (e.matches && e.matches('fieldset, .srv-left, .srv-right')) {
+      if (isDragBlock(e) && e !== ds.node && !e.contains(ds.node)) return e;
+    } else if (e.classList && (e.classList.contains('tabpage') ||
+               e.classList.contains('grid3') || e.classList.contains('grid2'))) {
+      if (e.contains(ds.node)) return e;
+    }
+  }
+  return null;
 }
 
 function wireEditMode() {
@@ -1891,6 +2027,17 @@ function wireEditMode() {
     toast('Раскладка темы сброшена к исходной');
   });
   initDragEvents();
+}
+
+/* Расстановка drag-обработчиков на все блоки всех вкладок (кроме «Листа»,
+   где секции подключает applyLayout). Вызывается один раз при загрузке и
+   после перерисовки серверных/ио панелей. */
+function wireTabBlocks() {
+  ['inventory', 'bio', 'servers', 'io'].forEach(function (tabId) {
+    var page = $('#tab-' + tabId);
+    if (!page) return;
+    $all('fieldset', page).forEach(function (f) { wireBlockDrag(f, ''); });
+  });
 }
 
 /* ---------------- инициализация ---------------- */
@@ -1924,6 +2071,7 @@ function boot() {
   State.sheet = normalizeSheet(map[State.currentId]);
 
   renderAll();
+  wireTabBlocks();   // drag за блоки на вкладках Инвентарь/Биография/Серверы/Импорт
   setState('Готово');
   switchTab('sheet');
 }
