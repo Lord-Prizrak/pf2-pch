@@ -136,19 +136,20 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
    РАСКЛАДКИ листа (layout). Тема = цвета + расположение блоков.
 
    Как это устроено и почему блоки больше не наезжают друг на друга:
-     - В DOM секции (.sheet-sec) лежат ВНУТРИ колонок-контейнеров
-       .sheet-area-left / .sheet-area-mid / .sheet-area-right; каждая колонка —
-       flex-столбик (gap между блоками гарантирован, перекрытие невозможно).
-     - applyLayout() НЕ перемещает узлы и НЕ использует display:contents /
-       grid-area: var() — эти механизмы по-разному поддерживались браузерами
-       и приводили к наложению блоков. Вместо этого:
-         * каждой колонке назначается data-col="left|mid|right" (или "full"),
-           CSS Grid расставляет сами колонки по grid-column;
-         * порядок секций внутри колонки задаётся inline order (--ord);
-         * состав секций в колонке меняется переносом узлов appendChild —
-           узлы всегда живут ровно в одном контейнере, дублирование исключено;
-         * лишние/дублирующиеся панели скрываются классом .sec-hidden.
-     - Число колонок задаётся data-cols="2|3" на #sheet-grid; «Основное»
+     - #sheet-grid — 12-колоночная CSS Grid (repeat(12, minmax(0,1fr))).
+       Колонки листа (.sheet-area) — её прямые дети; каждая занимает span
+       колонок через --span: 4 (три столбца — темы classic/sanych/dark) или
+       6 (два столбца — официальный лист Paizo). Ширина задаётся ТОЛЬКО
+       раскладкой темы — пользователь её не меняет.
+     - Секции (.sheet-sec) лежат ВНУТРИ колонок-контейнеров; каждая колонка —
+       flex-столбик (gap между блоками гарантирован, перекрытие невозможно,
+       вложение блоков структурно исключено — drop всегда идёт в колонку).
+     - applyLayout() НЕ использует display:contents / grid-area: var() /
+       inline order — эти механизмы по-разному поддерживались браузерами и
+       приводили к наложению и «убеганию» блоков. Порядок секций = порядок
+       узлов в DOM колонки; перенос секции между колонками — appendChild.
+     - Лишние/дублирующиеся панели скрываются классом .sec-hidden.
+     - Число колонок листа задаётся data-cols="2|3" на #sheet-grid; «Основное»
        (.info-block) всегда во всю ширину сверху; combat-strip — горизонтальная
        лента для VTT-раскладки (включается data-strip="1").
    ========================================================================== */
@@ -160,27 +161,16 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
 .sheet-sec { margin: 0; min-width: 0; overflow-wrap: break-word; }
 .sec-hidden { display: none !important; }
 
-/* три колонки (по умолчанию) */
-#sheet-grid { grid-template-columns: minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr); }
+/* 12-колоночная сетка: колонки листа получают span из --span (4 или 6) */
+#sheet-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+#sheet-grid > .sheet-area { grid-column: span var(--span, 4); }
 #sheet-grid > [data-col="strip"], #sheet-grid > [data-col="full"] { grid-column: 1 / -1; }
-#sheet-grid > [data-col="left"] { grid-column: 1; }
-#sheet-grid > [data-col="mid"] { grid-column: 2; }
-#sheet-grid > [data-col="right"] { grid-column: 3; }
 #sheet-grid > [data-col="strip"] { order: -2; }
-#sheet-grid > [data-col="full"] { order: -1; }
-#sheet-grid > [data-col="left"] { order: 1; }
-#sheet-grid > [data-col="mid"] { order: 2; }
-#sheet-grid > [data-col="right"] { order: 3; }
-
-/* две колонки (official): левая+средняя сливаются в первую grid-колонку */
-#sheet-grid[data-cols="2"] { grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); }
-#sheet-grid[data-cols="2"] > [data-col="left"],
-#sheet-grid[data-cols="2"] > [data-col="mid"] { grid-column: 1; }
-#sheet-grid[data-cols="2"] > [data-col="right"] { grid-column: 2; }
+#sheet-grid > .info-block { order: -1; }
 
 @media (max-width: 1100px) {                /* планшет/мобильный — одна колонка */
-  #sheet-grid, #sheet-grid[data-cols="2"] { grid-template-columns: minmax(0,1fr); }
-  #sheet-grid > [data-col] { grid-column: 1 / -1; }
+  #sheet-grid { grid-template-columns: minmax(0, 1fr); }
+  #sheet-grid > .sheet-area { grid-column: 1 / -1; }
 }
 
 /* карточки характеристик (по умолчанию скрыты — включаются раскладками classic/official) */
@@ -205,9 +195,9 @@ body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
 
 /* ==========================================================================
    Режим «Редактирование» (чек-бокс в шапке рядом с выбором темы)
-   1) секции можно таскать за заголовки (legend) между колонками;
-   2) панель управления блоком (.sec-controls): ширина блока и число колонок
-      текста внутри него. Всё это видимо/доступно только при body.edit-mode.
+   Секции можно таскать за заголовки между колонками и менять их порядок
+   внутри колонки. РАЗМЕР/ШИРИНА БЛОКОВ НЕ РЕГУЛИРУЕТСЯ — она задаётся
+   только раскладкой темы (12-колоночная сетка: span 4 / 6).
    ========================================================================== */
 .topbar-appearance { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
 #theme-select { padding: 3px 6px; border-radius: 6px; border: 1px solid #6b543a;

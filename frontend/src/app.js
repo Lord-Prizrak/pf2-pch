@@ -1763,51 +1763,57 @@ function loadTabStructures() {
 function saveTabStructures(obj) { localStorage.setItem(LS_TABSTRUCT, JSON.stringify(obj)); }
 
 /* Эффективная раскладка вкладки «Лист»: базовая от темы + правки поверх.
-   map строится по bid: базовый map темы даёт колонку каждой sec-секции,
-   конкретный блок получает её по своему sec-* классу. Дубликаты (панель
-   «ПЗ и щит» sec-hp) наследуют колонку оригинала, но живут отдельно. */
-function baseSheetMap(themeId) {
-  var base = themeById(themeId).layout || {};
-  var m = {};
-  ['left', 'mid', 'right'].forEach(function (col) {
-    ((base.map && base.map[col]) || []).forEach(function (sec) { m[sec] = col; });
-  });
-  var out = { left: [], mid: [], right: [], full: [] };
+   Базовый map строится ПРЯМО из DOM (какой блок в какой колонке лежит в
+   исходной разметке шаблона) — так исключаются ошибки ручного маппинга
+   sec-* классов на колонки. Порядок внутри колонок сохраняется как в DOM.
+   Правки пользователя (u.map) накладываются поверх, если существуют. */
+var SHEET_AREA_COLS = ['left', 'mid', 'right'];
+function baseSheetMap() {
   var grid = $('#sheet-grid');
+  var out = { left: [], mid: [], right: [], full: [] };
   if (!grid) return out;
-  /* Особые случаи именных блоков (до общего правила по sec-* классам):
-     панель «ПЗ и щит» (sec-hp) в official-раскладке живёт в правой колонке,
-     блок «Профичности оружия» делит sec-strikes с блоком «Удары». */
-  function specialCol(f) {
-    if (f.id === 'hp-shield-panel') return m.hp || 'right';
-    if (f.id === 'weapon-prof-panel') return m.wpnprof || null;
-    return null;
-  }
-  /* Прямые fieldset-дети сетки (например, «Основное») — всегда во всю ширину. */
-  $all(':scope > fieldset', grid).forEach(function (f) {
-    f.dataset.col = 'full';
-    out.full.push(f.dataset.bid);
+  /* Именные панели вне колонок («Основное», «Профичности оружия», дубль
+     «ПЗ и щит») привязаны к своим секциям: без этого они оставались бы
+     прямыми детьми #sheet-grid и ломали потоковую 12-колоночную сетку. */
+  var HOME = { 'hp-shield-panel': 'hp', 'weapon-prof-panel': 'wpnprof' };
+  SHEET_AREA_COLS.forEach(function (c) {
+    var area = $('.sheet-area[data-col="' + c + '"]', grid);
+    if (!area) return;
+    blocksOf(area).forEach(function (f) { out[c].push(f.dataset.bid); });
   });
-  $all(':scope > .sheet-area > fieldset', grid).forEach(function (f) {
-    var col = specialCol(f);
-    if (!col) f.classList.forEach(function (cl) {
-      if (cl.indexOf('sec-') === 0 && m[cl.slice(4)]) col = m[cl.slice(4)];
-    });
-    if (!col) col = 'right';
-    out[col].push(f.dataset.bid);
+  $all(':scope > fieldset', grid).forEach(function (f) {
+    var bid = f.dataset.bid;
+    var homeSec = HOME[f.id];
+    var col = null;
+    if (homeSec) {
+      for (var i = 0; i < SHEET_AREA_COLS.length; i++) {
+        if (out[SHEET_AREA_COLS[i]].indexOf(homeSec) >= 0) { col = SHEET_AREA_COLS[i]; break; }
+      }
+    }
+    if (col) {
+      var at = out[col].indexOf(homeSec) + 1;
+      out[col].splice(at, 0, bid);          // сразу после домашней секции
+      f.dataset.col = col;
+      var area = $('.sheet-area[data-col="' + col + '"]', grid);
+      var ref = area.children[at - 1] || null;
+      area.insertBefore(f, ref ? ref.nextSibling : null);
+    } else {
+      f.dataset.col = 'full';               // широкая шапка («Основное»)
+      out.full.push(bid);
+    }
   });
   return out;
 }
 function effectiveLayout(themeId) {
   var base = themeById(themeId).layout || {};
   var u = userLayoutFor(themeId) || {};
-  var bmap = baseSheetMap(themeId);
+  var bmap = baseSheetMap();
   var map = { left: (u.map && u.map.left) || bmap.left,
               mid: (u.map && u.map.mid) || bmap.mid,
               right: (u.map && u.map.right) || bmap.right,
               full: (u.map && u.map.full) || bmap.full };
-  return { cols: u.cols || (base.cols === 2 ? 2 : 3), map: map,
-           widths: u.widths || {}, textCols: u.textCols || {},
+  return { cols: base.cols === 2 ? 2 : 3, map: map,
+           textCols: u.textCols || {},
            strip: base.strip, hide: base.hide };
 }
 function mutateSheetLayout(fn) {
@@ -1854,32 +1860,36 @@ function insertBlock(node, container, before) {
 }
 
 /* ---------- применение раскладки вкладки «Лист» (12-колоночная сетка) ----
-   Блоки физически переносятся в колонки-контейнеры (.sheet-area); каждой
-   колонке назначается span: 4 колонки сетки (три столбца — все темы, кроме
-   official) или 6 колонок (два столбца — официальный лист Paizo).
-   Никаких display:contents / grid-area: var(). Дублирующиеся панели
-   скрываются .sec-hidden. Поверх базовой раскладки темы — пользовательские
-   правки (effectiveLayout): состав/порядок колонок и число колонок текста
-   (data-cols). ПАНЕЛЬ ИЗМЕНЕНИЯ ШИРИНЫ БЛОКОВ УБРАНА из режима
-   «Редактирование»: ширина задаётся только темой. */
+   Колонки (.sheet-area) — прямые дети #sheet-grid; каждая занимает span
+   колонок сетки: 4 (три столбца — все темы, кроме official) или 6 (два
+   столбца — официальный лист Paizo). Блоки физически лежат ВНУТРИ колонок
+   (flex-столбик), поэтому вложение блоков друг в друга структурно
+   невозможно. Порядок = DOM (никаких order/grid-area трюков).
+
+   Drag-and-drop на вкладке «Лист»: drop-цель всегда — колонка (.sheet-area)
+   или чужой блок (легенда → вставка перед ним в ТОЙ ЖЕ колонке). При drop
+   блок вынимается из своей колонки и вставляется в колонку-цель (перед
+   целевым блоком или в конец) — никогда внутрь fieldset и не прямым ребёнком
+   сетки. В 2-колоночных темах скрытая mid-колонка остаётся в DOM пустой и
+   тоже является зоной возврата: её блоки физически живут в левой колонке, а
+   их «домашняя» колонка хранится в u.map. Дублирующиеся панели скрываются
+   .sec-hidden. ИЗМЕНЕНИЕ РАЗМЕРА БЛОКОВ УБРАНО полностью: ширина задаётся
+   только раскладкой темы. */
 function applyLayout(themeId) {
   var grid = $('#sheet-grid'); if (!grid) return;
   var lay = effectiveLayout(themeId);
   var cols = lay.cols === 2 ? 2 : 3;
 
   var areas = {
-    left: $('.sheet-area[data-col="left"]', grid) || $('.sheet-area-left', grid),
-    mid: $('.sheet-area[data-col="mid"]', grid) || $('.sheet-area-mid', grid),
-    right: $('.sheet-area[data-col="right"]', grid) || $('.sheet-area-right', grid)
+    left: $('.sheet-area[data-col="left"]', grid),
+    mid: $('.sheet-area[data-col="mid"]', grid),
+    right: $('.sheet-area[data-col="right"]', grid)
   };
-  // в 2-колоночной сетке средняя колонка физически не нужна — прячем её
-  // (в режиме редактирования она видна как третья зона, см. CSS .edit-mode)
-  areas.mid.style.display = cols === 2 && !isEditMode() ? 'none' : '';
 
   grid.dataset.cols = String(cols);
   grid.dataset.strip = lay.strip ? '1' : '0';
   var span = colSpan(themeId);            // 4 (три столбца) или 6 (Paizo)
-  ['left', 'mid', 'right'].forEach(function (c) {
+  SHEET_AREA_COLS.forEach(function (c) {
     if (areas[c]) { areas[c].dataset.col = c; areas[c].style.setProperty('--span', String(span)); }
   });
   var strip = $('.combat-strip', grid);
@@ -1887,39 +1897,63 @@ function applyLayout(themeId) {
   var info = $('.info-block', grid);
   if (info) info.dataset.col = 'full';
 
-  // размещаем каждый блок согласно map (left+mid сливаются при cols=2)
-  var offsetMid = (cols === 2) ? (lay.map.left || []).length : 0;
+  /* Нормализация: каждый блок кладём КОНЦЕМ своей колонки согласно map
+     (последовательный обход map задаёт точный порядок). В 2-колоночной
+     теме блоки mid физически переезжают в левую колонку; скрытая mid-
+     колонка остаётся в DOM пустой — она тоже допустимая drop-зона. */
   var placed = {};
-  ['left', 'mid', 'right'].forEach(function (col) {
+  SHEET_AREA_COLS.forEach(function (col) {
     var cont = col === 'mid' && cols === 2 ? areas.left : areas[col];
-    (lay.map[col] || []).forEach(function (bid, i) {
+    if (!cont) return;
+    (lay.map[col] || []).forEach(function (bid) {
       var node = $('[data-bid="' + bid + '"]', grid);
-      if (!node || placed[bid]) return;
+      if (!node || placed[bid] || node === cont) return;
       placed[bid] = true;
+      node.style.order = '';              // больше не используем order
       if (node.parentNode !== cont) cont.appendChild(node);
-      node.style.order = String(col === 'mid' && cols === 2 ? i + offsetMid : i);
+      else { delete node._dragWire; node.remove(); cont.appendChild(node); }
     });
   });
-  // «Основное» всегда во всю ширину сверху
+  /* Очистка после drop «на якорь»: блок мог остаться прямым ребёнком
+     #sheet-grid или внутри чужого fieldset (вложение) — возвращаем его в
+     домашнюю колонку по порядку якорей/карты, всё остальное — в правую. */
+  $all(':scope > fieldset[data-bid]', grid).forEach(function (f) {
+    if (f.dataset.col === 'full') return;
+    var home = null;
+    SHEET_AREA_COLS.forEach(function (c) {
+      if ((lay.map[c] || []).indexOf(f.dataset.bid) >= 0) home = c;
+    });
+    var cont = home && !(home === 'mid' && cols === 2) ? areas[home] : areas.left;
+    if (f.parentNode !== cont) { delete f._dragWire; cont.appendChild(f); }
+  });
+  $all('fieldset fieldset[data-bid]', grid).forEach(function (f) {   // вложение — недопустимо
+    var host = f.closest('.sheet-area');
+    if (host) { delete f._dragWire; host.appendChild(f); }
+    else { delete f._dragWire; areas.right.appendChild(f); }
+  });
+  // «Основное» и прочие full-блоки — прямые дети сетки, во всю ширину
   (lay.map.full || []).forEach(function (bid) {
     var node = $('[data-bid="' + bid + '"]', grid);
     if (node) { node.dataset.col = 'full'; placed[bid] = true; }
   });
-  // страховка: любой непойманный блок — в правую колонку
-  $all('fieldset', grid).forEach(function (f) {
-    if (f.dataset.bid && !placed[f.dataset.bid] && !f.classList.contains('sheet-area')) {
+  // страховка: любой непойманный блок владения листа — в правую колонку
+  $all('fieldset[data-bid]', grid).forEach(function (f) {
+    if (f.closest('#sheet-grid') !== grid) return;   // чужие вкладки — мимо
+    if (f.classList.contains('sheet-area')) return;
+    if (f.dataset.bid && !placed[f.dataset.bid] && f.dataset.col !== 'full') {
       areas.right.appendChild(f);
     }
   });
+  areas.mid.style.display = cols === 2 ? 'none' : '';
 
-  // число колонок текста; ширина блока НЕ регулируется — удаляем data-width
-  // (старые сохранённые widths игнорируются), но оставляем выбор колонок
+  // число колонок текста; размер блока не регулируется — старые data-width
+  // и панели .sec-controls из прежних версий удаляем
   $all('fieldset[data-bid]', grid).forEach(function (node) {
+    if (node.closest('#sheet-grid') !== grid) return;
     node.removeAttribute('data-width');
+    removeSecControls(node);
     node.dataset.cols = String(lay.textCols[node.dataset.bid] || 1);
     ensureBodyWrap(node);
-    if (isEditMode()) ensureSecControls(node, node.dataset.bid);
-    else removeSecControls(node);
     wireBlockDrag(node);
   });
 
@@ -1943,10 +1977,9 @@ function markEmptyAreas() {
   });
 }
 
-/* Одна панель управления на секцию; пересоздаётся при смене темы. */
 /* Обёртка содержимого секции (.sec-body-wrap) для multi-column: собираем в
-   неё все дочерние узлы fieldset, кроме legend и панели управления. При
-   1 колонке обёртка display:contents — не влияет на верстку. */
+   неё все дочерние узлы fieldset, кроме legend и старой панели управления.
+   При 1 колонке обёртка display:contents — не влияет на верстку. */
 function ensureBodyWrap(node) {
   var wrap = node.querySelector(':scope > .sec-body-wrap');
   if (!wrap) {
@@ -1958,59 +1991,18 @@ function ensureBodyWrap(node) {
       kids.push(n);
     }
     var lg = node.querySelector('legend');
-    var ctrl = node.querySelector(':scope > .sec-controls');
-    var ref = ctrl || null;
-    if (lg) {
-      node.insertBefore(wrap, ref || (lg.nextSibling ? lg.nextSibling : null));
-    } else if (ref) {
-      node.insertBefore(wrap, ref);
-    } else {
-      node.appendChild(wrap);
-    }
+    if (lg && lg.nextSibling) node.insertBefore(wrap, lg.nextSibling);
+    else node.appendChild(wrap);
     kids.forEach(function (k) { wrap.appendChild(k); });
   }
 }
 
-/* Управление блоками в режиме «Редактирование»: панель с числом колонок
-   текста. ИЗМЕНЕНИЕ ШИРИНЫ БЛОКОВ УБРАНО по требованию — ширина задаётся
-   только раскладкой темы (12-колоночная сетка: span 4 или 6). */
+/* Старые сохранения могли содержать панель .sec-controls с регулировкой
+   размера блока — удаляем её навсегда (режим «Редактирование» теперь
+   позволяет только перетаскивание и порядок блоков). */
 function removeSecControls(node) {
   var box = node.querySelector(':scope > .sec-controls');
   if (box) box.remove();
-}
-
-function ensureSecControls(node, bid) {
-  var box = node.querySelector(':scope > .sec-controls');
-  if (!box) {
-    box = el('div', { class: 'sec-controls', 'data-for': bid });
-    var lg = node.querySelector('legend');
-    if (lg && lg.nextSibling) node.insertBefore(box, lg.nextSibling);
-    else node.insertBefore(box, node.firstChild);
-  }
-  if (box.dataset.built !== '2') {
-    box.innerHTML = '';
-    box.appendChild(secControls(bid));
-    box.dataset.built = '2';
-  }
-}
-
-/* Панель управления колонками блока (видна только в edit-mode). */
-function secControls(bid) {
-  var box = el('div', { class: 'sec-controls' });
-  var cSel = el('select', { title: 'Колонок текста в блоке' });
-  [1, 2, 3].forEach(function (n) { cSel.appendChild(el('option', { value: String(n), text: n + ' кол.' })); });
-  cSel.value = String(currentSecTextCols(bid));
-  cSel.addEventListener('change', function () { setSecTextCols(bid, Number(cSel.value)); });
-  box.appendChild(cSel);
-  return box;
-}
-function currentSecTextCols(bid) {
-  var u = userLayoutFor(currentTheme());
-  return (u && u.textCols && u.textCols[bid]) || 1;
-}
-function setSecTextCols(bid, n) {
-  mutateSheetLayout(function (u) { u.textCols = u.textCols || {}; u.textCols[bid] = n; });
-  applyLayout(currentTheme());
 }
 
 /* Применение сохранённой раскладки произвольной вкладки (не «Листа»). */
@@ -2100,35 +2092,45 @@ function startBlockDrag(ev, node) {
 /* Определение цели по координатам. Возвращает:
    {container, before|null} — вставить блок в колонку (перед before или в конец);
    null — цели нет.
-   Правила против вложения: fieldset-цель принимается ТОЛЬКО когда точка
-   находится в пределах её legend (тогда вставка перед этим блоком); если под
-   курсором тело чужого блока — ищем его колонку-контейнер. */
+   Правила против «убегания» и вложения блоков:
+   - контейнером может быть ТОЛЬКО узел из tabContainers() текущей вкладки
+     (колонки .sheet-area на листе, div-колонки srv-layout, сам ряд grid3);
+     прямые дети #sheet-grid вне колонок — не цель;
+   - чужой fieldset принимается только когда точка в его legend — тогда это
+     смена порядка ВНУТРИ его колонки (вложение исключено);
+   - попали телом в чужой блок — целимся в его колонку, позиция по Y. */
+function validContainer(n, tabId) {
+  if (!n || n.nodeType !== 1) return false;
+  var conts = tabContainers(tabId);
+  for (var i = 0; i < conts.length; i++) if (conts[i] === n) return true;
+  return false;
+}
 function dropTargetAt(x, y, ds) {
   var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
   for (var i = 0; i < els.length; i++) {
     var e = els[i];
     if (!e || e === ds.node || e.contains(ds.node)) continue;
-    // 1) заголовок чужого блока → вставка перед ним (тот же контейнер)
+    // 1) заголовок чужого блока → смена порядка перед ним (в ЕГО колонке)
     if (e.tagName === 'LEGEND') {
       var fs = e.parentElement;
       if (fs && fs.tagName === 'FIELDSET' && fs !== ds.node && fs.dataset.bid) {
-        return { container: fs.parentNode, before: fs };
+        var fc = fs.parentNode;
+        if (validContainer(fc, ds.tab)) return { container: fc, before: fs };
       }
     }
-    // 2) колонка-контейнер
-    if (isContainerNode(e, ds.tab)) return { container: e, before: null };
+    // 2) колонка-контейнер (только разрешённые зоной вкладки)
+    if (validContainer(e, ds.tab)) return { container: e, before: null };
     // 3) попали внутрь чужого блока — целимся в его колонку, позиция — по Y
-    if (e.tagName === 'FIELDSET' || (e.closest && (e.closest('fieldset') || e.closest('.sheet-area')))) {
-      var blk = e.tagName === 'FIELDSET' ? e : e.closest('fieldset');
-      var cont = blk ? containerOf(blk) : e.closest('.sheet-area');
-      if (!cont) continue;
-      var sibs = blocksOf(cont).filter(function (b) { return b !== ds.node; });
+    if (e.tagName === 'FIELDSET') {
+      var host = e.parentNode;
+      if (!validContainer(host, ds.tab)) continue;
+      var sibs = blocksOf(host).filter(function (b) { return b !== ds.node; });
       var before = null;
       for (var j = 0; j < sibs.length; j++) {
         var r = sibs[j].getBoundingClientRect();
         if (y < r.bottom) { before = sibs[j]; break; }
       }
-      return { container: cont, before: before };
+      return { container: host, before: before };
     }
   }
   return null;

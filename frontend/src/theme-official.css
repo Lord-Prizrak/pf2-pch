@@ -97,10 +97,9 @@ body.theme-official .feat-item { border-left-color: var(--accent); background: #
 body.theme-official .toast { background: #3a2f22; }
 
 /* ---------- РАСКЛАДКА official: две колонки, как в официальном PDF ---------- */
-/* «Основное» — широкая шапка сверху (как титульный блок PDF) */
-body.theme-official .info-block { grid-area: info; }
-body.theme-official #sheet-grid { grid-template-areas: "info info" "left right"; }
-@media (max-width: 1000px) { body.theme-official #sheet-grid { grid-template-areas: "info" "left" "right"; } }
+/* «Основное» — широкая шапка сверху (как титульный блок PDF). Размещение
+   колонок делает базовая 12-колоночная сетка (#sheet-grid + --span:6 для
+   official), grid-area/grid-template-areas больше не используются. */
 
 /* характеристики — карточками в ряд (крупный модификатор + значение), как в PDF */
 body.theme-official .abil-table { display: none; }
