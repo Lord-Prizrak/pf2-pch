@@ -233,6 +233,18 @@ body.dragging-active { user-select: none; cursor: grabbing; }
   outline: 3px dashed var(--accent2); outline-offset: -3px;
   border-radius: 10px; background: rgba(59,91,58,.06); }
 
+/* пустая колонка остаётся зоной для возврата блоков (не схлопывается) */
+.sheet-area.area-empty { min-height: 140px; }
+body.edit-mode .sheet-area.area-empty,
+body.edit-mode .tabpage .area-empty {
+  min-height: 120px; border: 2px dashed var(--line); border-radius: 10px;
+  background: rgba(0,0,0,.02); }
+.srv-left.area-empty, .srv-right.area-empty { min-height: 140px; }
+/* линия вставки перед целевым блоком (смена порядка внутри колонки) */
+.sheet-sec.drop-before, .tabpage fieldset.drop-before {
+  box-shadow: 0 -4px 0 0 var(--accent2); border-radius: 8px; }
+.dragging { opacity: .45; }
+
 /* ширина отдельного блока (нормализуется к ширине колонки, чтобы не вылезать) */
 .sheet-sec[data-width="narrow"] { width: 66%; min-width: 0; max-width: 100%; align-self: flex-start; }
 .sheet-sec[data-width="wide"]   { width: 100%; }
