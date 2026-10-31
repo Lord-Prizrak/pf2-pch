@@ -1571,6 +1571,31 @@ function themeById(id) {
   return THEMES[0];
 }
 
+/* Выпадающий список тем в шапке: заполнение, выбор, применение темы. */
+function wireThemePicker() {
+  var sel = $('#theme-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  THEMES.forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  var apply = function () {
+    var id = validTheme(sel.value);
+    localStorage.setItem(LS_THEME, id);
+    // переключение темы — классом theme-<id> на <body> (как делает сборщик)
+    THEMES.forEach(function (t) { document.body.classList.remove('theme-' + t.id); });
+    if (id !== 'default') document.body.classList.add('theme-' + id);
+    sel.value = id;
+    applyLayout(id);
+    renderAll();
+  };
+  sel.value = currentTheme();
+  sel.addEventListener('change', apply);
+  apply();
+}
+
 /* ---------------- инициализация ---------------- */
 function boot() {
   renderTabs();
