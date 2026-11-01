@@ -38,18 +38,22 @@ var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'fe
    в официальной теме Paizo — 6 колонок (два столбца). */
 function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
 
+/* Каждый блок лежит ВНУТРИ одной из трёх колонок (.sheet-area) и занимает
+   span 4 (три столбца) или span 6 (два столбца — официальная тема Paizo).
+   «Основное» (bid 'info') — обычный блок шириной в один столбец, как все
+   остальные; он размещён первым в левой колонке каждой темы. */
 var THEMES = [
   { id: 'default', name: 'Раскладка: Классическая', layout: { cols: 3, map: {
-      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
+      left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
   { id: 'official', name: 'Раскладка: Официальная (Paizo)', layout: { cols: 2, map: {
-      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
+      left: ['info', 'abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
       hide: [] } },
   { id: 'sanych', name: 'Раскладка: Боевая (Саныч)', layout: { cols: 3, map: {
-      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
+      left: ['info', 'def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
   { id: 'dark', name: 'Раскладка: Тёмный VTT', layout: { strip: true, cols: 3, map: {
-      left: ['abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
+      left: ['info', 'abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
 
@@ -1717,6 +1721,7 @@ function ensureBlockIds() {
     var info = $('.info-block', grid);
     if (info && !info.dataset.bid) info.dataset.bid = 'info';
     $all(':scope > .sheet-area > fieldset', grid).forEach(mark);
+    if (info) mark(info);            // «Основное» — обычный блок внутри колонки
   }
   [['#hp-shield-panel', 'hp-top'], ['#weapon-prof-panel', 'wpnprof']].forEach(function (p) {
     var elx = $(p[0]);
@@ -1746,16 +1751,12 @@ function tabContainers(tabId) {
   }
   var page = $('#tab-' + tabId);
   if (!page) return [];
-  // раскладка вкладки запоминается ТОЛЬКО когда её контейнеры — колонки одного
-  // grid-ряда (.grid3/.srv-layout): блоки можно менять местами между колонками.
+  /* Единая сетка для всех вкладок данных: контейнер — вся страница,
+     каждый блок — ячейка 12-колоночной сетки (span из --span). Блоки
+     меняются местами порядком в DOM; вложение исключено. */
+  if (tabId === 'inventory' || tabId === 'bio') return [page];
   // Вкладки с запрещённым переносом («Серверы», «Импорт/экспорт») не имеют зон.
   if (NO_DRAG_TABS[tabId]) return [];
-  // «Биография»: каждая секция — ячейка фиксированной 12-колоночной сетки
-  // (span 4 = три столбца); drag меняет только порядок секций внутри ряда.
-  if (tabId === 'bio') {
-    var row = $('.bio-grid', page);
-    return row ? [row] : [];
-  }
   var out = [];
   for (var n = page.firstElementChild; n; n = n.nextElementSibling) {
     if (n.classList.contains('grid3') || n.classList.contains('srv-layout')) {
@@ -1829,6 +1830,9 @@ function baseSheetMap() {
     if (!area) return;
     blocksOf(area).forEach(function (f) { out[c].push(f.dataset.bid); });
   });
+  /* Все прямые дети #sheet-grid — только панели-дубли с известным «домом»;
+     они вставляются в колонку сразу после домашней секции. Блоков на всю
+     ширину больше нет: «Основное» — обычный блок в колонке (span как у всех). */
   $all(':scope > fieldset', grid).forEach(function (f) {
     var bid = f.dataset.bid;
     var homeSec = HOME[f.id];
@@ -1838,28 +1842,44 @@ function baseSheetMap() {
         if (out[SHEET_AREA_COLS[i]].indexOf(homeSec) >= 0) { col = SHEET_AREA_COLS[i]; break; }
       }
     }
-    if (col) {
-      var at = out[col].indexOf(homeSec) + 1;
-      out[col].splice(at, 0, bid);          // сразу после домашней секции
-      f.dataset.col = col;
-      var area = $('.sheet-area[data-col="' + col + '"]', grid);
-      var ref = area.children[at - 1] || null;
-      area.insertBefore(f, ref ? ref.nextSibling : null);
-    } else {
-      f.dataset.col = 'full';               // широкая шапка («Основное»)
-      out.full.push(bid);
+    if (!col) col = 'left';                 // неопознанный блок — в левую колонку
+    var idx = homeSec ? out[col].indexOf(homeSec) : -1;
+    var at = idx >= 0 ? idx + 1 : 0;        // после домашней секции (или в начало)
+    out[col].splice(at, 0, bid);
+    f.dataset.col = col;
+    var area = $('.sheet-area[data-col="' + col + '"]', grid);
+    if (area) {
+      var ref = at > 0 ? area.children[at - 1] : null;
+      area.insertBefore(f, ref ? ref.nextSibling : area.firstChild);
     }
   });
   return out;
 }
+/* Санация старых сохранений раскладки: блоки, которые прежние версии
+   складывали в список full (на всю ширину), возвращаем в левую колонку —
+   теперь все блоки имеют одинаковую ширину столбца. */
+function migrateFullBlocks(u) {
+  if (!u || !u.map || !u.map.full || !u.map.full.length) return;
+  u.map.full.forEach(function (bid) {
+    if (bid === 'info') return;             // info и так в left у новых тем
+    if ((u.map.left || []).indexOf(bid) < 0) u.map.left.unshift(bid);
+  });
+  u.map.full = [];
+}
 function effectiveLayout(themeId) {
   var base = themeById(themeId).layout || {};
   var u = userLayoutFor(themeId) || {};
+  migrateFullBlocks(u);                     // старые full-блоки → в левую колонку
   var bmap = baseSheetMap();
   var map = { left: (u.map && u.map.left) || bmap.left,
               mid: (u.map && u.map.mid) || bmap.mid,
               right: (u.map && u.map.right) || bmap.right,
               full: (u.map && u.map.full) || bmap.full };
+  /* info больше не «full»: если остался в full из старого сохранения — в начало левой колонки */
+  if (map.full.indexOf('info') >= 0) {
+    map.full = map.full.filter(function (b) { return b !== 'info'; });
+    if (map.left.indexOf('info') < 0) map.left = ['info'].concat(map.left);
+  }
   return { cols: base.cols === 2 ? 2 : 3, map: map,
            textCols: u.textCols || {},
            strip: base.strip, hide: base.hide };
@@ -1943,7 +1963,7 @@ function applyLayout(themeId) {
   var strip = $('.combat-strip', grid);
   if (strip) strip.dataset.col = 'strip';
   var info = $('.info-block', grid);
-  if (info) { info.dataset.col = 'full'; info.classList.add('sheet-sec'); }
+  if (info) { delete info.dataset.col; info.classList.add('sheet-sec'); }
 
   /* Санация структуры ДО нормализации: блоки, «убежавшие» прямыми детьми
      #sheet-grid или вложившиеся в чужой fieldset, возвращаем в домашние
@@ -1954,11 +1974,11 @@ function applyLayout(themeId) {
     }
     return null;
   }
-  $all(':scope > fieldset[data-bid]', grid).forEach(function (f) {
-    if (f.dataset.col === 'full') return;
+  $all(':scope > fieldset[data-bid]', grid).forEach(function (f) {   // любой прямой ребёнок сетки — ошибка, возвращаем в колонку
     var home = homeColOf(f.dataset.bid);
     var cont = home && !(home === 'mid' && cols === 2) ? areas[home] : areas.left;
     if (f.parentNode !== cont) { delete f._dragWire; cont.appendChild(f); }
+    delete f.dataset.col;
   });
   $all('fieldset fieldset[data-bid]', grid).forEach(function (f) {   // вложение — недопустимо
     var host = f.closest('.sheet-area');
@@ -1986,16 +2006,12 @@ function applyLayout(themeId) {
       else { delete node._dragWire; node.remove(); cont.appendChild(node); }
     });
   });
-  // «Основное» и прочие full-блоки — прямые дети сетки, во всю ширину
-  (lay.map.full || []).forEach(function (bid) {
-    var node = $('[data-bid="' + bid + '"]', grid);
-    if (node) { node.dataset.col = 'full'; placed[bid] = true; }
-  });
+  /* Блоков «на всю ширину» больше нет: всё лежит в колонках span 4/6. */
   // страховка: любой непойманный блок владения листа — в правую колонку
   $all('fieldset[data-bid]', grid).forEach(function (f) {
     if (f.closest('#sheet-grid') !== grid) return;   // чужие вкладки — мимо
     if (f.classList.contains('sheet-area')) return;
-    if (f.dataset.bid && !placed[f.dataset.bid] && f.dataset.col !== 'full') {
+    if (f.dataset.bid && !placed[f.dataset.bid]) {
       areas.right.appendChild(f);
     }
   });

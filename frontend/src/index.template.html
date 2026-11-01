@@ -40,7 +40,8 @@
       <!-- лента для раскладки "Тёмный VTT" (strip): в неё JS копирует панель ПЗ/щита -->
       <div class="combat-strip" aria-hidden="true"></div>
 
-      <fieldset class="info-block"><legend>Основное</legend>
+      <div class="sheet-area" data-col="left">
+<fieldset class="info-block"><legend>Основное</legend>
           <div class="row"><label>Имя персонажа<input data-bind="name"></label>
             <label>Игрок<input data-bind="player"></label></div>
           <div class="row"><label>Народ<input data-bind="core.ancestry"></label>
@@ -57,9 +58,7 @@
             <label class="grow">Особые перемещения<input data-bind="core.speed.notes"></label></div>
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
       </fieldset>
-
-      <div class="sheet-area" data-col="left">
-        <fieldset class="sheet-sec sec-abil"><legend>Характеристики</legend>
+              <fieldset class="sheet-sec sec-abil"><legend>Характеристики</legend>
           <table class="abil-table"><thead><tr><th></th><th>Хар</th><th>Мод</th><th>+2 ув.</th></tr></thead>
           <tbody id="abilities-body"></tbody></table>
           <!-- карточки характеристик (раскладки classic/official) -->
