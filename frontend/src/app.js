@@ -12,6 +12,7 @@ var LS_CHARS = 'pf2e.characters.v1';     // {id: sheetJson}
 var LS_CURRENT = 'pf2e.currentId';
 var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
 var LS_THEME = 'pf2e.theme.v1';
+var LS_PALETTE = 'pf2e.palette.v1';   // цветовая гамма (независимо от темы-раскладки)
 var LS_EDITMODE = 'pf2e.editmode.v1';   // чек-бокс «режим редактирования раскладки»
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
@@ -38,16 +39,16 @@ var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'fe
 function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
 
 var THEMES = [
-  { id: 'default', name: 'Классический', layout: { cols: 3, map: {
+  { id: 'default', name: 'Раскладка: Классическая', layout: { cols: 3, map: {
       left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'official', name: 'Официальный (Paizo)', layout: { cols: 2, map: {
+  { id: 'official', name: 'Раскладка: Официальная (Paizo)', layout: { cols: 2, map: {
       left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
       hide: [] } },
-  { id: 'sanych', name: 'Лист персонажа (Саныч)', layout: { cols: 3, map: {
+  { id: 'sanych', name: 'Раскладка: Боевая (Саныч)', layout: { cols: 3, map: {
       left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
+  { id: 'dark', name: 'Раскладка: Тёмный VTT', layout: { strip: true, cols: 3, map: {
       left: ['abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
@@ -1571,7 +1572,25 @@ function themeById(id) {
   return THEMES[0];
 }
 
-/* Выпадающий список тем в шапке: заполнение, выбор, применение темы. */
+/* ---------------- цветовые гаммы (независимы от тем-раскладок) ----------
+   Тема (--theme / выбор в шапке) отвечает ТОЛЬКО за расположение блоков,
+   гамма (--palette / отдельный список) — ТОЛЬКО за цвета и шрифты. */
+var PALETTES = [
+  { id: 'default',  name: 'Гамма: Классическая (пергамент)' },
+  { id: 'official', name: 'Гамма: Официальная Paizo (cream)' },
+  { id: 'sanych',   name: 'Гамма: Ночная пергаментно-зелёная (Саныч)' },
+  { id: 'dark',     name: 'Гамма: Тёмный VTT (янтарь)' }
+];
+function validPalette(t) {
+  for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === t) return t;
+  return 'default';
+}
+var BUILD_PALETTE = (typeof window !== 'undefined' && window.__PF2E_BUILD_PALETTE__) || '';
+function currentPalette() {
+  return validPalette(localStorage.getItem(LS_PALETTE) || BUILD_PALETTE);
+}
+
+/* Выпадающий список тем-раскладок в шапке: только расположение блоков. */
 function wireThemePicker() {
   var sel = $('#theme-select');
   if (!sel) return;
@@ -1584,7 +1603,7 @@ function wireThemePicker() {
   var apply = function () {
     var id = validTheme(sel.value);
     localStorage.setItem(LS_THEME, id);
-    // переключение темы — классом theme-<id> на <body> (как делает сборщик)
+    // переключение раскладки — классом theme-<id> на <body> (как делает сборщик)
     THEMES.forEach(function (t) { document.body.classList.remove('theme-' + t.id); });
     if (id !== 'default') document.body.classList.add('theme-' + id);
     sel.value = id;
@@ -1596,11 +1615,34 @@ function wireThemePicker() {
   apply();
 }
 
+/* Выпадающий список цветовых гамм в шапке: только цвета/шрифты. */
+function wirePalettePicker() {
+  var sel = $('#palette-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  PALETTES.forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  var apply = function () {
+    var id = validPalette(sel.value);
+    localStorage.setItem(LS_PALETTE, id);
+    PALETTES.forEach(function (t) { document.body.classList.remove('pal-' + t.id); });
+    if (id !== 'default') document.body.classList.add('pal-' + id);
+    sel.value = id;
+  };
+  sel.value = currentPalette();
+  sel.addEventListener('change', apply);
+  apply();
+}
+
 /* ---------------- инициализация ---------------- */
 function boot() {
   renderTabs();
   ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
+  wirePalettePicker();
   wireTopbar();
   wireIOButtons();
   wireEditMode();

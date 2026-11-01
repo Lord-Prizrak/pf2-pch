@@ -1,124 +1,17 @@
 /* ==========================================================================
-   Тема "official" — по образцу официального Character Sheet от Paizo (PDF).
-   Двухколоночный лист, cream-фон, тёмно-красные заголовки секций на плашке,
-   крупные цифры КБ/ПЗ в квадратах с двойной рамкой.
+   Тема "official" — РАСКЛАДКА по образцу официального Character Sheet Paizo:
+   две колонки (span 6), характеристики карточками, панель ПЗ/щита, плитки
+   спасбросков. Цвета и шрифты несёт гамма pal-official (palette-official.css).
    ========================================================================== */
-
-body.theme-official {
-  --bg: #d9d2c5;
-  --panel: #f9f4e6;
-  --ink: #1e1a17;
-  --accent: #932f2b;
-  --accent2: #4a6741;
-  --line: #8d8574;
-  --muted: #6b6152;
-  background: var(--bg);
-}
-
-/* шапка вместо тёмного топа — светлая, как титульная полоса PDF */
-body.theme-official #topbar {
-  background: linear-gradient(#f9f4e6, #ece3cf);
-  color: var(--ink);
-  border-bottom: 3px double var(--accent);
-  box-shadow: 0 2px 5px rgba(0,0,0,.25);
-}
-body.theme-official .brand { font-family: Georgia, 'Times New Roman', serif; color: #3a2f22; }
-body.theme-official .brand b { color: var(--accent); }
-body.theme-official #character-select { background: #fff; }
-body.theme-official .save-state { color: var(--muted); }
-body.theme-official #tabs-nav button { color: #5a4d3a; }
-body.theme-official #tabs-nav button.active {
-  color: var(--accent); background: rgba(147,47,43,.08); border-bottom-color: var(--accent);
-}
-
-/* две колонки, как в официальном PDF */
 body.theme-official main { max-width: 1150px; }
-body.theme-official .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 1000px) { body.theme-official .grid { grid-template-columns: 1fr; } }
-
-/* секции: заголовок-плашка сверху поля, белая подложка */
-body.theme-official fieldset {
-  border: 1px solid var(--line);
-  border-radius: 0;
-  background: #fffdf5;
-  box-shadow: 0 1px 4px rgba(0,0,0,.18);
-  padding: 10px 12px 12px;
-}
-body.theme-official legend {
-  background: var(--accent);
-  color: #f6efe0;
-  padding: 3px 14px;
-  border-radius: 2px;
-  font-family: Georgia, serif;
-  font-size: 13px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  margin-left: -4px;
-}
-
-body.theme-official input, body.theme-official textarea, body.theme-official select {
-  border: none;
-  border-bottom: 1px solid #b7ad97;
-  border-radius: 0;
-  background: transparent;
-  padding: 2px 4px;
-}
-body.theme-official input:focus, body.theme-official textarea:focus {
-  outline: none; background: #fdf6df; border-bottom-color: var(--accent);
-}
-
-/* крупные квадраты статистики */
-body.theme-official .stat {
-  border: 3px double #7a6f5a;
-  border-radius: 0;
-  background: #fff;
-  padding: 6px 2px;
-}
-body.theme-official .stat span { font-family: Georgia, serif; color: var(--accent); font-weight: 700; }
-body.theme-official .stat b { font-size: 30px; font-family: Georgia, serif; }
-
-body.theme-official .abil-table td:first-child { font-family: Georgia, serif; }
-body.theme-official .mod-badge { background: #ece3cf; border: 1px solid var(--line); border-radius: 2px; }
-body.theme-official .prof-pick button.on { background: var(--accent); border-color: var(--accent); }
-
-body.theme-official #hp-bar { background: linear-gradient(#b23f38, #7c241f); }
-body.theme-official #hp-bar-wrap { border: 2px solid #7a6f5a; border-radius: 0; }
-
-body.theme-official .btn {
-  background: #ece3cf; border: 1px solid #9a8f78; border-radius: 2px;
-  font-family: Georgia, serif;
-}
-body.theme-official .btn:hover { background: #ddd2b8; }
-body.theme-official .btn.primary { background: var(--accent); color: #fff; }
-
-body.theme-official .dot { border-color: var(--accent); }
-body.theme-official .dot.used { background: var(--accent); }
-body.theme-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
-body.theme-official .toast { background: #3a2f22; }
-
-/* ---------- РАСКЛАДКА official: две колонки, как в официальном PDF ---------- */
-/* «Основное» — широкая шапка сверху (как титульный блок PDF). Размещение
-   колонок делает базовая 12-колоночная сетка (#sheet-grid + --span:6 для
-   official), grid-area/grid-template-areas больше не используются. */
-
-/* характеристики — карточками в ряд (крупный модификатор + значение), как в PDF */
+body.theme-official #hp-shield-panel { display: block; }
 body.theme-official .abil-table { display: none; }
 body.theme-official .ability-cards { display: flex; gap: 6px; }
-body.theme-official .abil-card { flex: 1; border: 2px double #7a6f5a; border-radius: 0;
-  background: #fff; padding: 8px 4px; }
-body.theme-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
-body.theme-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
-body.theme-official .abil-card input.card-score { border: none; border-bottom: 1px solid #b7ad97; width: 48px; }
-
-/* крупные ПЗ/щит в правом верхнем углу; спасброски — квадратными плитками */
-body.theme-official #hp-shield-panel { display: block; }
 body.theme-official .hps-row { display: flex; gap: 10px; align-items: stretch; }
-body.theme-official .hp-stat, body.theme-official .shield-stat {
-  border: 3px double #7a6f5a; border-radius: 0; background: #fff; min-width: 120px; padding: 8px; }
-body.theme-official .hp-stat b, body.theme-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
-body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; color: var(--muted); font-size: 11px; }
+body.theme-official .hp-stat, body.theme-official .shield-stat { min-width: 120px; padding: 8px; }
+body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; font-size: 11px; }
 body.theme-official .hps-quick { display: flex; flex-wrap: wrap; gap: 4px; align-content: center; }
 body.theme-official .saves-tiles { display: flex; gap: 8px; margin: 6px 0; }
-body.theme-official .save-tile { flex: 1; text-align: center; border: 2px double #7a6f5a; background: #fff; padding: 4px; }
-body.theme-official .save-tile span { display: block; font-size: 10.5px; color: var(--accent); font-family: Georgia, serif; text-transform: uppercase; }
-body.theme-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }
+body.theme-official .save-tile { flex: 1; text-align: center; padding: 4px; }
+body.theme-official .save-tile span { display: block; font-size: 10.5px; text-transform: uppercase; }
+body.theme-official .save-tile b { font-size: 20px; }

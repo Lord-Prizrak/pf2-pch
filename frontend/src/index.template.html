@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PF2e — интерактивный лист персонажа</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
-<!-- PF2E-BUILD-THEME: класс/тема, проставляемая tools/build.py (--theme) -->
+<!-- PF2E-BUILD-THEME: тема-раскладка (tools/build.py --theme), переопределяется выбором в шапке -->
+<!-- PF2E-BUILD-PALETTE: цветовая гамма (tools/build.py --palette) -->
 <script>window.__PF2E_BUILD_THEME__ = '__PF2E_THEME__';</script>
-<!-- PF2E-BUILD-LAYOUT: раскладка листа (tools/build.py --layout), переопределяется выбором темы на лету -->
-<script>window.__PF2E_BUILD_LAYOUT__ = '__PF2E_LAYOUT__';</script>
+<script>window.__PF2E_BUILD_PALETTE__ = '__PF2E_PALETTE__';</script>
 <!-- PF2E-SHEET-DATA:START -->
 <script id="pf2e-embedded-data" type="application/json">null</script>
 <!-- PF2E-SHEET-DATA:END -->
 <link rel="stylesheet" href="style.css">
 </head>
-<body class="theme-__PF2E_THEME_BODY__">
+<body class="theme-__PF2E_THEME_BODY__ pal-__PF2E_PALETTE_BODY__">
 <header id="topbar">
   <div class="brand">PF<b>2e</b> Лист персонажа</div>
   <div id="char-switcher">
@@ -24,7 +24,8 @@
   </div>
   <div class="save-state" id="save-state">—</div>
   <div class="topbar-appearance">
-    <select id="theme-select" title="Вариант оформления листа"></select>
+    <select id="theme-select" title="Тема: расположение блоков (раскладка)"></select>
+    <select id="palette-select" title="Цветовая гамма оформления"></select>
     <label class="edit-mode-label" title="Разрешить перетаскивание блоков за заголовки и изменение ширины/колонок текста">
       <input type="checkbox" id="edit-mode-check"> Редактирование
     </label>

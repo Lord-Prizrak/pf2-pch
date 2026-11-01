@@ -4,8 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PF2e — интерактивный лист персонажа</title>
-<!-- PF2E-BUILD-THEME: класс/тема, проставляемая tools/build.py (--theme) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
+<!-- PF2E-BUILD-THEME: тема-раскладка (tools/build.py --theme), переопределяется выбором в шапке -->
+<!-- PF2E-BUILD-PALETTE: цветовая гамма (tools/build.py --palette) -->
 <script>window.__PF2E_BUILD_THEME__ = "default";</script>
+<script>window.__PF2E_BUILD_PALETTE__ = "default";</script>
 <!-- PF2E-SHEET-DATA:START -->
 <script id="pf2e-embedded-data" type="application/json">
 {
@@ -24,6 +27,8 @@
   --accent2: #3b5b3a;
   --line: #d8cdb9;
   --muted: #8a7c66;
+  --field: #fff;      /* фон полей ввода */
+  --chip: #faf4e8;    /* фон плиток/карточек/слотов */
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
@@ -58,7 +63,7 @@ label { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; colo
 label.grow { flex: 1 1 100%; } label.half { flex: 1 1 45%; }
 input, select, textarea, button { font: inherit; color: var(--ink); }
 input, textarea, select { border: 1px solid var(--line); border-radius: 5px; padding: 4px 6px;
-  background: #fff; }
+  background: var(--field, #fff); }
 input[type="number"] { width: 60px; }
 input.xs { width: 62px; } input.s { width: 90px; } input.m { width: 140px; }
 textarea { resize: vertical; }
@@ -73,7 +78,7 @@ textarea { resize: vertical; }
 .btn.active-tab { outline: 2px solid var(--accent); }
 
 .bigstats { display: flex; gap: 10px; margin: 4px 0 8px; }
-.stat { flex: 1; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: #faf4e8; padding: 4px; }
+.stat { flex: 1; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: var(--chip, #faf4e8); padding: 4px; }
 .stat span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; }
 .stat b { font-size: 24px; }
 
@@ -86,15 +91,15 @@ table.mini td { padding: 2px 4px; border-top: 1px dashed var(--line); vertical-a
 .abil-table td { padding: 3px 4px; text-align: center; border-top: 1px dashed var(--line); }
 .abil-table td:first-child { font-weight: 700; text-align: left; }
 .mod-badge { display: inline-block; min-width: 34px; padding: 2px 4px; border-radius: 5px;
-  background: #eee4cf; font-weight: 700; }
+  background: var(--chip, #eee4cf); font-weight: 700; }
 
 .prof-pick { display: inline-flex; gap: 2px; }
-.prof-pick button { border: 1px solid var(--line); background: #fff; font-size: 10.5px;
+.prof-pick button { border: 1px solid var(--line); background: var(--field, #fff); font-size: 10.5px;
   padding: 1px 5px; cursor: pointer; border-radius: 3px; color: var(--muted); }
 .prof-pick button.on { background: var(--accent2); color: #fff; border-color: var(--accent2); }
 
 #hp-bar-wrap { position: relative; height: 22px; border: 1px solid var(--line); border-radius: 6px;
-  background: #fff; overflow: hidden; margin: 6px 0; }
+  background: var(--field, #fff); overflow: hidden; margin: 6px 0; }
 #hp-bar { height: 100%; width: 100%; background: linear-gradient(#a5d07f, #6da34f); transition: width .2s; }
 #hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 12px; }
@@ -106,14 +111,14 @@ table.mini td { padding: 2px 4px; border-top: 1px dashed var(--line); vertical-a
 .add-line { margin-top: 4px; }
 
 .spell-slot-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 6px 0; }
-.slot-cell { border: 1px solid var(--line); border-radius: 6px; text-align: center; padding: 3px; background: #faf4e8; }
+.slot-cell { border: 1px solid var(--line); border-radius: 6px; text-align: center; padding: 3px; background: var(--chip, #faf4e8); }
 .slot-cell b { display: block; font-size: 12px; }
 .slot-dots { display: flex; justify-content: center; gap: 3px; margin-top: 2px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--accent2); background: #fff; cursor: pointer; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--accent2); background: var(--field, #fff); cursor: pointer; }
 .dot.used { background: var(--accent2); }
 
 .server-list .srv-item { display: flex; align-items: center; gap: 8px; padding: 6px; border: 1px solid var(--line);
-  border-radius: 7px; margin: 5px 0; background: #fff; cursor: pointer; }
+  border-radius: 7px; margin: 5px 0; background: var(--panel, #fff); cursor: pointer; }
 .server-list .srv-item.sel { outline: 2px solid var(--accent); }
 .server-list .srv-item .url { flex: 1; font-family: monospace; }
 .dotled { width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
@@ -143,21 +148,257 @@ table.mini td { padding: 2px 4px; border-top: 1px dashed var(--line); vertical-a
 code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:12px; }
 
 .feats-cat { font-weight: 700; color: var(--accent2); margin: 8px 0 2px; font-size: 12px; text-transform: uppercase; }
-.feat-item { border-left: 3px solid var(--line); padding: 2px 8px; margin: 4px 0; background: #fbf7ee; border-radius: 0 6px 6px 0; }
+.feat-item { border-left: 3px solid var(--line); padding: 2px 8px; margin: 4px 0; background: var(--chip, #fbf7ee); border-radius: 0 6px 6px 0; }
 .feat-item .lvl { color: var(--muted); font-size: 11px; }
 .strike-attack { font-weight: 700; min-width: 42px; display: inline-block; }
 .roll-btn { border: 1px solid var(--line); background: #fff; border-radius: 5px; cursor: pointer; padding: 2px 7px; }
 .roll-btn:hover { background: #f0e6d0; }
 
+/* ==========================================================================
+   РАСКЛАДКИ листа (layout). Тема = цвета + расположение блоков.
+
+   Как это устроено и почему блоки больше не наезжают друг на друга:
+     - #sheet-grid — 12-колоночная CSS Grid (repeat(12, minmax(0,1fr))).
+       Колонки листа (.sheet-area) — её прямые дети; каждая занимает span
+       колонок через --span: 4 (три столбца — темы classic/sanych/dark) или
+       6 (два столбца — официальный лист Paizo). Ширина задаётся ТОЛЬКО
+       раскладкой темы — пользователь её не меняет.
+     - Секции (.sheet-sec) лежат ВНУТРИ колонок-контейнеров; каждая колонка —
+       flex-столбик (gap между блоками гарантирован, перекрытие невозможно,
+       вложение блоков структурно исключено — drop всегда идёт в колонку).
+     - applyLayout() НЕ использует display:contents / grid-area: var() /
+       inline order — эти механизмы по-разному поддерживались браузерами и
+       приводили к наложению и «убеганию» блоков. Порядок секций = порядок
+       узлов в DOM колонки; перенос секции между колонками — appendChild.
+     - Лишние/дублирующиеся панели скрываются классом .sec-hidden.
+     - Число колонок листа задаётся data-cols="2|3" на #sheet-grid; «Основное»
+       (.info-block) всегда во всю ширину сверху; combat-strip — горизонтальная
+       лента для VTT-раскладки (включается data-strip="1").
+   ========================================================================== */
+.sheet-grid { display: grid; gap: 12px; align-items: start; }
+.sheet-area { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.info-block { margin-bottom: 0; }
+.combat-strip { display: none; }
+.sheet-grid[data-strip="1"] > .combat-strip { display: block; }
+.sheet-sec { margin: 0; min-width: 0; overflow-wrap: break-word; }
+.sec-hidden { display: none !important; }
+
+/* 12-колоночная сетка: колонки листа получают span из --span (4 или 6) */
+#sheet-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+#sheet-grid > .sheet-area { grid-column: span var(--span, 4); }
+#sheet-grid > [data-col="strip"], #sheet-grid > [data-col="full"] { grid-column: 1 / -1; }
+#sheet-grid > [data-col="strip"] { order: -2; }
+#sheet-grid > .info-block { order: -1; }
+/* якорь пустой колонки: не даёт ей схлопнуться и служит зоной возврата */
+.area-anchor { height: 8px; flex: none; }
+
+@media (max-width: 1100px) {                /* планшет/мобильный — одна колонка */
+  #sheet-grid { grid-template-columns: minmax(0, 1fr); }
+  #sheet-grid > .sheet-area { grid-column: 1 / -1; }
+}
+
+/* Вкладки «Инвентарь» и «Биография» — те же 12 колонок, блоки по умолчанию
+   span 4 (три столбца). reflowGridRow() может переопределить число столбцов
+   inline-стилем, если пользователь собрал блоки в меньшее число колонок. */
+.inv-grid, .bio-grid { display: grid; gap: 12px; align-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.inv-grid > fieldset, .bio-grid > fieldset { margin: 0; min-width: 0; }
+@media (max-width: 1100px) {
+  .inv-grid, .bio-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* карточки характеристик (по умолчанию скрыты — включаются раскладками classic/official) */
+.ability-cards { display: none; }
+
+/* панель ПЗ/щит по умолчанию скрыта — её показывают только соответствующие раскладки */
+#hp-shield-panel { display: none; }
+
+/* ---------- раскладка темы "Классический" (default) ---------- */
+body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .ability-cards { display: grid;
+  grid-template-columns: repeat(3, 1fr); gap: 8px; }
+body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .abil-table { display: none; }
+.abil-card { border: 1px solid var(--line); border-radius: 8px; background: var(--chip, #faf4e8);
+  padding: 6px; text-align: center; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.abil-card .card-abbr { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.abil-card .card-mod { font-size: 22px; font-weight: 800; color: var(--accent); }
+.abil-card input.card-score { width: 56px; text-align: center; }
+.abil-card .card-boost { flex-direction: row; align-items: center; gap: 3px; font-size: 10.5px; }
+
+/* панель ПЗ/щит видна в классической и official-раскладках */
+body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
+
+/* ==========================================================================
+   Режим «Редактирование» (чек-бокс в шапке рядом с выбором темы)
+   Секции можно таскать за заголовки между колонками и менять их порядок
+   внутри колонки. РАЗМЕР/ШИРИНА БЛОКОВ НЕ РЕГУЛИРУЕТСЯ — она задаётся
+   только раскладкой темы (12-колоночная сетка: span 4 / 6).
+   ========================================================================== */
+.topbar-appearance { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
+#theme-select { padding: 3px 6px; border-radius: 6px; border: 1px solid #6b543a;
+  background: #f3e9d6; color: #2b2117; font-size: 12.5px; }
+.edit-mode-label { display: flex; flex-direction: row; align-items: center; gap: 5px;
+  font-size: 11.5px; color: #d9c9a8; cursor: pointer; text-transform: none; margin: 0; }
+.edit-mode-label input { accent-color: #e0a45e; margin: 0; }
+
+.sec-controls { display: none; gap: 6px; align-items: center; margin: 2px 0 6px;
+  padding: 4px 6px; border: 1px dashed var(--line); border-radius: 6px; background: rgba(0,0,0,.03); }
+.sec-controls select { font-size: 11px; padding: 2px 4px; }
+body.edit-mode .sec-controls { display: inline-flex; }
+body.edit-mode legend.drag-handle { cursor: grab; }
+body.edit-mode legend.drag-handle:hover { outline: 2px dashed var(--accent); outline-offset: 2px; border-radius: 4px; }
+body:not(.edit-mode) legend.drag-handle { cursor: default; }
+body.edit-mode fieldset > legend { cursor: grab; }
+.sheet-sec.dragging, .tabpage fieldset.dragging { opacity: .45; }
+body.dragging-active { user-select: none; cursor: grabbing; }
+.sheet-area.drop-over { outline: 3px dashed var(--accent2); outline-offset: -3px;
+  border-radius: 10px; background: rgba(59,91,58,.06); }
+/* подсветка блоков-контейнеров на вкладках Инвентарь/Биография/Серверы */
+.tabpage fieldset.drop-over, .srv-left.drop-over, .srv-right.drop-over {
+  outline: 3px dashed var(--accent2); outline-offset: -3px;
+  border-radius: 10px; background: rgba(59,91,58,.06); }
+
+/* пустая колонка остаётся зоной для возврата блоков (не схлопывается) */
+.sheet-area.area-empty { min-height: 140px; }
+body.edit-mode .sheet-area.area-empty,
+body.edit-mode .tabpage .area-empty {
+  min-height: 120px; border: 2px dashed var(--line); border-radius: 10px;
+  background: rgba(0,0,0,.02); }
+.srv-left.area-empty, .srv-right.area-empty { min-height: 140px; }
+/* линия вставки перед целевым блоком (смена порядка внутри колонки) */
+.sheet-sec.drop-before, .tabpage fieldset.drop-before {
+  box-shadow: 0 -4px 0 0 var(--accent2); border-radius: 8px; }
+.dragging { opacity: .45; }
+
+/* Ширина блока НЕ регулируется пользователем (по требованию) — она задаётся
+   только раскладкой темы (12-колоночная сетка: span 4 / 6). Правила
+   [data-width] удалены; JS снимает атрибут data-width со старых сохранений. */
+
+/* число колонок текста внутри блока: JS оборачивает содержимое fieldset
+   (кроме legend и панели управления) в .sec-body-wrap, которой задаётся
+   CSS multi-column. Обёртка не влияет на верстку при 1 колонке
+   (display:contents), поэтому блоки не ломаются и не наезжают друг на друга. */
+.sec-body-wrap { display: contents; }
+/* Число колонок текста в блоке НЕ регулируется — правила [data-cols] удалены. */
+.sec-body-wrap > * { break-inside: avoid; margin-top: 0; }
+
+@media print {
+  .sec-controls, .topbar-appearance { display: none !important; }
+}
+
+/* ---------------- список известных языков (блок «Основное») ------------- */
+.lang-list { display: block; margin-left: 6px; }
+.lang-items { list-style: none; margin: 2px 0 4px; padding: 0; display: flex;
+  flex-wrap: wrap; gap: 4px 6px; }
+.lang-item { display: inline-flex; align-items: center; gap: 2px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--chip, #faf4e8); padding: 1px 4px 1px 8px; }
+.lang-item input.lang-name { border: none; background: transparent; padding: 1px 2px;
+  font-size: 12.5px; color: var(--ink); }
+.lang-item input.lang-name:focus { outline: none; background: var(--field, #fff); border-radius: 4px; }
+.lang-del { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 3px; }
+.lang-del:hover { color: var(--accent); }
+.lang-empty { color: var(--muted); font-size: 12px; font-style: italic; }
+.lang-add { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.lang-pick { font-size: 11.5px; padding: 2px 4px; }
+.lang-custom { font-size: 11.5px; width: 110px; }
+
+/* Полная заливка фона: html наследует цвет/фон активной гаммы — иначе под
+   длинным листом на тёмных темах внизу оставалось светлое поле браузера. */
+html { background: var(--bg); }
+/* Гаммы: поля ввода/плитки и фон html под тёмными вариантами (полная заливка) */
+body.pal-dark { --field: #10141b; --chip: #161a22; }
+body.pal-sanych { --field: #12171c; --chip: #1d242b; }
+body.pal-official { --field: #fffdf5; --chip: #f3e9d6; }
+html:has(body.pal-dark) { background: #0d0f14; }
+html:has(body.pal-sanych) { background: #14181c; }
+html:has(body.pal-official) { background: #d9d2c5; }
+
+body.pal-dark, body.pal-sanych { color-scheme: dark; }
+body.pal-dark, body.pal-sanych { background-color: var(--bg); }
+
 
 /* === тема: dark === */
 /* ==========================================================================
-   Тема "dark" — тёмный «компактный VTT» в духе фанатских листов из интернета
-   (Reddit r/Pathfinder2e, Overchat/Dicejoy-подобные оверлеи):
-   почти чёрный фон, янтарные акценты, крупные кликабельные броски, sans-serif.
+   Тема "dark" — РАСКЛАДКА блоков. Цвета и шрифты несёт гамма pal-dark
+   (palette-dark.css).
+   ========================================================================== */
+/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху, три колонки ---------- */
+body.pal-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
+body.pal-dark .hps-row { display: flex; gap: 12px; align-items: center; }
+body.pal-dark .hp-stat, body.pal-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
+body.pal-dark .hp-stat span, body.pal-dark .shield-stat span { text-transform: uppercase; font-size: 10.5px; color: var(--muted); }
+body.pal-dark .hp-stat b, body.pal-dark .shield-stat b { font-size: 26px; color: var(--accent); }
+body.pal-dark .hp-stat small, body.pal-dark .shield-stat small { color: var(--muted); }
+body.pal-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
+body.pal-dark .sheet-sec { border-radius: 12px; }
+
+/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху (strip) ---------- */
+body.theme-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
+body.theme-dark .hps-row { display: flex; gap: 12px; align-items: center; }
+body.theme-dark .hp-stat, body.theme-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
+body.theme-dark .hp-stat span, body.theme-dark .shield-stat span { font-size: 10.5px; }
+body.theme-dark .hp-stat b, body.theme-dark .shield-stat b { font-size: 26px; }
+body.theme-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
+body.theme-dark .sheet-sec { border-radius: 12px; }
+
+
+/* === тема: official === */
+/* ==========================================================================
+   Тема "official" — РАСКЛАДКА по образцу официального Character Sheet Paizo:
+   две колонки (span 6), характеристики карточками, панель ПЗ/щита, плитки
+   спасбросков. Цвета и шрифты несёт гамма pal-official (palette-official.css).
+   ========================================================================== */
+body.theme-official main { max-width: 1150px; }
+body.theme-official #hp-shield-panel { display: block; }
+body.theme-official .abil-table { display: none; }
+body.theme-official .ability-cards { display: flex; gap: 6px; }
+body.theme-official .hps-row { display: flex; gap: 10px; align-items: stretch; }
+body.theme-official .hp-stat, body.theme-official .shield-stat { min-width: 120px; padding: 8px; }
+body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; font-size: 11px; }
+body.theme-official .hps-quick { display: flex; flex-wrap: wrap; gap: 4px; align-content: center; }
+body.theme-official .saves-tiles { display: flex; gap: 8px; margin: 6px 0; }
+body.theme-official .save-tile { flex: 1; text-align: center; padding: 4px; }
+body.theme-official .save-tile span { display: block; font-size: 10.5px; text-transform: uppercase; }
+body.theme-official .save-tile b { font-size: 20px; }
+
+
+/* === тема: sanych === */
+/* ==========================================================================
+   Тема "sanych" — РАСКЛАДКА блоков. Цвета и шрифты несёт гамма pal-sanych
+   (palette-sanych.css).
+   ========================================================================== */
+/* ---------- РАСКЛАДКА sanych: «боевой» лист — защиты/ПЗ слева, бой-сводка ---------- */
+body.pal-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
+body.pal-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+body.pal-sanych .cstat { border: 1px solid var(--line); background: #12171c; border-radius: 3px;
+  padding: 4px 10px; text-align: center; min-width: 64px; }
+body.pal-sanych .cstat small { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+body.pal-sanych .cstat b { color: var(--accent); font-family: Consolas, monospace; font-size: 18px; }
+body.pal-sanych .combat-strike { display: flex; align-items: center; gap: 8px;
+  border-top: 1px dashed var(--line); padding: 5px 2px; }
+body.pal-sanych .combat-strike .strike-attack { color: var(--accent2); font-family: Consolas, monospace; min-width: 34px; }
+body.pal-sanych .combat-strike small { color: var(--muted); margin-left: auto; font-family: Consolas, monospace; }
+
+/* ---------- РАСКЛАДКА sanych: «боевой» лист — панель ПЗ скрыта, сводка «Бой» ---------- */
+body.theme-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
+body.theme-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+body.theme-sanych .cstat { padding: 4px 10px; text-align: center; min-width: 64px; }
+body.theme-sanych .cstat small { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+body.theme-sanych .cstat b { font-size: 18px; }
+body.theme-sanych .combat-strike { display: flex; align-items: center; gap: 8px; padding: 5px 2px; }
+body.theme-sanych .combat-strike .strike-attack { min-width: 34px; }
+body.theme-sanych .combat-strike small { margin-left: auto; }
+
+
+/* === гамма: dark === */
+/* ==========================================================================
+   Гамма "dark" — цвета фанатского тёмного листа из интернета
+   (Reddit r/Pathfinder2e, Dicejoy-подобные оверлеи): почти чёрный фон,
+   янтарные акценты, sans-serif. ТОЛЬКО цвета/шрифты; расположение блоков
+   задаёт тема-раскладка (--theme).
    ========================================================================== */
 
-body.theme-dark {
+
+body.pal-dark {
   --bg: #0d0f14;
   --panel: #161a22;
   --ink: #cfd6e1;
@@ -169,87 +410,89 @@ body.theme-dark {
   font-size: 13.5px;
 }
 
-body.theme-dark #topbar {
+body.pal-dark #topbar {
   background: #10131a;
   border-bottom: 1px solid var(--line);
   box-shadow: none;
 }
-body.theme-dark .brand b { color: var(--accent); }
-body.theme-dark #character-select { background: #1c212b; color: var(--ink); border-color: var(--line); }
-body.theme-dark #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+body.pal-dark .brand b { color: var(--accent); }
+body.pal-dark #character-select { background: #1c212b; color: var(--ink); border-color: var(--line); }
+body.pal-dark #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-body.theme-dark fieldset {
+body.pal-dark fieldset {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: 0 4px 14px rgba(0,0,0,.45);
 }
-body.theme-dark legend {
+body.pal-dark legend {
   color: var(--accent);
   text-transform: none;
   font-weight: 600;
   letter-spacing: .02em;
 }
 
-body.theme-dark input, body.theme-dark textarea, body.theme-dark select {
+body.pal-dark input, body.pal-dark textarea, body.pal-dark select {
   background: #10141b; color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
 }
-body.theme-dark input:focus, body.theme-dark textarea:focus {
+body.pal-dark input:focus, body.pal-dark textarea:focus {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,163,61,.2);
 }
-body.theme-dark label { color: var(--muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: .05em; }
+body.pal-dark label { color: var(--muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: .05em; }
 
-body.theme-dark .stat { background: #10141b; border-radius: 10px; border-color: var(--line); }
-body.theme-dark .stat span { color: var(--muted); }
-body.theme-dark .stat b { color: var(--accent); font-size: 26px; }
+body.pal-dark .stat { background: #10141b; border-radius: 10px; border-color: var(--line); }
+body.pal-dark .stat span { color: var(--muted); }
+body.pal-dark .stat b { color: var(--accent); font-size: 26px; }
 
-body.theme-dark .btn {
+body.pal-dark .btn {
   background: #1c212b; color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
 }
-body.theme-dark .btn:hover { background: #242b37; border-color: var(--accent); }
-body.theme-dark .btn.primary { background: var(--accent); color: #14100a; border-color: var(--accent); font-weight: 700; }
-body.theme-dark .btn.danger { background: #2b1a1d; border-color: #5a2e33; color: #eab9bd; }
+body.pal-dark .btn:hover { background: #242b37; border-color: var(--accent); }
+body.pal-dark .btn.primary { background: var(--accent); color: #14100a; border-color: var(--accent); font-weight: 700; }
+body.pal-dark .btn.danger { background: #2b1a1d; border-color: #5a2e33; color: #eab9bd; }
 
-body.theme-dark #hp-bar-wrap { background: #10141b; border-color: var(--line); border-radius: 8px; }
-body.theme-dark #hp-bar { background: linear-gradient(#e8a33d, #b5722a); }
-body.theme-dark #hp-text { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+body.pal-dark #hp-bar-wrap { background: #10141b; border-color: var(--line); border-radius: 8px; }
+body.pal-dark #hp-bar { background: linear-gradient(#e8a33d, #b5722a); }
+body.pal-dark #hp-text { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
 
-body.theme-dark table.mini td { border-top-color: var(--line); }
-body.theme-dark table.mini th { color: var(--muted); }
-body.theme-dark .abil-table td { border-top-color: var(--line); }
-body.theme-dark .mod-badge { background: #242b37; color: var(--accent); border-radius: 6px; }
+body.pal-dark table.mini td { border-top-color: var(--line); }
+body.pal-dark table.mini th { color: var(--muted); }
+body.pal-dark .abil-table td { border-top-color: var(--line); }
+body.pal-dark .mod-badge { background: #242b37; color: var(--accent); border-radius: 6px; }
 
-body.theme-dark .prof-pick button { background: #10141b; color: var(--muted); border-color: var(--line); border-radius: 4px; }
-body.theme-dark .prof-pick button.on { background: var(--accent2); color: #0d1220; border-color: var(--accent2); }
+body.pal-dark .prof-pick button { background: #10141b; color: var(--muted); border-color: var(--line); border-radius: 4px; }
+body.pal-dark .prof-pick button.on { background: var(--accent2); color: #0d1220; border-color: var(--accent2); }
 
-body.theme-dark .dot { background: #10141b; border-color: var(--accent2); }
-body.theme-dark .dot.used { background: var(--accent2); }
+body.pal-dark .dot { background: #10141b; border-color: var(--accent2); }
+body.pal-dark .dot.used { background: var(--accent2); }
 
-body.theme-dark .roll-btn {
+body.pal-dark .roll-btn {
   background: #10141b; color: var(--accent); border: 1px solid var(--line); border-radius: 6px;
   font-weight: 700;
 }
-body.theme-dark .roll-btn:hover { background: #242b37; border-color: var(--accent); }
+body.pal-dark .roll-btn:hover { background: #242b37; border-color: var(--accent); }
 
-body.theme-dark .feat-item { background: #10141b; border-left: 3px solid var(--accent2); border-radius: 6px; }
-body.theme-dark .feats-cat { color: var(--accent2); }
-body.theme-dark #modal { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
-body.theme-dark #json-editor { background: #10141b; color: var(--ink); }
-body.theme-dark code.inline { background: #242b37; color: var(--accent); }
-body.theme-dark .server-list .srv-item { background: var(--panel); }
-body.theme-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
-body.theme-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
-body.theme-dark .hint { color: var(--muted); }
+body.pal-dark .feat-item { background: #10141b; border-left: 3px solid var(--accent2); border-radius: 6px; }
+body.pal-dark .feats-cat { color: var(--accent2); }
+body.pal-dark #modal { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
+body.pal-dark #json-editor { background: #10141b; color: var(--ink); }
+body.pal-dark code.inline { background: #242b37; color: var(--accent); }
+body.pal-dark .server-list .srv-item { background: var(--panel); }
+body.pal-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
+body.pal-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
+body.pal-dark .hint { color: var(--muted); }
 
 
-/* === тема: official === */
+/* === гамма: official === */
 /* ==========================================================================
-   Тема "official" — по образцу официального Character Sheet от Paizo (PDF).
-   Двухколоночный лист, cream-фон, тёмно-красные заголовки секций на плашке,
-   крупные цифры КБ/ПЗ в квадратах с двойной рамкой.
+   Гамма "official" — цвета официального Character Sheet от Paizo (PDF):
+   cream-фон, тёмно-красные заголовки секций на плашке, Georgia-шрифты,
+   крупные цифры в квадратах с двойной рамкой. ТОЛЬКО цвета/шрифты;
+   расположение блоков задаёт тема-раскладка (--theme).
    ========================================================================== */
 
-body.theme-official {
+
+body.pal-official {
   --bg: #d9d2c5;
   --panel: #f9f4e6;
   --ink: #1e1a17;
@@ -261,35 +504,35 @@ body.theme-official {
 }
 
 /* шапка вместо тёмного топа — светлая, как титульная полоса PDF */
-body.theme-official #topbar {
+body.pal-official #topbar {
   background: linear-gradient(#f9f4e6, #ece3cf);
   color: var(--ink);
   border-bottom: 3px double var(--accent);
   box-shadow: 0 2px 5px rgba(0,0,0,.25);
 }
-body.theme-official .brand { font-family: Georgia, 'Times New Roman', serif; color: #3a2f22; }
-body.theme-official .brand b { color: var(--accent); }
-body.theme-official #character-select { background: #fff; }
-body.theme-official .save-state { color: var(--muted); }
-body.theme-official #tabs-nav button { color: #5a4d3a; }
-body.theme-official #tabs-nav button.active {
+body.pal-official .brand { font-family: Georgia, 'Times New Roman', serif; color: #3a2f22; }
+body.pal-official .brand b { color: var(--accent); }
+body.pal-official #character-select { background: #fff; }
+body.pal-official .save-state { color: var(--muted); }
+body.pal-official #tabs-nav button { color: #5a4d3a; }
+body.pal-official #tabs-nav button.active {
   color: var(--accent); background: rgba(147,47,43,.08); border-bottom-color: var(--accent);
 }
 
 /* две колонки, как в официальном PDF */
-body.theme-official main { max-width: 1150px; }
-body.theme-official .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 1000px) { body.theme-official .grid { grid-template-columns: 1fr; } }
+body.pal-official main { max-width: 1150px; }
+body.pal-official .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 1000px) { body.pal-official .grid { grid-template-columns: 1fr; } }
 
 /* секции: заголовок-плашка сверху поля, белая подложка */
-body.theme-official fieldset {
+body.pal-official fieldset {
   border: 1px solid var(--line);
   border-radius: 0;
   background: #fffdf5;
   box-shadow: 0 1px 4px rgba(0,0,0,.18);
   padding: 10px 12px 12px;
 }
-body.theme-official legend {
+body.pal-official legend {
   background: var(--accent);
   color: #f6efe0;
   padding: 3px 14px;
@@ -301,55 +544,65 @@ body.theme-official legend {
   margin-left: -4px;
 }
 
-body.theme-official input, body.theme-official textarea, body.theme-official select {
+body.pal-official input, body.pal-official textarea, body.pal-official select {
   border: none;
   border-bottom: 1px solid #b7ad97;
   border-radius: 0;
   background: transparent;
   padding: 2px 4px;
 }
-body.theme-official input:focus, body.theme-official textarea:focus {
+body.pal-official input:focus, body.pal-official textarea:focus {
   outline: none; background: #fdf6df; border-bottom-color: var(--accent);
 }
 
 /* крупные квадраты статистики */
-body.theme-official .stat {
+body.pal-official .stat {
   border: 3px double #7a6f5a;
   border-radius: 0;
   background: #fff;
   padding: 6px 2px;
 }
-body.theme-official .stat span { font-family: Georgia, serif; color: var(--accent); font-weight: 700; }
-body.theme-official .stat b { font-size: 30px; font-family: Georgia, serif; }
+body.pal-official .stat span { font-family: Georgia, serif; color: var(--accent); font-weight: 700; }
+body.pal-official .stat b { font-size: 30px; font-family: Georgia, serif; }
 
-body.theme-official .abil-table td:first-child { font-family: Georgia, serif; }
-body.theme-official .mod-badge { background: #ece3cf; border: 1px solid var(--line); border-radius: 2px; }
-body.theme-official .prof-pick button.on { background: var(--accent); border-color: var(--accent); }
+body.pal-official .abil-table td:first-child { font-family: Georgia, serif; }
+body.pal-official .mod-badge { background: #ece3cf; border: 1px solid var(--line); border-radius: 2px; }
+body.pal-official .prof-pick button.on { background: var(--accent); border-color: var(--accent); }
 
-body.theme-official #hp-bar { background: linear-gradient(#b23f38, #7c241f); }
-body.theme-official #hp-bar-wrap { border: 2px solid #7a6f5a; border-radius: 0; }
+body.pal-official #hp-bar { background: linear-gradient(#b23f38, #7c241f); }
+body.pal-official #hp-bar-wrap { border: 2px solid #7a6f5a; border-radius: 0; }
 
-body.theme-official .btn {
+body.pal-official .btn {
   background: #ece3cf; border: 1px solid #9a8f78; border-radius: 2px;
   font-family: Georgia, serif;
 }
-body.theme-official .btn:hover { background: #ddd2b8; }
-body.theme-official .btn.primary { background: var(--accent); color: #fff; }
+body.pal-official .btn:hover { background: #ddd2b8; }
+body.pal-official .btn.primary { background: var(--accent); color: #fff; }
 
-body.theme-official .dot { border-color: var(--accent); }
-body.theme-official .dot.used { background: var(--accent); }
-body.theme-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
-body.theme-official .toast { background: #3a2f22; }
+body.pal-official .dot { border-color: var(--accent); }
+body.pal-official .dot.used { background: var(--accent); }
+body.pal-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
+body.pal-official .toast { background: #3a2f22; }
 
 
-/* === тема: sanych === */
+/* карточки характеристик и плитки — шрифт/размер в духе PDF (цвета не трогает раскладку) */
+body.pal-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
+body.pal-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
+body.pal-official .hp-stat b, body.pal-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
+body.pal-official .save-tile span { color: var(--accent); font-family: Georgia, serif; }
+body.pal-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }
+
+
+/* === гамма: sanych === */
 /* ==========================================================================
-   Тема "sanych" — в стиле листа существующего персонажа (Саныч.pdf):
+   Гамма "sanych" — цвета листа существующего персонажа (Саныч.pdf):
    тёмное «пергаментно-ночное» оформление, зелёные акценты друида/варвара,
-   компактные таблицы, моноширинные цифры.
+   моноширинные цифры. ТОЛЬКО цвета/шрифты; расположение блоков задаёт
+   тема-раскладка (--theme).
    ========================================================================== */
 
-body.theme-sanych {
+
+body.pal-sanych {
   --bg: #14181c;
   --panel: #1d242b;
   --ink: #d8e2dc;
@@ -362,23 +615,23 @@ body.theme-sanych {
     var(--bg);
 }
 
-body.theme-sanych #topbar {
+body.pal-sanych #topbar {
   background: linear-gradient(#10151a, #0b0f13);
   color: var(--ink);
   border-bottom: 2px solid var(--accent);
 }
-body.theme-sanych .brand b { color: var(--accent); }
-body.theme-sanych #character-select { background: #232c34; color: var(--ink); border-color: var(--line); }
-body.theme-sanych .save-state { color: var(--muted); }
-body.theme-sanych #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+body.pal-sanych .brand b { color: var(--accent); }
+body.pal-sanych #character-select { background: #232c34; color: var(--ink); border-color: var(--line); }
+body.pal-sanych .save-state { color: var(--muted); }
+body.pal-sanych #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-body.theme-sanych fieldset {
+body.pal-sanych fieldset {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 4px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.02), 0 2px 8px rgba(0,0,0,.45);
 }
-body.theme-sanych legend {
+body.pal-sanych legend {
   color: var(--accent);
   font-family: Georgia, serif;
   letter-spacing: .12em;
@@ -388,48 +641,48 @@ body.theme-sanych legend {
   border-radius: 3px;
 }
 
-body.theme-sanych input, body.theme-sanych textarea, body.theme-sanych select {
+body.pal-sanych input, body.pal-sanych textarea, body.pal-sanych select {
   background: #12171c; color: var(--ink); border: 1px solid var(--line); border-radius: 3px;
 }
-body.theme-sanych input:focus, body.theme-sanych textarea:focus {
+body.pal-sanych input:focus, body.pal-sanych textarea:focus {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(95,174,108,.18);
 }
-body.theme-sanych label { color: var(--muted); }
+body.pal-sanych label { color: var(--muted); }
 
-body.theme-sanych .stat { background: #12171c; border-color: var(--line); }
-body.theme-sanych .stat span { color: var(--muted); }
-body.theme-sanych .stat b { color: var(--accent); font-family: Consolas, monospace; }
+body.pal-sanych .stat { background: #12171c; border-color: var(--line); }
+body.pal-sanych .stat span { color: var(--muted); }
+body.pal-sanych .stat b { color: var(--accent); font-family: Consolas, monospace; }
 
-body.theme-sanych table.mini td { border-top-color: var(--line); }
-body.theme-sanych table.mini th { color: var(--muted); }
-body.theme-sanych .abil-table td { border-top-color: var(--line); }
-body.theme-sanych .mod-badge { background: #223038; color: var(--accent2); font-family: Consolas, monospace; }
+body.pal-sanych table.mini td { border-top-color: var(--line); }
+body.pal-sanych table.mini th { color: var(--muted); }
+body.pal-sanych .abil-table td { border-top-color: var(--line); }
+body.pal-sanych .mod-badge { background: #223038; color: var(--accent2); font-family: Consolas, monospace; }
 
-body.theme-sanych .btn {
+body.pal-sanych .btn {
   background: #223038; color: var(--ink); border: 1px solid var(--line); border-radius: 3px;
 }
-body.theme-sanych .btn:hover { background: #2b3a44; }
-body.theme-sanych .btn.primary { background: var(--accent); color: #0d1210; border-color: var(--accent); }
-body.theme-sanych .btn.danger { background: #3a2226; border-color: #6b3a40; color: #e6b8bd; }
+body.pal-sanych .btn:hover { background: #2b3a44; }
+body.pal-sanych .btn.primary { background: var(--accent); color: #0d1210; border-color: var(--accent); }
+body.pal-sanych .btn.danger { background: #3a2226; border-color: #6b3a40; color: #e6b8bd; }
 
-body.theme-sanych #hp-bar-wrap { background: #12171c; border-color: var(--line); }
-body.theme-sanych #hp-bar { background: linear-gradient(#5fae6c, #3c7a48); }
-body.theme-sanych #hp-text { color: #eaf3ec; text-shadow: 0 1px 2px #000; }
+body.pal-sanych #hp-bar-wrap { background: #12171c; border-color: var(--line); }
+body.pal-sanych #hp-bar { background: linear-gradient(#5fae6c, #3c7a48); }
+body.pal-sanych #hp-text { color: #eaf3ec; text-shadow: 0 1px 2px #000; }
 
-body.theme-sanych .prof-pick button { background: #12171c; color: var(--muted); border-color: var(--line); }
-body.theme-sanych .prof-pick button.on { background: var(--accent2); color: #141210; border-color: var(--accent2); }
+body.pal-sanych .prof-pick button { background: #12171c; color: var(--muted); border-color: var(--line); }
+body.pal-sanych .prof-pick button.on { background: var(--accent2); color: #141210; border-color: var(--accent2); }
 
-body.theme-sanych .dot { background: #12171c; border-color: var(--accent2); }
-body.theme-sanych .dot.used { background: var(--accent2); }
+body.pal-sanych .dot { background: #12171c; border-color: var(--accent2); }
+body.pal-sanych .dot.used { background: var(--accent2); }
 
-body.theme-sanych .feat-item { background: #171f25; border-left-color: var(--accent2); }
-body.theme-sanych .feats-cat { color: var(--accent2); }
-body.theme-sanych .roll-btn { background: #12171c; color: var(--ink); border-color: var(--line); }
-body.theme-sanych .roll-btn:hover { background: #223038; }
-body.theme-sanych #modal { background: var(--panel); color: var(--ink); }
-body.theme-sanych #json-editor { background: #12171c; color: var(--ink); }
-body.theme-sanych code.inline { background: #223038; color: var(--accent2); }
-body.theme-sanych .server-list .srv-item { background: var(--panel); }
+body.pal-sanych .feat-item { background: #171f25; border-left-color: var(--accent2); }
+body.pal-sanych .feats-cat { color: var(--accent2); }
+body.pal-sanych .roll-btn { background: #12171c; color: var(--ink); border-color: var(--line); }
+body.pal-sanych .roll-btn:hover { background: #223038; }
+body.pal-sanych #modal { background: var(--panel); color: var(--ink); }
+body.pal-sanych #json-editor { background: #12171c; color: var(--ink); }
+body.pal-sanych code.inline { background: #223038; color: var(--accent2); }
+body.pal-sanych .server-list .srv-item { background: var(--panel); }
 
 </style>
 </head>
@@ -442,16 +695,24 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
     <button id="btn-del-char" class="btn small danger" title="Удалить текущего персонажа">🗑</button>
   </div>
   <div class="save-state" id="save-state">—</div>
-  <select id="theme-select" title="Вариант оформления листа"></select>
+  <div class="topbar-appearance">
+    <select id="theme-select" title="Тема: расположение блоков (раскладка)"></select>
+    <select id="palette-select" title="Цветовая гамма оформления"></select>
+    <label class="edit-mode-label" title="Разрешить перетаскивание блоков за заголовки и изменение ширины/колонок текста">
+      <input type="checkbox" id="edit-mode-check"> Редактирование
+    </label>
+  </div>
   <nav id="tabs-nav"></nav>
 </header>
 
 <main id="main">
   <!-- ==================== ВКЛАДКА: ЛИСТ ==================== -->
   <section id="tab-sheet" class="tabpage">
-    <div class="grid">
-      <div class="col left">
-        <fieldset><legend>Основное</legend>
+    <div class="grid sheet-grid" id="sheet-grid">
+      <!-- лента для раскладки "Тёмный VTT" (strip): в неё JS копирует панель ПЗ/щита -->
+      <div class="combat-strip" aria-hidden="true"></div>
+
+      <fieldset class="info-block"><legend>Основное</legend>
           <div class="row"><label>Имя персонажа<input data-bind="name"></label>
             <label>Игрок<input data-bind="player"></label></div>
           <div class="row"><label>Народ<input data-bind="core.ancestry"></label>
@@ -463,18 +724,21 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
           <div class="row"><label>Божество<input data-bind="core.deity"></label>
             <label>Уровень<input type="number" data-bind="core.level" class="xs"></label>
             <label>Опыт<input type="number" data-bind="core.xp" class="s"></label></div>
-          <div class="row"><label class="grow">Языки<textarea rows="2" data-bind="core.languages"></textarea></label></div>
+          <div class="row"><span class="grow">Языки<span id="languages-list" class="lang-list"></span></span></div>
           <div class="row"><label>Скорость, футов<input type="number" data-bind="core.speed.feet" class="xs"></label>
             <label class="grow">Особые перемещения<input data-bind="core.speed.notes"></label></div>
           <div class="row"><span>Пункты героизма</span><span id="hero-points"></span></div>
-        </fieldset>
+      </fieldset>
 
-        <fieldset><legend>Характеристики</legend>
+      <div class="sheet-area" data-col="left">
+        <fieldset class="sheet-sec sec-abil"><legend>Характеристики</legend>
           <table class="abil-table"><thead><tr><th></th><th>Хар</th><th>Мод</th><th>+2 ув.</th></tr></thead>
           <tbody id="abilities-body"></tbody></table>
+          <!-- карточки характеристик (раскладки classic/official) -->
+          <div id="ability-cards" class="ability-cards"></div>
         </fieldset>
 
-        <fieldset><legend>Защиты</legend>
+        <fieldset class="sheet-sec sec-def"><legend>Защиты</legend>
           <div class="bigstats">
             <div class="stat"><span>КБ</span><b id="ac-total">0</b></div>
             <div class="stat"><span>Классовая КС</span><b id="classdc-total">0</b></div>
@@ -495,7 +759,7 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
           <div class="row"><label class="grow">Устойчивости/невосприимчивости<textarea rows="2" data-bind="resistances"></textarea></label></div>
         </fieldset>
 
-        <fieldset><legend>Пункты здоровья</legend>
+        <fieldset class="sheet-sec sec-hp"><legend>Пункты здоровья</legend>
           <div class="row">
             <label>Макс<input type="number" data-bind="hitPoints.max" class="xs"></label>
             <label>Тек<input type="number" data-bind="hitPoints.current" class="xs"></label>
@@ -511,33 +775,46 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
         </fieldset>
       </div>
 
-      <div class="col mid">
-        <fieldset><legend>Навыки</legend>
+      <div class="sheet-area" data-col="mid">
+        <fieldset class="sheet-sec sec-skills"><legend>Навыки</legend>
           <div class="row"><label>Восприятие<input type="number" data-bind="perception.total" class="xs"></label>
             <span id="perception-prof"></span></div>
           <div id="skills-block"></div>
         </fieldset>
 
-        <fieldset><legend>Удары</legend>
+        <fieldset class="sheet-sec sec-strikes"><legend>Удары</legend>
           <div id="strikes-block"></div>
         </fieldset>
 
-        <fieldset><legend>Профичности оружия</legend>
+        <fieldset class="sheet-sec sec-strikes" id="weapon-prof-panel"><legend>Профичности оружия</legend>
           <div id="weapon-prof-block"></div>
           <div class="row"><label class="grow">Примечания<input data-bind="weaponProfNotes"></label></div>
         </fieldset>
       </div>
 
-      <div class="col right">
-        <fieldset><legend>Магия</legend>
+      <div class="sheet-area" data-col="right">
+        <!-- верхняя панель: ПЗ + щит (раскладка "official") -->
+        <fieldset class="sheet-sec sec-hp" id="hp-shield-panel"><legend>ПЗ и щит</legend>
+          <div class="hps-row">
+            <div class="stat hp-stat"><span>Пункты здоровья</span><b id="hp-big-cur">0</b><small id="hp-big-max"></small></div>
+            <div class="stat shield-stat"><span>Щит</span><b id="shield-big">0</b><small id="shield-big-max"></small></div>
+            <div class="hps-quick" id="hps-quick"></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="sheet-sec sec-combat" id="combat-panel"><legend>Бой</legend>
+          <div id="combat-summary"></div>
+        </fieldset>
+
+        <fieldset class="sheet-sec sec-magic"><legend>Магия</legend>
           <div id="spellcasting-block"></div>
         </fieldset>
 
-        <fieldset><legend>Черты и умения</legend>
+        <fieldset class="sheet-sec sec-feats"><legend>Черты и умения</legend>
           <div id="feats-block"></div>
         </fieldset>
 
-        <fieldset><legend>Действия</legend>
+        <fieldset class="sheet-sec sec-actions"><legend>Действия</legend>
           <div id="actions-block"></div>
         </fieldset>
       </div>
@@ -555,17 +832,20 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
         <label>Макс. вес (bulk)<input type="number" data-bind="inventory.bulkMax" class="xs"></label>
       </div>
     </fieldset>
-    <div class="grid3">
+    <div class="grid3 inv-grid">
       <fieldset><legend>Надето / Носится</legend><div id="inv-worn"></div></fieldset>
       <fieldset><legend>В руках</legend><div id="inv-held"></div></fieldset>
       <fieldset><legend>Расходники</legend><div id="inv-consumables"></div></fieldset>
       <fieldset><legend>Прочее</legend><div id="inv-other"></div></fieldset>
     </div>
-    <div class="row"><label class="grow">Примечания<textarea rows="3" data-bind="inventory.notes"></textarea></label></div>
+    <fieldset><legend>Примечания инвентаря</legend>
+      <div class="row"><label class="grow">Заметки о снаряжении<textarea rows="3" data-bind="inventory.notes"></textarea></label></div>
+    </fieldset>
   </section>
 
   <!-- ==================== ВКЛАДКА: БИОГРАФИЯ ==================== -->
   <section id="tab-bio" class="tabpage hidden">
+    <div class="bio-grid">
     <fieldset><legend>Происхождение</legend>
       <div class="row"><label>Этническая принадлежность<input data-bind="biography.ethnicity"></label>
         <label>Место рождения<input data-bind="biography.birthplace"></label>
@@ -590,6 +870,7 @@ body.theme-sanych .server-list .srv-item { background: var(--panel); }
       <div class="row"><label class="half">Организации<textarea rows="2" data-bind="biography.organizations"></textarea></label>
         <label class="half">Прочие заметки<textarea rows="2" data-bind="biography.notes"></textarea></label></div>
     </fieldset>
+    </div>
   </section>
 
   <!-- ==================== ВКЛАДКА: СЕРВЕРЫ ==================== -->
@@ -668,14 +949,53 @@ var LS_CHARS = 'pf2e.characters.v1';     // {id: sheetJson}
 var LS_CURRENT = 'pf2e.currentId';
 var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
 var LS_THEME = 'pf2e.theme.v1';
+var LS_PALETTE = 'pf2e.palette.v1';   // цветовая гамма (независимо от темы-раскладки)
+var LS_EDITMODE = 'pf2e.editmode.v1';   // чек-бокс «режим редактирования раскладки»
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
+/* Каждая тема задаёт и цветовое оформление, и РАСПОЛОЖЕНИЕ блоков вкладки
+   «Лист» (layout). Секции листа помечены class="sheet-sec sec-<id>"; узлы с
+   одним sec-id — одна логическая секция (переносится целиком).
+   Раскладка описывается так:
+     cols — число колонок (2 или 3);
+     map  — состав и порядок секций в колонках left/mid/right (для cols=2
+            содержимое mid дописывается после left в первую grid-колонку);
+     strip — показывать верхнюю горизонтальную ленту ПЗ/щита (VTT);
+     hide — селекторы панелей, скрываемых в этой раскладке (дубликаты). */
+var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'feats', 'actions'];
+
+/* Уникальные идентификаторы ВСЕХ drag-блоков вкладки «Лист» — включая
+   «Основное», «Профичности оружия» и дублирующуюся панель «ПЗ и щит».
+   Каждый блок получает data-bid по порядку обхода DOM; это стабильный ключ
+   раскладки: блоки больше не путаются из-за одинаковых sec-* классов и
+   никогда не переносятся внутрь друг друга. */
+/* Все раскладки строятся на 12-колоночной сетке (#sheet-grid — grid из
+   12 равных колонок). Каждому блоку в map соответствует span (число
+   колонок сетки): по умолчанию блоки занимают 4 колонки (три столбца),
+   в официальной теме Paizo — 6 колонок (два столбца). */
+function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
+
 var THEMES = [
-  { id: 'default', name: 'Классический' },
-  { id: 'official', name: 'Официальный (Paizo)' },
-  { id: 'sanych', name: 'Лист персонажа (Саныч)' },
-  { id: 'dark', name: 'Тёмный VTT' }
+  { id: 'default', name: 'Раскладка: Классическая', layout: { cols: 3, map: {
+      left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
+      hide: ['#hp-shield-panel'] } },
+  { id: 'official', name: 'Раскладка: Официальная (Paizo)', layout: { cols: 2, map: {
+      left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
+      hide: [] } },
+  { id: 'sanych', name: 'Раскладка: Боевая (Саныч)', layout: { cols: 3, map: {
+      left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
+      hide: ['#hp-shield-panel'] } },
+  { id: 'dark', name: 'Раскладка: Тёмный VTT', layout: { strip: true, cols: 3, map: {
+      left: ['abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
+      hide: ['#hp-shield-panel'] } }
 ];
+
+/* Пользовательская раскладка (режим редактирования): куда перетащили секции
+   и какая у них ширина. Хранится в localStorage по каждой теме отдельно,
+   чтобы правки не «текли» между вариантами оформления. */
+var LS_LAYOUT = 'pf2e.layout.v1';        // {themeId: {map:{left:[..],mid:[..],right:[..]}, widths:{secId:'wide|normal|narrow'}}}
+var LS_TABSTRUCT = 'pf2e.tabstruct.v1';  // {tabId: {cols:[[dkey,...],[...]]}} — раскладка блоков на вкладках Инвентарь/Биография/Серверы
+var LAYOUT_WIDTHS = ['narrow', 'normal', 'wide'];
 
 /* ---------------- утилиты ---------------- */
 function $(sel, root) { return (root || document).querySelector(sel); }
@@ -697,6 +1017,26 @@ function uid() {
   return 'c-' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 }
 function nowISO() { return new Date().toISOString(); }
+
+/* ---------------- автоскрытие текстовых полей (растягивание вниз) --------
+   Функция была потеряна при рефакторинге раскладок — восстановлена.
+   wireAutogrow вешает обработчик на textarea; refreshAllTextareas
+   пересчитывает высоты всех полей после программной смены значений,
+   перемещения блоков и применения раскладки. */
+function autogrowTa(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(28, ta.scrollHeight + 2) + 'px';
+}
+function wireAutogrow(ta) {
+  if (ta._autogrow) { autogrowTa(ta); return; }
+  ta._autogrow = true;
+  ta.addEventListener('input', function () { autogrowTa(ta); });
+  requestAnimationFrame(function () { autogrowTa(ta); });
+}
+function refreshAllTextareas(root) {
+  $all('textarea', root || document).forEach(autogrowTa);
+}
+
 function toast(msg, isErr) {
   var t = el('div', { class: 'toast' + (isErr ? ' err' : ''), text: msg });
   $('#toast-wrap').appendChild(t);
@@ -920,8 +1260,10 @@ function switchTab(id) {
   $all('.tabpage').forEach(function (p) { p.classList.add('hidden'); });
   $('#tab-' + id).classList.remove('hidden');
   renderTabs();
+  applyTabStructure(id);   // восстанавливаем пользовательскую раскладку блоков вкладки
   if (id === 'servers') renderServersUI();
   if (id === 'io') refreshJsonEditor();
+  ensureBlockIds(); applyTabStructure(id);
 }
 
 /* ---------------- переключатель персонажей ---------------- */
@@ -961,6 +1303,7 @@ function bindInputs(root) {
       markDirty();
       updateComputed();
     });
+    if (inp.tagName === 'TEXTAREA') wireAutogrow(inp);   // растягивание вниз по содержимому
   });
 }
 function markDirty() {
@@ -1017,6 +1360,63 @@ function renderAbilities() {
     cb.appendChild(chk); tr.appendChild(cb);
     tb.appendChild(tr);
   });
+  // карточки (раскладки classic/official): аббр -> [название, мод, значение, +2 ув.]
+  var cards = $('#ability-cards');
+  if (cards) {
+    cards.innerHTML = '';
+    [['str','СИЛ'],['dex','ЛОВ'],['con','ВЫН'],['int','ИНТ'],['wis','МУД'],['cha','ХАР']].forEach(function (pair) {
+      var k = pair[0], a = State.sheet.abilities[k];
+      var numInp = el('input', { type: 'number', value: a.score, class: 'card-score' });
+      numInp.addEventListener('input', function () { a.score = Number(numInp.value) || 0; markDirty(); updateComputed(); renderAbilities(); });
+      var chk = el('input', { type: 'checkbox', title: '+2 улучшение' }); chk.checked = !!a.boost;
+      chk.addEventListener('change', function () { a.boost = chk.checked; markDirty(); updateComputed(); renderAbilities(); });
+      var card = el('div', { class: 'abil-card' }, [
+        el('span', { class: 'card-abbr', text: pair[1] }),
+        el('b', { class: 'card-mod', text: modStr(abilityMod(a)) }),
+        numInp,
+        el('label', { class: 'card-boost' }, [chk, document.createTextNode('+2')])
+      ]);
+      cards.appendChild(card);
+    });
+  }
+}
+
+/* Панель «ПЗ и щит» (крупные цифры раскладки official) — синхронизируется из updateComputed */
+function renderHpShieldPanel() {
+  var box = $('#hps-quick'); if (!box || box.childNodes.length) return;
+  [[-5,'−5'],[-1,'−1'],[1,'+1'],[5,'+5']].forEach(function (p) {
+    box.appendChild(el('button', { class: 'btn small', text: p[1], onclick: function () { applyDamage(p[0]); } }));
+  });
+  box.appendChild(el('button', { class: 'btn small', text: 'Отдых', onclick: function () {
+    var hp = State.sheet.hitPoints; hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0;
+    markDirty(); updateComputed();
+  }}));
+}
+
+/* Компактная сводка боя (раскладка sanych): КБ/спасброски/КСС + удары с броском */
+function renderCombatSummary() {
+  var box = $('#combat-summary'); if (!box) return;
+  var d = getComputed(), s = State.sheet;
+  box.innerHTML = '';
+  var stats = el('div', { class: 'combat-stats' });
+  [['КБ', String(d.ac)], ['Воспр', modStr(d.perception)],
+   ['Стoйк', modStr(d.saves.fortitude)], ['Реакц', modStr(d.saves.reflex)], ['Воля', modStr(d.saves.will)],
+   ['Кл.КС', String(d.classDC)], ['Маг.атк', modStr(d.spellAttack)], ['Маг.КС', String(d.spellDC)]].forEach(function (p) {
+    stats.appendChild(el('span', { class: 'cstat' }, [
+      el('small', { text: p[0] }), el('b', { text: p[1] })]));
+  });
+  box.appendChild(stats);
+  ['melee', 'ranged'].forEach(function (kind) {
+    (s.strikes[kind] || []).forEach(function (st, i) {
+      var v = d.strikes[kind][i];
+      box.appendChild(el('div', { class: 'combat-strike' }, [
+        el('button', { class: 'roll-btn', text: '🎲', onclick: function () { rollStrike(st.name, v, st.damage); } }),
+        el('span', { class: 'strike-attack', text: modStr(v) }),
+        el('span', { text: st.name || '(без названия)' }),
+        el('small', { text: st.damage || '' })
+      ]));
+    });
+  });
 }
 
 function renderDefense() {
@@ -1027,6 +1427,15 @@ function renderDefense() {
     profPicker(s.armor.prof, function (r) { s.armor.prof = r; markDirty(); updateComputed(); })
   ]));
   var sb = $('#saves-block'); sb.innerHTML = '';
+  // плитки итоговых спасбросков (раскладка official) — id save-total-* обновляет updateComputed
+  var tiles = el('div', { class: 'saves-tiles' });
+  [['fortitude', 'Стойкость'], ['reflex', 'Реакция'], ['will', 'Воля']].forEach(function (pair) {
+    tiles.appendChild(el('div', { class: 'save-tile' }, [
+      el('span', { text: pair[1] }),
+      el('b', { id: 'save-tile-' + pair[0], text: '' })
+    ]));
+  });
+  sb.appendChild(tiles);
   [['fortitude', 'Стойкость'], ['reflex', 'Реакция'], ['will', 'Воля']].forEach(function (pair) {
     var blk = s.saves[pair[0]];
     var row = el('div', { class: 'row' });
@@ -1070,7 +1479,8 @@ function renderSkills() {
     sel.addEventListener('change', function () { sk.keyAttr = sel.value; markDirty(); updateComputed(); });
     row.appendChild(sel);
     row.appendChild(el('b', { id: 'skill-total-' + sk.key, text: '' }));
-    row.appendChild(el('button', { class: 'roll-btn', text: '🎲', onclick: function () { rollCheck(sk.name, getComputed().skills[sk.key]); } }));
+    // броски кубиков в навыках намеренно отсутствуют — проверка бросается
+    // кнопкой «🎲 Проверка» в сводке боя и через контекстные меню атак
     box.appendChild(row);
   });
   var addBtn = el('button', { class: 'btn small', text: '＋ Знание (Lore)', onclick: function () {
@@ -1153,6 +1563,75 @@ function renderHeroPoints() {
       box.appendChild(b);
     })(i);
   }
+}
+
+/* ---------------- известные языки: список, а не текст ------------------- */
+/* Хранимся по-прежнему в core.languages (строка через запятую — совместимость
+   с JSON-форматом и сервером), но отображаем как редактируемый список:
+   каждый язык отдельной строкой, кнопка ＋ добавляет язык из справочника
+   PF2e или произвольный, ✕ удаляет. */
+var KNOWN_LANGUAGES = ['Общий', 'Эльфийский', 'Гномий', 'Гоблинский', 'Огрский',
+  'Полуросликовый', 'Козлитин', 'Дварфский', 'Драконий', 'Сквозной', 'Небесный',
+  'Адский', 'Язык демонов', 'Феей', 'Акван', 'Азlantian', 'Валутский', 'Юни',
+  'Икс', 'Тengu', 'Jotun', 'Ундинский', 'Терраский', 'Циклопский'];
+function splitLanguages(str) {
+  return String(str || '').split(/[,;\n]+/).map(function (s) { return s.trim(); })
+    .filter(function (s) { return s.length; });
+}
+function renderLanguages() {
+  var box = $('#languages-list'); if (!box) return;
+  box.innerHTML = '';
+  var langs = splitLanguages(State.sheet.core.languages);
+  var ul = el('ul', { class: 'lang-items' });
+  if (!langs.length) ul.appendChild(el('li', { class: 'lang-empty', text: '(нет)' }));
+  langs.forEach(function (name, idx) {
+    var li = el('li', { class: 'lang-item' });
+    var inp = el('input', { value: name, class: 'lang-name', size: Math.max(6, name.length) });
+    inp.addEventListener('input', function () {
+      langs[idx] = inp.value.trim();
+      State.sheet.core.languages = langs.filter(Boolean).join(', ');
+      inp.setAttribute('size', Math.max(6, inp.value.length));
+      markDirty();
+    });
+    li.appendChild(inp);
+    var del = el('button', { class: 'btn small danger lang-del', text: '✕', title: 'Убрать язык' });
+    del.addEventListener('click', function () {
+      langs.splice(idx, 1);
+      State.sheet.core.languages = langs.join(', ');
+      markDirty(); renderLanguages();
+    });
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+  var addRow = el('div', { class: 'lang-add' });
+  var sel = el('select', { class: 'lang-pick' });
+  sel.appendChild(el('option', { value: '', text: '— добавить язык —' }));
+  KNOWN_LANGUAGES.forEach(function (l) {
+    if (langs.indexOf(l) < 0) sel.appendChild(el('option', { value: l, text: l }));
+  });
+  sel.addEventListener('change', function () {
+    if (!sel.value) return;
+    langs.push(sel.value);
+    State.sheet.core.languages = langs.join(', ');
+    markDirty(); renderLanguages();
+  });
+  addRow.appendChild(sel);
+  var custom = el('input', { class: 'lang-custom', placeholder: 'свой язык…' });
+  var btnAdd = el('button', { class: 'btn small', text: '＋', title: 'Добавить указанный язык' });
+  function addCustom() {
+    var v = custom.value.trim();
+    if (!v) return;
+    langs.push(v);
+    State.sheet.core.languages = langs.join(', ');
+    custom.value = '';
+    markDirty(); renderLanguages();
+  }
+  btnAdd.addEventListener('click', addCustom);
+  custom.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); addCustom(); } });
+  addRow.appendChild(custom);
+  addRow.appendChild(btnAdd);
+  box.appendChild(addRow);
 }
 
 function renderSpells() {
@@ -1246,61 +1725,170 @@ function renderSpells() {
   }
 }
 
-function renderFeats() {
-  var box = $('#feats-block'); box.innerHTML = '';
-  var cats = { ancestry: 'Народа', class: 'Класса', skill: 'Навыков', general: 'Общие', bonus: 'Бонусные' };
-  var byCat = {};
-  State.sheet.feats.forEach(function (ft) { (byCat[ft.category] = byCat[ft.category] || []).push(ft); });
-  Object.keys(cats).forEach(function (cat) {
-    var items = byCat[cat] || [];
-    box.appendChild(el('div', { class: 'feats-cat', text: cats[cat] + ' черты' }));
-    items.forEach(function (ft) {
-      var div = el('div', { class: 'feat-item' });
-      var nm = el('input', { value: ft.name, style: 'border:none;background:transparent;font-weight:600;width:70%' });
-      nm.addEventListener('input', function () { ft.name = nm.value; markDirty(); });
-      div.appendChild(nm);
-      div.appendChild(el('span', { class: 'lvl', text: ' ур. ' }));
-      var lv = el('input', { type: 'number', value: ft.level, class: 'xs', style: 'width:48px' });
-      lv.addEventListener('input', function () { ft.level = Number(lv.value) || 0; markDirty(); });
-      div.appendChild(lv);
-      var tx = el('textarea', { rows: 2, style: 'width:100%' });
-      tx.value = ft.text || '';
-      tx.addEventListener('input', function () { ft.text = tx.value; markDirty(); });
-      div.appendChild(tx);
-      var rm = el('button', { class: 'rm', text: '✕ удалить', onclick: function () {
-        State.sheet.feats.splice(State.sheet.feats.indexOf(ft), 1); markDirty(); renderFeats();
-      }});
-      div.appendChild(rm);
-      box.appendChild(div);
+/* ---------------- «Черты и умения»: списки, а не текстовые поля ---------- */
+var FEAT_CATS = { ancestry: 'Народа', class: 'Класса', skill: 'Навыков', general: 'Общие', bonus: 'Бонусные' };
+
+/* Черта как элемент списка. В обычном режиме — компактный <li>: название,
+   уровень, категория; клик по строке разворачивает описание (details/summary).
+   В режиме редактирования добавляются ✎ (правка имени/уровня/категории inline)
+   и ✕ (удаление). Данные при этом остаются в State.sheet.feats как раньше. */
+function featListItem(ft, editMode) {
+  var li = el('li', { class: 'feat-li' });
+  var det = el('details', { class: 'feat-det' });
+  var sum = el('summary', { class: 'feat-sum' });
+  sum.appendChild(el('span', { class: 'feat-name', text: ft.name || '(без названия)' }));
+  sum.appendChild(el('span', { class: 'feat-meta', text: 'ур. ' + (ft.level != null ? ft.level : 0) +
+    ' · ' + (FEAT_CATS[ft.category] || ft.category || 'общ.') }));
+  if (editMode) {
+    var editBtn = el('button', { class: 'mini-btn', text: '✎', title: 'Редактировать черту' });
+    editBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      openFeatEditor(ft);
     });
-  });
-  box.appendChild(el('button', { class: 'btn small', text: '＋ Черта', onclick: function () {
-    State.sheet.feats.push({ name: 'Новая черта', level: State.sheet.core.level, category: 'general', text: '' });
-    markDirty(); renderFeats();
-  }}));
+    var rmBtn = el('button', { class: 'mini-btn danger', text: '✕', title: 'Удалить черту' });
+    rmBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      State.sheet.feats.splice(State.sheet.feats.indexOf(ft), 1);
+      markDirty(); renderFeats();
+    });
+    sum.appendChild(editBtn); sum.appendChild(rmBtn);
+  }
+  det.appendChild(sum);
+  var body = el('div', { class: 'feat-body' });
+  // описание — обычный текст (не textarea): read-only вне редактора
+  body.appendChild(el('p', { class: 'feat-text', text: ft.text || 'Описание отсутствует.' }));
+  if (ft.actions) body.appendChild(el('p', { class: 'feat-traits', text: 'Действия: ' + ft.actions }));
+  if (ft.traits) body.appendChild(el('p', { class: 'feat-traits', text: 'Черты: ' + ft.traits }));
+  det.appendChild(body);
+  li.appendChild(det);
+  return li;
 }
 
+/* Редактор одной черты — модальное окно с полями (единственное место, где
+   текст черты вводится через поле ввода; на листе остаются только списки). */
+function openFeatEditor(ft) {
+  var nameI = el('input', { value: ft.name || '', class: 'grow' });
+  var lvlI = el('input', { type: 'number', value: ft.level != null ? ft.level : 0, class: 'xs' });
+  var catS = el('select');
+  Object.keys(FEAT_CATS).forEach(function (c) { catS.appendChild(el('option', { value: c, text: FEAT_CATS[c] })); });
+  catS.value = FEAT_CATS[ft.category] ? ft.category : 'general';
+  var txtA = el('textarea', { rows: 5, class: 'autogrow', placeholder: 'Текст черты' });
+  txtA.value = ft.text || '';
+  wireAutogrow(txtA);
+  var saveB = el('button', { class: 'btn primary', text: 'Сохранить' });
+  saveB.addEventListener('click', function () {
+    ft.name = nameI.value.trim() || '(без названия)';
+    ft.level = Number(lvlI.value) || 0;
+    ft.category = catS.value;
+    ft.text = txtA.value;
+    markDirty(); closeModal(); renderFeats();
+  });
+  var cancelB = el('button', { class: 'btn', text: 'Отмена' });
+  cancelB.addEventListener('click', closeModal);
+  modal([
+    el('h3', { text: 'Черта: ' + (ft.name || '') }),
+    el('div', { class: 'row' }, [el('label', {}, [nameI]), el('label', {}, [lvlI]), el('label', {}, [catS])]),
+    el('div', { class: 'row' }, [el('label', { class: 'grow' }, [txtA])]),
+    el('div', { class: 'row' }, [saveB, cancelB])
+  ]);
+  wireAutogrow(txtA);
+}
+
+function renderFeats() {
+  var box = $('#feats-block'); box.innerHTML = '';
+  var editMode = isEditMode();
+  var byCat = {};
+  State.sheet.feats.forEach(function (ft) { (byCat[ft.category] = byCat[ft.category] || []).push(ft); });
+  Object.keys(FEAT_CATS).forEach(function (cat) {
+    var items = byCat[cat] || [];
+    box.appendChild(el('div', { class: 'feats-cat', text: FEAT_CATS[cat] + ' черты' }));
+    var ul = el('ul', { class: 'feat-list' });
+    if (!items.length && editMode) ul.appendChild(el('li', { class: 'feat-empty', text: '— пусто —' }));
+    items.forEach(function (ft) { ul.appendChild(featListItem(ft, editMode)); });
+    box.appendChild(ul);
+  });
+  if (editMode) {
+    box.appendChild(el('button', { class: 'btn small', text: '＋ Черта', onclick: function () {
+      var ft = { name: 'Новая черта', level: State.sheet.core.level, category: 'general', text: '' };
+      State.sheet.feats.push(ft);
+      markDirty(); renderFeats(); openFeatEditor(ft);
+    }}));
+  }
+}
+
+/* Действия — тоже список. Строка: значок кол-ва действий, название, черты;
+   клик разворачивает описание. Правка/удаление — только в режиме редактирования. */
+var ACTION_GLYPH = { '1': '◆', '2': '◆◆', '3': '◆◆◆', 'free': '⟁', 'reaction': '↺' };
+function actionGlyph(a) {
+  var key = String(a == null ? '' : a).trim().toLowerCase();
+  if (ACTION_GLYPH[key]) return ACTION_GLYPH[key];
+  var n = parseInt(key, 10);
+  if (n >= 1 && n <= 3) return Array(n + 1).join('◆');
+  return key ? '(' + key + ')' : '';
+}
+function actionListItem(act, idx, editMode) {
+  var li = el('li', { class: 'act-li' });
+  var det = el('details', { class: 'feat-det' });
+  var sum = el('summary', { class: 'feat-sum' });
+  sum.appendChild(el('span', { class: 'act-glyph', text: actionGlyph(act.actions) }));
+  sum.appendChild(el('span', { class: 'feat-name', text: act.name || '(без названия)' }));
+  if (act.traits) sum.appendChild(el('span', { class: 'feat-meta', text: act.traits }));
+  if (editMode) {
+    var editBtn = el('button', { class: 'mini-btn', text: '✎', title: 'Редактировать действие' });
+    editBtn.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); openActionEditor(act); });
+    var rmBtn = el('button', { class: 'mini-btn danger', text: '✕', title: 'Удалить действие' });
+    rmBtn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      State.sheet.actions.splice(idx, 1); markDirty(); renderActions();
+    });
+    sum.appendChild(editBtn); sum.appendChild(rmBtn);
+  }
+  det.appendChild(sum);
+  var body = el('div', { class: 'feat-body' });
+  body.appendChild(el('p', { class: 'feat-text', text: act.text || 'Описание отсутствует.' }));
+  if (act.source) body.appendChild(el('p', { class: 'feat-traits', text: 'Источник: ' + act.source }));
+  det.appendChild(body);
+  li.appendChild(det);
+  return li;
+}
+function openActionEditor(act) {
+  var nameI = el('input', { value: act.name || '', class: 'grow' });
+  var actI = el('input', { value: act.actions || '', class: 'xs', title: 'Кол-во действий: 1/2/3/free/reaction' });
+  var traitsI = el('input', { value: act.traits || '', class: 's' });
+  var srcI = el('input', { value: act.source || '', class: 's' });
+  var txtA = el('textarea', { rows: 5, class: 'autogrow', placeholder: 'Описание' });
+  txtA.value = act.text || '';
+  var saveB = el('button', { class: 'btn primary', text: 'Сохранить' });
+  saveB.addEventListener('click', function () {
+    act.name = nameI.value.trim() || '(без названия)';
+    act.actions = actI.value.trim(); act.traits = traitsI.value.trim();
+    act.source = srcI.value.trim(); act.text = txtA.value;
+    markDirty(); closeModal(); renderActions();
+  });
+  var cancelB = el('button', { class: 'btn', text: 'Отмена' });
+  cancelB.addEventListener('click', closeModal);
+  modal([
+    el('h3', { text: 'Действие' }),
+    el('div', { class: 'row' }, [el('label', {}, [nameI]), el('label', {}, [actI]), el('label', {}, [traitsI]), el('label', {}, [srcI])]),
+    el('div', { class: 'row' }, [el('label', { class: 'grow' }, [txtA])]),
+    el('div', { class: 'row' }, [saveB, cancelB])
+  ]);
+  wireAutogrow(txtA);
+}
 function renderActions() {
   var box = $('#actions-block'); box.innerHTML = '';
-  State.sheet.actions.forEach(function (act, idx) {
-    var div = el('div', { class: 'feat-item' });
-    var nm = el('input', { value: act.name, placeholder: 'Название', style: 'width:60%' });
-    nm.addEventListener('input', function () { act.name = nm.value; markDirty(); });
-    var ac = el('input', { value: act.actions || '', placeholder: 'Действия', style: 'width:90px' });
-    ac.addEventListener('input', function () { act.actions = ac.value; markDirty(); });
-    div.append(nm, ac);
-    var tx = el('textarea', { rows: 2, style: 'width:100%', placeholder: 'Описание' });
-    tx.value = act.text || '';
-    tx.addEventListener('input', function () { act.text = tx.value; markDirty(); });
-    div.appendChild(tx);
-    var rm = el('button', { class: 'rm', text: '✕', onclick: function () { State.sheet.actions.splice(idx, 1); markDirty(); renderActions(); } });
-    div.appendChild(rm);
-    box.appendChild(div);
-  });
-  box.appendChild(el('button', { class: 'btn small', text: '＋ Действие', onclick: function () {
-    State.sheet.actions.push({ name: '', actions: '1', traits: '', source: '', text: '' });
-    markDirty(); renderActions();
-  }}));
+  var editMode = isEditMode();
+  var ul = el('ul', { class: 'feat-list act-list' });
+  if (!State.sheet.actions.length && editMode) ul.appendChild(el('li', { class: 'feat-empty', text: '— пусто —' }));
+  State.sheet.actions.forEach(function (act, idx) { ul.appendChild(actionListItem(act, idx, editMode)); });
+  box.appendChild(ul);
+  if (editMode) {
+    box.appendChild(el('button', { class: 'btn small', text: '＋ Действие', onclick: function () {
+      var act = { name: 'Новое действие', actions: '1', traits: '', source: '', text: '' };
+      State.sheet.actions.push(act);
+      markDirty(); renderActions(); openActionEditor(act);
+    }}));
+  }
 }
 
 function renderInventory() {
@@ -1358,6 +1946,10 @@ function updateComputed() {
   $('#save-total-fortitude').textContent = modStr(d.saves.fortitude);
   $('#save-total-reflex').textContent = modStr(d.saves.reflex);
   $('#save-total-will').textContent = modStr(d.saves.will);
+  var tf = $('#save-tile-fortitude');
+  if (tf) { tf.textContent = modStr(d.saves.fortitude);
+            $('#save-tile-reflex').textContent = modStr(d.saves.reflex);
+            $('#save-tile-will').textContent = modStr(d.saves.will); }
   Object.keys(d.skills).forEach(function (k) {
     var e = $('#skill-total-' + k); if (e) e.textContent = modStr(d.skills[k]);
   });
@@ -1377,6 +1969,27 @@ function updateComputed() {
   $('#hp-text').textContent = hp.current + ' / ' + hp.max + (hp.temp ? ' (+' + hp.temp + ' врем.)' : '');
   $('#dying-val').textContent = hp.dying || 0;
   $('#wounded-val').textContent = hp.wounded || 0;
+  // панель «ПЗ и щит» (раскладка official)
+  renderHpShieldPanel();
+  var hc = $('#hp-big-cur'), hm = $('#hp-big-max'), sc = $('#shield-big'), sm = $('#shield-big-max');
+  if (hc) {
+    hc.textContent = hp.current;
+    hm.textContent = 'из ' + hp.max + (hp.temp ? ' +' + hp.temp : '');
+    var sh = State.sheet.armor.shield || {};
+    sc.textContent = sh.current != null ? sh.current : (sh.hp || 0);
+    sm.textContent = 'из ' + (sh.hp || 0);
+  }
+  // сводка боя (раскладка sanych): обновляем только цифры, список ударов — в renderAll
+  var cbox = $('#combat-summary');
+  if (cbox && cbox.childNodes.length) {
+    var vals = [d.ac, modStr(d.perception), modStr(d.saves.fortitude), modStr(d.saves.reflex),
+                modStr(d.saves.will), d.classDC, modStr(d.spellAttack), d.spellDC];
+    $all('.cstat b', cbox).forEach(function (bEl, i) { if (vals[i] != null) bEl.textContent = String(vals[i]); });
+    $all('.combat-strike .strike-attack', cbox).forEach(function (e, i) {
+      var all = d.strikes.melee.concat(d.strikes.ranged);
+      if (all[i] != null) e.textContent = modStr(all[i]);
+    });
+  }
 }
 
 function renderAll() {
@@ -1389,11 +2002,43 @@ function renderAll() {
   renderStrikes();
   renderWeaponProf();
   renderHeroPoints();
+  renderLanguages();
+  renderCombatSummary();
   renderSpells();
   renderFeats();
   renderActions();
   renderInventory();
   updateComputed();
+  syncCombatStrip();
+
+  /* Пересобираем раскладку, если пользователь сменил тему между рендерами */
+  var grid = $('#sheet-grid');
+  if (grid && grid.dataset.layoutApplied !== currentTheme()) applyLayout(currentTheme());
+  refreshAllTextareas();   // после подстановки значений data-bind
+}
+
+/* Раскладка «Тёмный VTT» (strip): панель «ПЗ и щит» дублируется в верхнюю
+   горизонтальную ленту над колонками. Копия — только для отображения
+   (id удалены), поэтому не конфликтует с оригиналом при updateComputed. */
+function syncCombatStrip() {
+  var grid = $('#sheet-grid'); if (!grid) return;
+  var src = $('#hp-shield-panel');
+  var stripBox = $('.combat-strip', grid);
+  if (!src || !stripBox) return;
+  if (grid.dataset.strip === '1') {
+    // пересобираем копию при каждом рендере, чтобы цифры были актуальны
+    stripBox.innerHTML = '';
+    var clone = src.cloneNode(true);
+    clone.removeAttribute('id');
+    $all('[id]', clone).forEach(function (n) { n.removeAttribute('id'); });
+    // в копии не нужны элементы управления блоком и drag-обработчики
+    $all('.sec-controls', clone).forEach(function (n) { n.remove(); });
+    $all('legend.drag-handle', clone).forEach(function (n) { n.classList.remove('drag-handle'); });
+    $all('[data-dkey]', clone).forEach(function (n) { delete n.dataset.dkey; });
+    stripBox.appendChild(clone);
+  } else {
+    stripBox.innerHTML = '';
+  }
 }
 
 /* ---------------- броски кубиков ---------------- */
@@ -1849,7 +2494,7 @@ function wireTopbar() {
   });
 }
 
-/* ---------------- темы оформления ---------------- */
+/* ---------------- темы оформления (цвета + раскладка) ---------------- */
 var BUILD_THEME = (typeof window !== 'undefined' && window.__PF2E_BUILD_THEME__) || '';
 
 function validTheme(t) {
@@ -1859,33 +2504,85 @@ function currentTheme() {
   // приоритет: сохранённый выбор пользователя > тема, вшитая сборщиком > default
   return validTheme(localStorage.getItem(LS_THEME) || BUILD_THEME);
 }
-function applyTheme(t) {
-  THEMES.forEach(function (x) {
-    if (x.id !== 'default') document.body.classList.remove('theme-' + x.id);
-  });
-  if (t !== 'default') document.body.classList.add('theme-' + t);
-  var sel = $('#theme-select');
-  if (sel) sel.value = t;
+function themeById(id) {
+  for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i];
+  return THEMES[0];
 }
+
+/* ---------------- цветовые гаммы (независимы от тем-раскладок) ----------
+   Тема (--theme / выбор в шапке) отвечает ТОЛЬКО за расположение блоков,
+   гамма (--palette / отдельный список) — ТОЛЬКО за цвета и шрифты. */
+var PALETTES = [
+  { id: 'default',  name: 'Гамма: Классическая (пергамент)' },
+  { id: 'official', name: 'Гамма: Официальная Paizo (cream)' },
+  { id: 'sanych',   name: 'Гамма: Ночная пергаментно-зелёная (Саныч)' },
+  { id: 'dark',     name: 'Гамма: Тёмный VTT (янтарь)' }
+];
+function validPalette(t) {
+  for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === t) return t;
+  return 'default';
+}
+var BUILD_PALETTE = (typeof window !== 'undefined' && window.__PF2E_BUILD_PALETTE__) || '';
+function currentPalette() {
+  return validPalette(localStorage.getItem(LS_PALETTE) || BUILD_PALETTE);
+}
+
+/* Выпадающий список тем-раскладок в шапке: только расположение блоков. */
 function wireThemePicker() {
   var sel = $('#theme-select');
   if (!sel) return;
-  THEMES.forEach(function (x) {
-    sel.appendChild(el('option', { value: x.id, text: x.name }));
+  sel.innerHTML = '';
+  THEMES.forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
   });
-  sel.addEventListener('change', function () {
-    localStorage.setItem(LS_THEME, sel.value);
-    applyTheme(sel.value);
+  var apply = function () {
+    var id = validTheme(sel.value);
+    localStorage.setItem(LS_THEME, id);
+    // переключение раскладки — классом theme-<id> на <body> (как делает сборщик)
+    THEMES.forEach(function (t) { document.body.classList.remove('theme-' + t.id); });
+    if (id !== 'default') document.body.classList.add('theme-' + id);
+    sel.value = id;
+    applyLayout(id);
+    renderAll();
+  };
+  sel.value = currentTheme();
+  sel.addEventListener('change', apply);
+  apply();
+}
+
+/* Выпадающий список цветовых гамм в шапке: только цвета/шрифты. */
+function wirePalettePicker() {
+  var sel = $('#palette-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  PALETTES.forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
   });
-  applyTheme(currentTheme());
+  var apply = function () {
+    var id = validPalette(sel.value);
+    localStorage.setItem(LS_PALETTE, id);
+    PALETTES.forEach(function (t) { document.body.classList.remove('pal-' + t.id); });
+    if (id !== 'default') document.body.classList.add('pal-' + id);
+    sel.value = id;
+  };
+  sel.value = currentPalette();
+  sel.addEventListener('change', apply);
+  apply();
 }
 
 /* ---------------- инициализация ---------------- */
 function boot() {
   renderTabs();
+  ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
+  wirePalettePicker();
   wireTopbar();
   wireIOButtons();
+  wireEditMode();
 
   // 1) загружаем персонажей: localStorage + встроенные в HTML данные
   var map = Store.loadAll();
@@ -1910,8 +2607,654 @@ function boot() {
   State.sheet = normalizeSheet(map[State.currentId]);
 
   renderAll();
+  wireTabBlocks();   // drag за блоки на вкладках Инвентарь/Биография/Серверы/Импорт
   setState('Готово');
   switchTab('sheet');
+}
+
+/* ==========================================================================
+   РАСКЛАДКА И ПЕРЕТАСКИВАНИЕ БЛОКОВ (режим «Редактирование»)
+   --------------------------------------------------------------------------
+   Единый движок для всех вкладок. Исправлены три проблемы прежней версии:
+     1) Блоки НЕ встраиваются друг в друга: drop-зоной может быть только
+        колонка-контейнер (.sheet-area / .tabpage / grid2/grid3/srv-layout —
+        только верхнего уровня). Блок fieldset принимает drop лишь когда под
+        курсором его ЗАГОЛОВОК (legend), и тогда вставляется ПЕРЕД ним, а не
+        внутрь. Вставка внутрь fieldset физически невозможна (insertBlock
+        работает только с контейнерами-колонками).
+     2) Если из колонки вынести все блоки — она остаётся видимой зоной
+        (min-height в CSS + класс .area-empty), поэтому в неё снова можно
+        перетащить блок; пустая колонка больше не «схлопывается», и блоки не
+        уезжают вниз страницы на две колонки.
+     3) Порядок блоков внутри одной колонки меняется перетаскиванием: цель
+        определяется по вертикали (вставить перед/после блока), правка
+        сохраняется в ту же раскладку, что и состав колонок.
+   Ключи раскладки — стабильные data-bid (уникальны для каждого блока, включая
+   одноимённые секции sec-hp/sec-strikes и панель #hp-shield-panel).
+   ========================================================================== */
+
+/* Назначение блока по id (для подсказок в панели управления). */
+var BLOCK_LABELS = {
+  'info': 'Основное', 'abil': 'Характеристики', 'def': 'Защиты',
+  'hp-top': 'ПЗ и щит (верхняя панель)', 'hp': 'Пункты здоровья',
+  'skills': 'Навыки', 'strikes': 'Удары', 'wpnprof': 'Профичности оружия',
+  'combat': 'Бой', 'magic': 'Магия', 'feats': 'Черты и умения', 'actions': 'Действия'
+};
+
+/* ---------- присвоение стабильных id блокам ---------- */
+function ensureBlockIds() {
+  var n = 0;
+  function mark(node) { if (!node.dataset.bid) node.dataset.bid = 'b' + (++n); }
+  // Вкладка «Лист»: сначала обход DOM (стабильно между темами), затем
+  // отдельные панели по id (их порядок в DOM зависит от раскладки темы).
+  var grid = $('#sheet-grid');
+  if (grid) {
+    /* «Основное» — прямой ребёнок #sheet-grid, помечаем первым, чтобы bid
+       был стабильным независимо от порядка обхода колонок. */
+    var info = $('.info-block', grid);
+    if (info && !info.dataset.bid) info.dataset.bid = 'info';
+    $all(':scope > .sheet-area > fieldset', grid).forEach(mark);
+  }
+  [['#hp-shield-panel', 'hp-top'], ['#weapon-prof-panel', 'wpnprof']].forEach(function (p) {
+    var elx = $(p[0]);
+    if (elx && elx.tagName === 'FIELDSET' && !elx.dataset.bid) elx.dataset.bid = p[1];
+  });
+  if (grid) $all('fieldset', grid).forEach(mark);
+  // Остальные вкладки: все fieldset в порядке DOM.
+  $all('.tabpage').forEach(function (page) {
+    if (page.id === 'tab-sheet') return;
+    $all('fieldset', page).forEach(mark);
+  });
+}
+function blockTitle(node) {
+  var lg = node.querySelector(':scope > legend');
+  if (lg) return lg.textContent.trim();
+  return BLOCK_LABELS[node.dataset.bid] || node.dataset.bid || 'Блок';
+}
+
+/* ---------- зоны и контейнеры ---------- */
+/* Колонки-контейнеры текущей вкладки. Только они могут принимать блоки —
+   поэтому вложение блоков друг в друга исключено структурно. */
+function tabContainers(tabId) {
+  if (tabId === 'sheet') {
+    return ['left', 'mid', 'right'].map(function (c) {
+      return $('.sheet-area[data-col="' + c + '"]');
+    }).filter(Boolean);
+  }
+  var page = $('#tab-' + tabId);
+  if (!page) return [];
+  // раскладка вкладки запоминается ТОЛЬКО когда её контейнеры — колонки одного
+  // grid-ряда (.grid3/.srv-layout): блоки можно менять местами между колонками.
+  // Вкладки с запрещённым переносом («Серверы», «Импорт/экспорт») не имеют зон.
+  if (NO_DRAG_TABS[tabId]) return [];
+  // «Биография»: каждая секция — ячейка фиксированной 12-колоночной сетки
+  // (span 4 = три столбца); drag меняет только порядок секций внутри ряда.
+  if (tabId === 'bio') {
+    var row = $('.bio-grid', page);
+    return row ? [row] : [];
+  }
+  var out = [];
+  for (var n = page.firstElementChild; n; n = n.nextElementSibling) {
+    if (n.classList.contains('grid3') || n.classList.contains('srv-layout')) {
+      /* grid3: fieldset-и — прямые дети ряда, сам ряд и есть контейнер.
+         srv-layout: children div-колонки (.srv-left/.srv-right). */
+      if (n.classList.contains('grid3')) { out.push(n); continue; }
+      for (var k = n.firstElementChild; k; k = k.nextElementSibling) {
+        if (k.classList.contains('srv-left') || k.classList.contains('srv-right')) out.push(k);
+      }
+    }
+  }
+  return out;
+}
+function isContainerNode(node, tabId) {
+  if (tabId === 'sheet') return !!(node.classList && node.classList.contains('sheet-area'));
+  if (node.tagName === 'FIELDSET') return false;
+  var page = $('#tab-' + tabId);
+  return !!page && page.contains(node);
+}
+function containerOf(node) {
+  while (node) { if (node.dataset && node.dataset.col) return node; node = node.parentElement; }
+  return null;
+}
+function visibleTabId() {
+  var p = $('#main > .tabpage:not(.hidden)');
+  return p ? p.id.replace('tab-', '') : 'sheet';
+}
+function blocksOf(container) {
+  return Array.prototype.filter.call(container.children, function (c) {
+    return c.nodeType === 1 && c.tagName === 'FIELDSET';
+  });
+}
+
+/* ---------- хранилище пользовательских раскладок ---------- */
+function loadUserLayouts() {
+  try { return JSON.parse(localStorage.getItem(LS_LAYOUT) || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveUserLayouts(obj) { localStorage.setItem(LS_LAYOUT, JSON.stringify(obj)); }
+function userLayoutFor(themeId) {
+  var all = loadUserLayouts();
+  return all[themeId] || null;
+}
+function setUserLayout(themeId, lay) {
+  var all = loadUserLayouts();
+  if (!lay) delete all[themeId]; else all[themeId] = lay;
+  saveUserLayouts(all);
+}
+function loadTabStructures() {
+  try { return JSON.parse(localStorage.getItem(LS_TABSTRUCT) || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveTabStructures(obj) { localStorage.setItem(LS_TABSTRUCT, JSON.stringify(obj)); }
+
+/* Эффективная раскладка вкладки «Лист»: базовая от темы + правки поверх.
+   Базовый map строится ПРЯМО из DOM (какой блок в какой колонке лежит в
+   исходной разметке шаблона) — так исключаются ошибки ручного маппинга
+   sec-* классов на колонки. Порядок внутри колонок сохраняется как в DOM.
+   Правки пользователя (u.map) накладываются поверх, если существуют. */
+var SHEET_AREA_COLS = ['left', 'mid', 'right'];
+function baseSheetMap() {
+  var grid = $('#sheet-grid');
+  var out = { left: [], mid: [], right: [], full: [] };
+  if (!grid) return out;
+  /* Именные панели вне колонок («Основное», «Профичности оружия», дубль
+     «ПЗ и щит») привязаны к своим секциям: без этого они оставались бы
+     прямыми детьми #sheet-grid и ломали потоковую 12-колоночную сетку. */
+  var HOME = { 'hp-shield-panel': 'hp', 'weapon-prof-panel': 'wpnprof' };
+  SHEET_AREA_COLS.forEach(function (c) {
+    var area = $('.sheet-area[data-col="' + c + '"]', grid);
+    if (!area) return;
+    blocksOf(area).forEach(function (f) { out[c].push(f.dataset.bid); });
+  });
+  $all(':scope > fieldset', grid).forEach(function (f) {
+    var bid = f.dataset.bid;
+    var homeSec = HOME[f.id];
+    var col = null;
+    if (homeSec) {
+      for (var i = 0; i < SHEET_AREA_COLS.length; i++) {
+        if (out[SHEET_AREA_COLS[i]].indexOf(homeSec) >= 0) { col = SHEET_AREA_COLS[i]; break; }
+      }
+    }
+    if (col) {
+      var at = out[col].indexOf(homeSec) + 1;
+      out[col].splice(at, 0, bid);          // сразу после домашней секции
+      f.dataset.col = col;
+      var area = $('.sheet-area[data-col="' + col + '"]', grid);
+      var ref = area.children[at - 1] || null;
+      area.insertBefore(f, ref ? ref.nextSibling : null);
+    } else {
+      f.dataset.col = 'full';               // широкая шапка («Основное»)
+      out.full.push(bid);
+    }
+  });
+  return out;
+}
+function effectiveLayout(themeId) {
+  var base = themeById(themeId).layout || {};
+  var u = userLayoutFor(themeId) || {};
+  var bmap = baseSheetMap();
+  var map = { left: (u.map && u.map.left) || bmap.left,
+              mid: (u.map && u.map.mid) || bmap.mid,
+              right: (u.map && u.map.right) || bmap.right,
+              full: (u.map && u.map.full) || bmap.full };
+  return { cols: base.cols === 2 ? 2 : 3, map: map,
+           textCols: u.textCols || {},
+           strip: base.strip, hide: base.hide };
+}
+function mutateSheetLayout(fn) {
+  var themeId = currentTheme();
+  var all = loadUserLayouts();
+  var u = all[themeId] || (all[themeId] = {});
+  if (!u.map) u.map = effectiveLayout(themeId).map;
+  fn(u);
+  saveUserLayouts(all);
+}
+
+/* Запоминание текущего расположения блоков вкладки (лист — как map по bid,
+   прочие вкладки — как список колонок dkey-сов... используется тот же bid). */
+function captureStructure(tabId) {
+  if (tabId === 'sheet') {
+    var areas = { left: $('.sheet-area[data-col="left"]'),
+                  mid: $('.sheet-area[data-col="mid"]'),
+                  right: $('.sheet-area[data-col="right"]') };
+    mutateSheetLayout(function (u) {
+      u.map = u.map || {};
+      ['left', 'mid', 'right'].forEach(function (c) {
+        u.map[c] = areas[c] ? blocksOf(areas[c]).map(function (b) { return b.dataset.bid; }) : [];
+      });
+    });
+    return;
+  }
+  var conts = tabContainers(tabId);
+  var cols = conts.map(function (c) {
+    return blocksOf(c).map(function (b) { return b.dataset.bid; });
+  });
+  var all = loadTabStructures();
+  all[tabId] = { cols: cols };
+  saveTabStructures(all);
+  reflowGridRow(conts);
+  conts.forEach(function (c) { c.classList.toggle('area-empty', blocksOf(c).length === 0); });
+}
+
+/* Перенос блока в контейнер (перед before или в конец). Гарантирует, что
+   блок — прямой ребёнок колонки, т.е. вложение невозможно. */
+function insertBlock(node, container, before) {
+  if (before && before.parentNode !== container) before = null;
+  if (before) container.insertBefore(node, before);
+  else container.appendChild(node);
+}
+
+/* ---------- применение раскладки вкладки «Лист» (12-колоночная сетка) ----
+   Колонки (.sheet-area) — прямые дети #sheet-grid; каждая занимает span
+   колонок сетки: 4 (три столбца — все темы, кроме official) или 6 (два
+   столбца — официальный лист Paizo). Блоки физически лежат ВНУТРИ колонок
+   (flex-столбик), поэтому вложение блоков друг в друга структурно
+   невозможно. Порядок = DOM (никаких order/grid-area трюков).
+
+   Drag-and-drop на вкладке «Лист»: drop-цель всегда — колонка (.sheet-area)
+   или чужой блок (легенда → вставка перед ним в ТОЙ ЖЕ колонке). При drop
+   блок вынимается из своей колонки и вставляется в колонку-цель (перед
+   целевым блоком или в конец) — никогда внутрь fieldset и не прямым ребёнком
+   сетки. В 2-колоночных темах скрытая mid-колонка остаётся в DOM пустой и
+   тоже является зоной возврата: её блоки физически живут в левой колонке, а
+   их «домашняя» колонка хранится в u.map. Дублирующиеся панели скрываются
+   .sec-hidden. ИЗМЕНЕНИЕ РАЗМЕРА БЛОКОВ УБРАНО полностью: ширина задаётся
+   только раскладкой темы. */
+function applyLayout(themeId) {
+  var grid = $('#sheet-grid'); if (!grid) return;
+  var lay = effectiveLayout(themeId);
+  var cols = lay.cols === 2 ? 2 : 3;
+
+  var areas = {
+    left: $('.sheet-area[data-col="left"]', grid),
+    mid: $('.sheet-area[data-col="mid"]', grid),
+    right: $('.sheet-area[data-col="right"]', grid)
+  };
+
+  grid.dataset.cols = String(cols);
+  grid.dataset.strip = lay.strip ? '1' : '0';
+  var span = colSpan(themeId);            // 4 (три столбца) или 6 (Paizo)
+  SHEET_AREA_COLS.forEach(function (c) {
+    if (areas[c]) { areas[c].dataset.col = c; areas[c].style.setProperty('--span', String(span)); }
+  });
+  var strip = $('.combat-strip', grid);
+  if (strip) strip.dataset.col = 'strip';
+  var info = $('.info-block', grid);
+  if (info) { info.dataset.col = 'full'; info.classList.add('sheet-sec'); }
+
+  /* Санация структуры ДО нормализации: блоки, «убежавшие» прямыми детьми
+     #sheet-grid или вложившиеся в чужой fieldset, возвращаем в домашние
+     колонки (иначе map-нормализация их не найдёт и они уедут в конец). */
+  function homeColOf(bid) {
+    for (var ci = 0; ci < SHEET_AREA_COLS.length; ci++) {
+      if ((lay.map[SHEET_AREA_COLS[ci]] || []).indexOf(bid) >= 0) return SHEET_AREA_COLS[ci];
+    }
+    return null;
+  }
+  $all(':scope > fieldset[data-bid]', grid).forEach(function (f) {
+    if (f.dataset.col === 'full') return;
+    var home = homeColOf(f.dataset.bid);
+    var cont = home && !(home === 'mid' && cols === 2) ? areas[home] : areas.left;
+    if (f.parentNode !== cont) { delete f._dragWire; cont.appendChild(f); }
+  });
+  $all('fieldset fieldset[data-bid]', grid).forEach(function (f) {   // вложение — недопустимо
+    var host = f.closest('.sheet-area');
+    if (host) { delete f._dragWire; host.appendChild(f); }
+    else {
+      var home2 = homeColOf(f.dataset.bid);
+      var cont2 = home2 && areas[home2] ? areas[home2] : areas.right;
+      delete f._dragWire; cont2.appendChild(f);
+    }
+  });
+  /* Нормализация: каждый блок кладём КОНЦЕМ своей колонки согласно map
+     (последовательный обход map задаёт точный порядок). В 2-колоночной
+     теме блоки mid физически переезжают в левую колонку; скрытая mid-
+     колонка остаётся в DOM пустой — она тоже допустимая drop-зона. */
+  var placed = {};
+  SHEET_AREA_COLS.forEach(function (col) {
+    var cont = col === 'mid' && cols === 2 ? areas.left : areas[col];
+    if (!cont) return;
+    (lay.map[col] || []).forEach(function (bid) {
+      var node = $('[data-bid="' + bid + '"]', grid);
+      if (!node || placed[bid] || node === cont) return;
+      placed[bid] = true;
+      node.style.order = '';              // больше не используем order
+      if (node.parentNode !== cont) cont.appendChild(node);
+      else { delete node._dragWire; node.remove(); cont.appendChild(node); }
+    });
+  });
+  // «Основное» и прочие full-блоки — прямые дети сетки, во всю ширину
+  (lay.map.full || []).forEach(function (bid) {
+    var node = $('[data-bid="' + bid + '"]', grid);
+    if (node) { node.dataset.col = 'full'; placed[bid] = true; }
+  });
+  // страховка: любой непойманный блок владения листа — в правую колонку
+  $all('fieldset[data-bid]', grid).forEach(function (f) {
+    if (f.closest('#sheet-grid') !== grid) return;   // чужие вкладки — мимо
+    if (f.classList.contains('sheet-area')) return;
+    if (f.dataset.bid && !placed[f.dataset.bid] && f.dataset.col !== 'full') {
+      areas.right.appendChild(f);
+    }
+  });
+  areas.mid.style.display = cols === 2 ? 'none' : '';
+
+  // число колонок текста; РАЗМЕР БЛОКОВ НЕ РЕГУЛИРУЕТСЯ: старые атрибуты
+  // data-cols/data-width и панели .sec-controls удаляем со всех блоков —
+  // ширина задаётся только раскладкой темы (12-колоночная сетка, span 4/6)
+  $all('fieldset[data-bid]', grid).forEach(function (node) {
+    if (node.closest('#sheet-grid') !== grid) return;
+    node.removeAttribute('data-width');
+    node.removeAttribute('data-cols');
+    removeSecControls(node);
+    ensureBodyWrap(node);
+    wireBlockDrag(node);
+  });
+
+  // скрытие дублирующихся панелей (например, панель ПЗ/щит при ленте strip)
+  $all('.sheet-sec', grid).forEach(function (n) { n.classList.remove('sec-hidden'); });
+  (lay.hide || []).forEach(function (sel) {
+    var n = $(sel, grid); if (n) n.classList.add('sec-hidden');
+  });
+
+  /* Якоря колонок: пустая колонка схлопнулась бы в нулевую ширину и блоки
+     некуда было бы возвращать — поэтому в каждую .sheet-area кладётся
+     невидимый anchor (не fieldset → blocksOf его игнорирует). Он же служит
+     зоной drop под последним блоком. */
+  SHEET_AREA_COLS.forEach(function (c) {
+    if (!areas[c]) return;
+    var anc = areas[c].querySelector(':scope > .area-anchor');
+    if (!anc) {
+      anc = el('div', { class: 'area-anchor' });
+      areas[c].appendChild(anc);
+    } else {
+      areas[c].appendChild(anc);          // всегда последним
+    }
+  });
+
+  markEmptyAreas();
+  grid.dataset.layoutApplied = themeId;
+  syncCombatStrip();
+  refreshAllTextareas();
+}
+
+/* Подсветка пустых колонок: они остаются.drop-зонами (min-height в CSS),
+   поэтому вынесенные из колонки блоки можно вернуть обратно. */
+function markEmptyAreas() {
+  $all('.sheet-area').forEach(function (a) {
+    a.classList.toggle('area-empty', blocksOf(a).length === 0);
+  });
+}
+
+/* Обёртка содержимого секции (.sec-body-wrap) для multi-column: собираем в
+   неё все дочерние узлы fieldset, кроме legend и старой панели управления.
+   display:contents — не влияет на верстку (число колонок текста больше НЕ
+   регулируется, правила [data-cols] удалены). */
+function ensureBodyWrap(node) {
+  var wrap = node.querySelector(':scope > .sec-body-wrap');
+  if (!wrap) {
+    wrap = el('div', { class: 'sec-body-wrap' });
+    var kids = [];
+    for (var n = node.firstChild; n; n = n.nextSibling) {
+      if (n.tagName === 'LEGEND') continue;
+      if (n.nodeType === 1 && n.classList.contains('sec-controls')) continue;
+      kids.push(n);
+    }
+    var lg = node.querySelector('legend');
+    if (lg && lg.nextSibling) node.insertBefore(wrap, lg.nextSibling);
+    else node.appendChild(wrap);
+    kids.forEach(function (k) { wrap.appendChild(k); });
+  }
+}
+
+/* Старые сохранения могли содержать панель .sec-controls с регулировкой
+   размера блока — удаляем её навсегда (режим «Редактирование» теперь
+   позволяет только перетаскивание и порядок блоков). */
+function removeSecControls(node) {
+  var box = node.querySelector(':scope > .sec-controls');
+  if (box) box.remove();
+}
+
+/* Вкладки с запрещённым переносом блоков (структура фиксирована). */
+var NO_DRAG_TABS = { servers: true, io: true };
+function tabDragAllowed(tabId) { return !NO_DRAG_TABS[tabId]; }
+
+/* Все fieldset-детей контейнера, включая временно скрытые (.sec-hidden):
+   display:none не мешает appendChild/insertBefore, поэтому санация
+   «убежавших» и вложенных блоков работает без снятия классов. */
+function allBlocksOf(container) { return blocksOf(container); }
+
+/* Применение сохранённой раскладки произвольной вкладки (не «Листа»). */
+function applyTabStructure(tabId) {
+  if (tabId === 'sheet') return;
+  var page = $('#tab-' + tabId);
+  if (!tabDragAllowed(tabId)) {
+    /* «Серверы» и «Импорт/экспорт»: перенос блоков запрещён — снимаем
+       drag-обработчики и скрытую пользовательскую раскладку этой вкладки. */
+    if (page) {
+      $all('fieldset', page).forEach(function (f) {
+        f._dragWire = false;
+        var lg = f.querySelector(':scope > legend');
+        if (lg) { lg.classList.remove('drag-handle'); lg.removeAttribute('title'); }
+      });
+      var stAll = loadTabStructures();
+      if (stAll[tabId]) { delete stAll[tabId]; saveTabStructures(stAll); }
+    }
+    return;
+  }
+  ensureBlockIds();
+  var st = loadTabStructures()[tabId];
+  var conts = tabContainers(tabId);
+  if (!conts.length) {
+    /* Вкладка без зон drag: снимаем обработчики, чтобы блоки не «убегали»
+       в конец DOM при случайном перетаскивании. */
+    $all('fieldset', page || document).forEach(function (f) {
+      if (!page || !page.contains(f)) return;
+      f._dragWire = false;
+      var lg = f.querySelector(':scope > legend');
+      if (lg) { lg.classList.remove('drag-handle'); lg.removeAttribute('title'); }
+    });
+    return;
+  }
+  if (st && Array.isArray(st.cols)) {
+    st.cols.forEach(function (keys, ci) {
+      var container = conts[Math.min(ci, conts.length - 1)];
+      keys.forEach(function (k) {
+        var node = document.querySelector('#tab-' + tabId + ' [data-bid="' + k + '"]');
+        if (node && node.tagName === 'FIELDSET' && node.parentNode !== container) {
+          container.appendChild(node);
+        }
+      });
+    });
+  }
+  /* Санация: прямые fieldset-дети страницы вне контейнеров (последствие
+     старых багов) возвращаем в единственную/первую зону вкладки. */
+  if (page && conts.length === 1) {
+    $all(':scope > fieldset[data-bid]', page).forEach(function (f) {
+      delete f._dragWire;
+      conts[0].appendChild(f);
+    });
+  }
+  /* Инвентарь: ряд .inv-grid — часть 12-колоночной сетки (см. CSS).
+     reflowGridRow меняет число столбцов ряда по числу НЕпустых колонок;
+     если блоки перенесли в одну колонку — остальные схлопываются. */
+  if (tabId === 'inventory') {
+    var invRow = $('.inv-grid', page);
+    if (invRow) reflowGridRow([invRow]);
+  }
+  conts.forEach(function (c) {
+    c.classList.toggle('area-empty', blocksOf(c).length === 0);
+    $all(':scope > fieldset', c).forEach(wireBlockDrag);
+  });
+}
+
+/* После переноса блоков между колонками grid-ряда пересчитываем
+   grid-template-columns: столько колонок, сколько непустых контейнеров
+   (1..3), иначе пустая колонка оставляла бы «дыру» посреди строки. */
+function reflowGridRow(conts) {
+  if (!conts.length) return;
+  var row = conts[0].parentElement;
+  if (!row) return;
+  var filled = conts.filter(function (c) { return blocksOf(c).length > 0; }).length;
+  var n = Math.max(1, Math.min(3, filled));
+  row.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))';
+}
+
+/* ---------- drag engine (единый для всех вкладок) ---------- */
+var dragState = null;
+
+function wireBlockDrag(node) {
+  var tabEl = node.closest ? node.closest('.tabpage') : null;
+  var tabId = tabEl ? tabEl.id.replace('tab-', '') : 'sheet';
+  if (!tabDragAllowed(tabId)) return;      // вкладки с запретом переноса
+  if (node._dragWire) return;
+  node._dragWire = true;
+  var head = node.querySelector(':scope > legend');
+  if (head) {
+    head.classList.add('drag-handle');
+    head.setAttribute('title', 'Перетащите за заголовок: между колонками или для смены порядка');
+    head.addEventListener('mousedown', function (ev) { startBlockDrag(ev, node); });
+  }
+  // таскание за «пустое» место блока (не за элементы ввода)
+  node.addEventListener('mousedown', function (ev) {
+    if (!isEditMode() || ev.button !== 0) return;
+    if (ev.target.closest('input,select,textarea,button,a,label,.sec-controls')) return;
+    if (ev.target.tagName === 'LEGEND') return; // уже обработано выше
+    startBlockDrag(ev, node);
+  });
+}
+
+function startBlockDrag(ev, node) {
+  if (!isEditMode()) return;
+  var tabEl = node.closest ? node.closest('.tabpage') : null;
+  var tabId = tabEl ? tabEl.id.replace('tab-', '') : visibleTabId();
+  if (!tabDragAllowed(tabId)) return;      // «Серверы»/«Импорт-экспорт» — таскать нельзя
+  if (ev.button !== 0) return;
+  ev.preventDefault();
+  dragState = { node: node, tab: visibleTabId(), moved: false, sx: ev.clientX, sy: ev.clientY };
+  node.classList.add('dragging');
+  document.body.classList.add('dragging-active');
+}
+
+/* Определение цели по координатам. Возвращает:
+   {container, before|null} — вставить блок в колонку (перед before или в конец);
+   null — цели нет.
+   Правила против «убегания» и вложения блоков:
+   - контейнером может быть ТОЛЬКО узел из tabContainers() текущей вкладки
+     (колонки .sheet-area на листе, div-колонки srv-layout, сам ряд grid3);
+     прямые дети #sheet-grid вне колонок — не цель;
+   - чужой fieldset принимается только когда точка в его legend — тогда это
+     смена порядка ВНУТРИ его колонки (вложение исключено);
+   - попали телом в чужой блок — целимся в его колонку, позиция по Y. */
+function validContainer(n, tabId) {
+  if (!n || n.nodeType !== 1) return false;
+  var conts = tabContainers(tabId);
+  for (var i = 0; i < conts.length; i++) if (conts[i] === n) return true;
+  return false;
+}
+function dropTargetAt(x, y, ds) {
+  var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+  for (var i = 0; i < els.length; i++) {
+    var e = els[i];
+    if (!e || e === ds.node || e.contains(ds.node)) continue;
+    // 1) заголовок чужого блока → смена порядка перед ним (в ЕГО колонке)
+    if (e.tagName === 'LEGEND') {
+      var fs = e.parentElement;
+      if (fs && fs.tagName === 'FIELDSET' && fs !== ds.node && fs.dataset.bid) {
+        var fc = fs.parentNode;
+        if (validContainer(fc, ds.tab)) return { container: fc, before: fs };
+      }
+    }
+    // 2) колонка-контейнер (только разрешённые зоной вкладки)
+    if (validContainer(e, ds.tab)) return { container: e, before: null };
+    // 3) попали внутрь чужого блока — целимся в его колонку, позиция — по Y
+    if (e.tagName === 'FIELDSET') {
+      var host = e.parentNode;
+      if (!validContainer(host, ds.tab)) continue;
+      var sibs = blocksOf(host).filter(function (b) { return b !== ds.node; });
+      var before = null;
+      for (var j = 0; j < sibs.length; j++) {
+        var r = sibs[j].getBoundingClientRect();
+        if (y < r.bottom) { before = sibs[j]; break; }
+      }
+      return { container: host, before: before };
+    }
+  }
+  return null;
+}
+
+function initDragEvents() {
+  document.addEventListener('mousemove', function (ev) {
+    if (!dragState) return;
+    if (Math.abs(ev.clientX - dragState.sx) + Math.abs(ev.clientY - dragState.sy) > 4) dragState.moved = true;
+    var t = dropTargetAt(ev.clientX, ev.clientY, dragState);
+    clearDropMarks();
+    if (t && t.container) {
+      t.container.classList.add('drop-over');
+      if (t.before) t.before.classList.add('drop-before');
+    }
+  });
+  document.addEventListener('mouseup', function (ev) {
+    if (!dragState) return;
+    var ds = dragState; dragState = null;
+    clearDropMarks();
+    ds.node.classList.remove('dragging');
+    document.body.classList.remove('dragging-active');
+    if (!ds.moved) return;                       // простой клик — ничего не делаем
+    var t = dropTargetAt(ev.clientX, ev.clientY, ds);
+    if (!t || !t.container) return;
+    if (t.before === ds.node) return;
+    if (t.container === ds.node.parentNode && !t.before) return; // уже там же в конце
+    insertBlock(ds.node, t.container, t.before === ds.node ? t.before.nextSibling && isBlock(t.before.nextSibling) ? t.before.nextSibling : null : t.before);
+    rememberStructure(ds.tab);
+    markEmptyAreas();
+    refreshAllTextareas();
+  });
+  // при переключении вкладки — применяем её сохранённую раскладку блоков
+  document.addEventListener('click', function (ev) {
+    var tb = ev.target.closest ? ev.target.closest('#tabs-nav button') : null;
+    if (tb) setTimeout(function () { applyTabStructure(visibleTabId()); refreshAllTextareas(); }, 0);
+  });
+}
+function isBlock(n) { return n && n.nodeType === 1 && n.tagName === 'FIELDSET'; }
+function clearDropMarks() {
+  $all('.drop-over').forEach(function (n) { n.classList.remove('drop-over'); });
+  $all('.drop-before').forEach(function (n) { n.classList.remove('drop-before'); });
+}
+function rememberStructure(tabId) {
+  captureStructure(tabId);
+  if (tabId === 'sheet') applyLayout(currentTheme());
+}
+
+/* ---------------- режим редактирования ---------------- */
+function isEditMode() {
+  var cb = $('#edit-mode-check');
+  return !!(cb && cb.checked);
+}
+
+function wireEditMode() {
+  var cb = $('#edit-mode-check');
+  if (!cb) return;
+  cb.checked = localStorage.getItem(LS_EDITMODE) === '1';
+  cb.addEventListener('change', function () {
+    localStorage.setItem(LS_EDITMODE, cb.checked ? '1' : '0');
+    document.body.classList.toggle('edit-mode', cb.checked);
+    applyLayout(currentTheme());   // в 2-колоночных темах показываем доп. зону
+    renderAll();
+  });
+  document.body.classList.toggle('edit-mode', cb.checked);
+  var resetBtn = $('#layout-reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', function () {
+    setUserLayout(currentTheme(), null);
+    applyLayout(currentTheme());
+    toast('Раскладка темы сброшена к исходной');
+  });
+  initDragEvents();
+}
+
+/* Расстановка drag-обработчиков на все блоки не-листовых вкладок. */
+function wireTabBlocks() {
+  ensureBlockIds();
+  $all('.tabpage fieldset').forEach(wireBlockDrag);
 }
 
 document.addEventListener('DOMContentLoaded', boot);

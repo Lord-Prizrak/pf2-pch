@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PF2e — интерактивный лист персонажа</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
-<!-- PF2E-BUILD-THEME: класс/тема, проставляемая tools/build.py (--theme) -->
+<!-- PF2E-BUILD-THEME: тема-раскладка (tools/build.py --theme), переопределяется выбором в шапке -->
+<!-- PF2E-BUILD-PALETTE: цветовая гамма (tools/build.py --palette) -->
 <script>window.__PF2E_BUILD_THEME__ = "default";</script>
-<!-- PF2E-BUILD-LAYOUT: раскладка листа (tools/build.py --layout), переопределяется выбором темы на лету -->
-<script>window.__PF2E_BUILD_LAYOUT__ = "default";</script>
+<script>window.__PF2E_BUILD_PALETTE__ = "default";</script>
 <!-- PF2E-SHEET-DATA:START -->
 <script id="pf2e-embedded-data" type="application/json">
 {
@@ -864,6 +864,8 @@
   --accent2: #3b5b3a;
   --line: #d8cdb9;
   --muted: #8a7c66;
+  --field: #fff;      /* фон полей ввода */
+  --chip: #faf4e8;    /* фон плиток/карточек/слотов */
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
@@ -898,7 +900,7 @@ label { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; colo
 label.grow { flex: 1 1 100%; } label.half { flex: 1 1 45%; }
 input, select, textarea, button { font: inherit; color: var(--ink); }
 input, textarea, select { border: 1px solid var(--line); border-radius: 5px; padding: 4px 6px;
-  background: #fff; }
+  background: var(--field, #fff); }
 input[type="number"] { width: 60px; }
 input.xs { width: 62px; } input.s { width: 90px; } input.m { width: 140px; }
 textarea { resize: vertical; }
@@ -913,7 +915,7 @@ textarea { resize: vertical; }
 .btn.active-tab { outline: 2px solid var(--accent); }
 
 .bigstats { display: flex; gap: 10px; margin: 4px 0 8px; }
-.stat { flex: 1; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: #faf4e8; padding: 4px; }
+.stat { flex: 1; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: var(--chip, #faf4e8); padding: 4px; }
 .stat span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; }
 .stat b { font-size: 24px; }
 
@@ -926,15 +928,15 @@ table.mini td { padding: 2px 4px; border-top: 1px dashed var(--line); vertical-a
 .abil-table td { padding: 3px 4px; text-align: center; border-top: 1px dashed var(--line); }
 .abil-table td:first-child { font-weight: 700; text-align: left; }
 .mod-badge { display: inline-block; min-width: 34px; padding: 2px 4px; border-radius: 5px;
-  background: #eee4cf; font-weight: 700; }
+  background: var(--chip, #eee4cf); font-weight: 700; }
 
 .prof-pick { display: inline-flex; gap: 2px; }
-.prof-pick button { border: 1px solid var(--line); background: #fff; font-size: 10.5px;
+.prof-pick button { border: 1px solid var(--line); background: var(--field, #fff); font-size: 10.5px;
   padding: 1px 5px; cursor: pointer; border-radius: 3px; color: var(--muted); }
 .prof-pick button.on { background: var(--accent2); color: #fff; border-color: var(--accent2); }
 
 #hp-bar-wrap { position: relative; height: 22px; border: 1px solid var(--line); border-radius: 6px;
-  background: #fff; overflow: hidden; margin: 6px 0; }
+  background: var(--field, #fff); overflow: hidden; margin: 6px 0; }
 #hp-bar { height: 100%; width: 100%; background: linear-gradient(#a5d07f, #6da34f); transition: width .2s; }
 #hp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 12px; }
@@ -946,14 +948,14 @@ table.mini td { padding: 2px 4px; border-top: 1px dashed var(--line); vertical-a
 .add-line { margin-top: 4px; }
 
 .spell-slot-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 6px 0; }
-.slot-cell { border: 1px solid var(--line); border-radius: 6px; text-align: center; padding: 3px; background: #faf4e8; }
+.slot-cell { border: 1px solid var(--line); border-radius: 6px; text-align: center; padding: 3px; background: var(--chip, #faf4e8); }
 .slot-cell b { display: block; font-size: 12px; }
 .slot-dots { display: flex; justify-content: center; gap: 3px; margin-top: 2px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--accent2); background: #fff; cursor: pointer; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--accent2); background: var(--field, #fff); cursor: pointer; }
 .dot.used { background: var(--accent2); }
 
 .server-list .srv-item { display: flex; align-items: center; gap: 8px; padding: 6px; border: 1px solid var(--line);
-  border-radius: 7px; margin: 5px 0; background: #fff; cursor: pointer; }
+  border-radius: 7px; margin: 5px 0; background: var(--panel, #fff); cursor: pointer; }
 .server-list .srv-item.sel { outline: 2px solid var(--accent); }
 .server-list .srv-item .url { flex: 1; font-family: monospace; }
 .dotled { width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
@@ -983,7 +985,7 @@ table.mini td { padding: 2px 4px; border-top: 1px dashed var(--line); vertical-a
 code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:12px; }
 
 .feats-cat { font-weight: 700; color: var(--accent2); margin: 8px 0 2px; font-size: 12px; text-transform: uppercase; }
-.feat-item { border-left: 3px solid var(--line); padding: 2px 8px; margin: 4px 0; background: #fbf7ee; border-radius: 0 6px 6px 0; }
+.feat-item { border-left: 3px solid var(--line); padding: 2px 8px; margin: 4px 0; background: var(--chip, #fbf7ee); border-radius: 0 6px 6px 0; }
 .feat-item .lvl { color: var(--muted); font-size: 11px; }
 .strike-attack { font-weight: 700; min-width: 42px; display: inline-block; }
 .roll-btn { border: 1px solid var(--line); background: #fff; border-radius: 5px; cursor: pointer; padding: 2px 7px; }
@@ -1052,7 +1054,7 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
 body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .ability-cards { display: grid;
   grid-template-columns: repeat(3, 1fr); gap: 8px; }
 body:not(.theme-official):not(.theme-sanych):not(.theme-dark) .abil-table { display: none; }
-.abil-card { border: 1px solid var(--line); border-radius: 8px; background: #faf4e8;
+.abil-card { border: 1px solid var(--line); border-radius: 8px; background: var(--chip, #faf4e8);
   padding: 6px; text-align: center; display: flex; flex-direction: column; gap: 3px; align-items: center; }
 .abil-card .card-abbr { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
 .abil-card .card-mod { font-size: 22px; font-weight: 800; color: var(--accent); }
@@ -1125,10 +1127,10 @@ body.edit-mode .tabpage .area-empty {
 .lang-items { list-style: none; margin: 2px 0 4px; padding: 0; display: flex;
   flex-wrap: wrap; gap: 4px 6px; }
 .lang-item { display: inline-flex; align-items: center; gap: 2px;
-  border: 1px solid var(--line); border-radius: 999px; background: #faf4e8; padding: 1px 4px 1px 8px; }
+  border: 1px solid var(--line); border-radius: 999px; background: var(--chip, #faf4e8); padding: 1px 4px 1px 8px; }
 .lang-item input.lang-name { border: none; background: transparent; padding: 1px 2px;
   font-size: 12.5px; color: var(--ink); }
-.lang-item input.lang-name:focus { outline: none; background: #fff; border-radius: 4px; }
+.lang-item input.lang-name:focus { outline: none; background: var(--field, #fff); border-radius: 4px; }
 .lang-del { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 3px; }
 .lang-del:hover { color: var(--accent); }
 .lang-empty { color: var(--muted); font-size: 12px; font-style: italic; }
@@ -1136,15 +1138,104 @@ body.edit-mode .tabpage .area-empty {
 .lang-pick { font-size: 11.5px; padding: 2px 4px; }
 .lang-custom { font-size: 11.5px; width: 110px; }
 
+/* Полная заливка фона: html наследует цвет/фон активной гаммы — иначе под
+   длинным листом на тёмных темах внизу оставалось светлое поле браузера. */
+html { background: var(--bg); }
+/* Гаммы: поля ввода/плитки и фон html под тёмными вариантами (полная заливка) */
+body.pal-dark { --field: #10141b; --chip: #161a22; }
+body.pal-sanych { --field: #12171c; --chip: #1d242b; }
+body.pal-official { --field: #fffdf5; --chip: #f3e9d6; }
+html:has(body.pal-dark) { background: #0d0f14; }
+html:has(body.pal-sanych) { background: #14181c; }
+html:has(body.pal-official) { background: #d9d2c5; }
+
+body.pal-dark, body.pal-sanych { color-scheme: dark; }
+body.pal-dark, body.pal-sanych { background-color: var(--bg); }
+
 
 /* === тема: dark === */
 /* ==========================================================================
-   Тема "dark" — тёмный «компактный VTT» в духе фанатских листов из интернета
-   (Reddit r/Pathfinder2e, Overchat/Dicejoy-подобные оверлеи):
-   почти чёрный фон, янтарные акценты, крупные кликабельные броски, sans-serif.
+   Тема "dark" — РАСКЛАДКА блоков. Цвета и шрифты несёт гамма pal-dark
+   (palette-dark.css).
+   ========================================================================== */
+/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху, три колонки ---------- */
+body.pal-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
+body.pal-dark .hps-row { display: flex; gap: 12px; align-items: center; }
+body.pal-dark .hp-stat, body.pal-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
+body.pal-dark .hp-stat span, body.pal-dark .shield-stat span { text-transform: uppercase; font-size: 10.5px; color: var(--muted); }
+body.pal-dark .hp-stat b, body.pal-dark .shield-stat b { font-size: 26px; color: var(--accent); }
+body.pal-dark .hp-stat small, body.pal-dark .shield-stat small { color: var(--muted); }
+body.pal-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
+body.pal-dark .sheet-sec { border-radius: 12px; }
+
+/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху (strip) ---------- */
+body.theme-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
+body.theme-dark .hps-row { display: flex; gap: 12px; align-items: center; }
+body.theme-dark .hp-stat, body.theme-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
+body.theme-dark .hp-stat span, body.theme-dark .shield-stat span { font-size: 10.5px; }
+body.theme-dark .hp-stat b, body.theme-dark .shield-stat b { font-size: 26px; }
+body.theme-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
+body.theme-dark .sheet-sec { border-radius: 12px; }
+
+
+/* === тема: official === */
+/* ==========================================================================
+   Тема "official" — РАСКЛАДКА по образцу официального Character Sheet Paizo:
+   две колонки (span 6), характеристики карточками, панель ПЗ/щита, плитки
+   спасбросков. Цвета и шрифты несёт гамма pal-official (palette-official.css).
+   ========================================================================== */
+body.theme-official main { max-width: 1150px; }
+body.theme-official #hp-shield-panel { display: block; }
+body.theme-official .abil-table { display: none; }
+body.theme-official .ability-cards { display: flex; gap: 6px; }
+body.theme-official .hps-row { display: flex; gap: 10px; align-items: stretch; }
+body.theme-official .hp-stat, body.theme-official .shield-stat { min-width: 120px; padding: 8px; }
+body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; font-size: 11px; }
+body.theme-official .hps-quick { display: flex; flex-wrap: wrap; gap: 4px; align-content: center; }
+body.theme-official .saves-tiles { display: flex; gap: 8px; margin: 6px 0; }
+body.theme-official .save-tile { flex: 1; text-align: center; padding: 4px; }
+body.theme-official .save-tile span { display: block; font-size: 10.5px; text-transform: uppercase; }
+body.theme-official .save-tile b { font-size: 20px; }
+
+
+/* === тема: sanych === */
+/* ==========================================================================
+   Тема "sanych" — РАСКЛАДКА блоков. Цвета и шрифты несёт гамма pal-sanych
+   (palette-sanych.css).
+   ========================================================================== */
+/* ---------- РАСКЛАДКА sanych: «боевой» лист — защиты/ПЗ слева, бой-сводка ---------- */
+body.pal-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
+body.pal-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+body.pal-sanych .cstat { border: 1px solid var(--line); background: #12171c; border-radius: 3px;
+  padding: 4px 10px; text-align: center; min-width: 64px; }
+body.pal-sanych .cstat small { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+body.pal-sanych .cstat b { color: var(--accent); font-family: Consolas, monospace; font-size: 18px; }
+body.pal-sanych .combat-strike { display: flex; align-items: center; gap: 8px;
+  border-top: 1px dashed var(--line); padding: 5px 2px; }
+body.pal-sanych .combat-strike .strike-attack { color: var(--accent2); font-family: Consolas, monospace; min-width: 34px; }
+body.pal-sanych .combat-strike small { color: var(--muted); margin-left: auto; font-family: Consolas, monospace; }
+
+/* ---------- РАСКЛАДКА sanych: «боевой» лист — панель ПЗ скрыта, сводка «Бой» ---------- */
+body.theme-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
+body.theme-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+body.theme-sanych .cstat { padding: 4px 10px; text-align: center; min-width: 64px; }
+body.theme-sanych .cstat small { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+body.theme-sanych .cstat b { font-size: 18px; }
+body.theme-sanych .combat-strike { display: flex; align-items: center; gap: 8px; padding: 5px 2px; }
+body.theme-sanych .combat-strike .strike-attack { min-width: 34px; }
+body.theme-sanych .combat-strike small { margin-left: auto; }
+
+
+/* === гамма: dark === */
+/* ==========================================================================
+   Гамма "dark" — цвета фанатского тёмного листа из интернета
+   (Reddit r/Pathfinder2e, Dicejoy-подобные оверлеи): почти чёрный фон,
+   янтарные акценты, sans-serif. ТОЛЬКО цвета/шрифты; расположение блоков
+   задаёт тема-раскладка (--theme).
    ========================================================================== */
 
-body.theme-dark {
+
+body.pal-dark {
   --bg: #0d0f14;
   --panel: #161a22;
   --ink: #cfd6e1;
@@ -1156,97 +1247,89 @@ body.theme-dark {
   font-size: 13.5px;
 }
 
-body.theme-dark #topbar {
+body.pal-dark #topbar {
   background: #10131a;
   border-bottom: 1px solid var(--line);
   box-shadow: none;
 }
-body.theme-dark .brand b { color: var(--accent); }
-body.theme-dark #character-select { background: #1c212b; color: var(--ink); border-color: var(--line); }
-body.theme-dark #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+body.pal-dark .brand b { color: var(--accent); }
+body.pal-dark #character-select { background: #1c212b; color: var(--ink); border-color: var(--line); }
+body.pal-dark #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-body.theme-dark fieldset {
+body.pal-dark fieldset {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: 0 4px 14px rgba(0,0,0,.45);
 }
-body.theme-dark legend {
+body.pal-dark legend {
   color: var(--accent);
   text-transform: none;
   font-weight: 600;
   letter-spacing: .02em;
 }
 
-body.theme-dark input, body.theme-dark textarea, body.theme-dark select {
+body.pal-dark input, body.pal-dark textarea, body.pal-dark select {
   background: #10141b; color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
 }
-body.theme-dark input:focus, body.theme-dark textarea:focus {
+body.pal-dark input:focus, body.pal-dark textarea:focus {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,163,61,.2);
 }
-body.theme-dark label { color: var(--muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: .05em; }
+body.pal-dark label { color: var(--muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: .05em; }
 
-body.theme-dark .stat { background: #10141b; border-radius: 10px; border-color: var(--line); }
-body.theme-dark .stat span { color: var(--muted); }
-body.theme-dark .stat b { color: var(--accent); font-size: 26px; }
+body.pal-dark .stat { background: #10141b; border-radius: 10px; border-color: var(--line); }
+body.pal-dark .stat span { color: var(--muted); }
+body.pal-dark .stat b { color: var(--accent); font-size: 26px; }
 
-body.theme-dark .btn {
+body.pal-dark .btn {
   background: #1c212b; color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
 }
-body.theme-dark .btn:hover { background: #242b37; border-color: var(--accent); }
-body.theme-dark .btn.primary { background: var(--accent); color: #14100a; border-color: var(--accent); font-weight: 700; }
-body.theme-dark .btn.danger { background: #2b1a1d; border-color: #5a2e33; color: #eab9bd; }
+body.pal-dark .btn:hover { background: #242b37; border-color: var(--accent); }
+body.pal-dark .btn.primary { background: var(--accent); color: #14100a; border-color: var(--accent); font-weight: 700; }
+body.pal-dark .btn.danger { background: #2b1a1d; border-color: #5a2e33; color: #eab9bd; }
 
-body.theme-dark #hp-bar-wrap { background: #10141b; border-color: var(--line); border-radius: 8px; }
-body.theme-dark #hp-bar { background: linear-gradient(#e8a33d, #b5722a); }
-body.theme-dark #hp-text { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+body.pal-dark #hp-bar-wrap { background: #10141b; border-color: var(--line); border-radius: 8px; }
+body.pal-dark #hp-bar { background: linear-gradient(#e8a33d, #b5722a); }
+body.pal-dark #hp-text { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
 
-body.theme-dark table.mini td { border-top-color: var(--line); }
-body.theme-dark table.mini th { color: var(--muted); }
-body.theme-dark .abil-table td { border-top-color: var(--line); }
-body.theme-dark .mod-badge { background: #242b37; color: var(--accent); border-radius: 6px; }
+body.pal-dark table.mini td { border-top-color: var(--line); }
+body.pal-dark table.mini th { color: var(--muted); }
+body.pal-dark .abil-table td { border-top-color: var(--line); }
+body.pal-dark .mod-badge { background: #242b37; color: var(--accent); border-radius: 6px; }
 
-body.theme-dark .prof-pick button { background: #10141b; color: var(--muted); border-color: var(--line); border-radius: 4px; }
-body.theme-dark .prof-pick button.on { background: var(--accent2); color: #0d1220; border-color: var(--accent2); }
+body.pal-dark .prof-pick button { background: #10141b; color: var(--muted); border-color: var(--line); border-radius: 4px; }
+body.pal-dark .prof-pick button.on { background: var(--accent2); color: #0d1220; border-color: var(--accent2); }
 
-body.theme-dark .dot { background: #10141b; border-color: var(--accent2); }
-body.theme-dark .dot.used { background: var(--accent2); }
+body.pal-dark .dot { background: #10141b; border-color: var(--accent2); }
+body.pal-dark .dot.used { background: var(--accent2); }
 
-body.theme-dark .roll-btn {
+body.pal-dark .roll-btn {
   background: #10141b; color: var(--accent); border: 1px solid var(--line); border-radius: 6px;
   font-weight: 700;
 }
-body.theme-dark .roll-btn:hover { background: #242b37; border-color: var(--accent); }
+body.pal-dark .roll-btn:hover { background: #242b37; border-color: var(--accent); }
 
-body.theme-dark .feat-item { background: #10141b; border-left: 3px solid var(--accent2); border-radius: 6px; }
-body.theme-dark .feats-cat { color: var(--accent2); }
-body.theme-dark #modal { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
-body.theme-dark #json-editor { background: #10141b; color: var(--ink); }
-body.theme-dark code.inline { background: #242b37; color: var(--accent); }
-body.theme-dark .server-list .srv-item { background: var(--panel); }
-body.theme-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
-body.theme-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
-body.theme-dark .hint { color: var(--muted); }
-
-/* ---------- РАСКЛАДКА dark: «VTT-оверлей» — лента ПЗ/щита сверху, три колонки ---------- */
-body.theme-dark #hp-shield-panel { display: none; }     /* панель живёт в ленте strip */
-body.theme-dark .hps-row { display: flex; gap: 12px; align-items: center; }
-body.theme-dark .hp-stat, body.theme-dark .shield-stat { display: flex; align-items: baseline; gap: 6px; }
-body.theme-dark .hp-stat span, body.theme-dark .shield-stat span { text-transform: uppercase; font-size: 10.5px; color: var(--muted); }
-body.theme-dark .hp-stat b, body.theme-dark .shield-stat b { font-size: 26px; color: var(--accent); }
-body.theme-dark .hp-stat small, body.theme-dark .shield-stat small { color: var(--muted); }
-body.theme-dark .hps-quick { display: flex; gap: 5px; margin-left: auto; }
-body.theme-dark .sheet-sec { border-radius: 12px; }
+body.pal-dark .feat-item { background: #10141b; border-left: 3px solid var(--accent2); border-radius: 6px; }
+body.pal-dark .feats-cat { color: var(--accent2); }
+body.pal-dark #modal { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
+body.pal-dark #json-editor { background: #10141b; color: var(--ink); }
+body.pal-dark code.inline { background: #242b37; color: var(--accent); }
+body.pal-dark .server-list .srv-item { background: var(--panel); }
+body.pal-dark .toast { background: #1c212b; border: 1px solid var(--accent); }
+body.pal-dark .toast.err { background: #2b1a1d; border-color: #a04b52; }
+body.pal-dark .hint { color: var(--muted); }
 
 
-/* === тема: official === */
+/* === гамма: official === */
 /* ==========================================================================
-   Тема "official" — по образцу официального Character Sheet от Paizo (PDF).
-   Двухколоночный лист, cream-фон, тёмно-красные заголовки секций на плашке,
-   крупные цифры КБ/ПЗ в квадратах с двойной рамкой.
+   Гамма "official" — цвета официального Character Sheet от Paizo (PDF):
+   cream-фон, тёмно-красные заголовки секций на плашке, Georgia-шрифты,
+   крупные цифры в квадратах с двойной рамкой. ТОЛЬКО цвета/шрифты;
+   расположение блоков задаёт тема-раскладка (--theme).
    ========================================================================== */
 
-body.theme-official {
+
+body.pal-official {
   --bg: #d9d2c5;
   --panel: #f9f4e6;
   --ink: #1e1a17;
@@ -1258,35 +1341,35 @@ body.theme-official {
 }
 
 /* шапка вместо тёмного топа — светлая, как титульная полоса PDF */
-body.theme-official #topbar {
+body.pal-official #topbar {
   background: linear-gradient(#f9f4e6, #ece3cf);
   color: var(--ink);
   border-bottom: 3px double var(--accent);
   box-shadow: 0 2px 5px rgba(0,0,0,.25);
 }
-body.theme-official .brand { font-family: Georgia, 'Times New Roman', serif; color: #3a2f22; }
-body.theme-official .brand b { color: var(--accent); }
-body.theme-official #character-select { background: #fff; }
-body.theme-official .save-state { color: var(--muted); }
-body.theme-official #tabs-nav button { color: #5a4d3a; }
-body.theme-official #tabs-nav button.active {
+body.pal-official .brand { font-family: Georgia, 'Times New Roman', serif; color: #3a2f22; }
+body.pal-official .brand b { color: var(--accent); }
+body.pal-official #character-select { background: #fff; }
+body.pal-official .save-state { color: var(--muted); }
+body.pal-official #tabs-nav button { color: #5a4d3a; }
+body.pal-official #tabs-nav button.active {
   color: var(--accent); background: rgba(147,47,43,.08); border-bottom-color: var(--accent);
 }
 
 /* две колонки, как в официальном PDF */
-body.theme-official main { max-width: 1150px; }
-body.theme-official .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 1000px) { body.theme-official .grid { grid-template-columns: 1fr; } }
+body.pal-official main { max-width: 1150px; }
+body.pal-official .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 1000px) { body.pal-official .grid { grid-template-columns: 1fr; } }
 
 /* секции: заголовок-плашка сверху поля, белая подложка */
-body.theme-official fieldset {
+body.pal-official fieldset {
   border: 1px solid var(--line);
   border-radius: 0;
   background: #fffdf5;
   box-shadow: 0 1px 4px rgba(0,0,0,.18);
   padding: 10px 12px 12px;
 }
-body.theme-official legend {
+body.pal-official legend {
   background: var(--accent);
   color: #f6efe0;
   padding: 3px 14px;
@@ -1298,82 +1381,65 @@ body.theme-official legend {
   margin-left: -4px;
 }
 
-body.theme-official input, body.theme-official textarea, body.theme-official select {
+body.pal-official input, body.pal-official textarea, body.pal-official select {
   border: none;
   border-bottom: 1px solid #b7ad97;
   border-radius: 0;
   background: transparent;
   padding: 2px 4px;
 }
-body.theme-official input:focus, body.theme-official textarea:focus {
+body.pal-official input:focus, body.pal-official textarea:focus {
   outline: none; background: #fdf6df; border-bottom-color: var(--accent);
 }
 
 /* крупные квадраты статистики */
-body.theme-official .stat {
+body.pal-official .stat {
   border: 3px double #7a6f5a;
   border-radius: 0;
   background: #fff;
   padding: 6px 2px;
 }
-body.theme-official .stat span { font-family: Georgia, serif; color: var(--accent); font-weight: 700; }
-body.theme-official .stat b { font-size: 30px; font-family: Georgia, serif; }
+body.pal-official .stat span { font-family: Georgia, serif; color: var(--accent); font-weight: 700; }
+body.pal-official .stat b { font-size: 30px; font-family: Georgia, serif; }
 
-body.theme-official .abil-table td:first-child { font-family: Georgia, serif; }
-body.theme-official .mod-badge { background: #ece3cf; border: 1px solid var(--line); border-radius: 2px; }
-body.theme-official .prof-pick button.on { background: var(--accent); border-color: var(--accent); }
+body.pal-official .abil-table td:first-child { font-family: Georgia, serif; }
+body.pal-official .mod-badge { background: #ece3cf; border: 1px solid var(--line); border-radius: 2px; }
+body.pal-official .prof-pick button.on { background: var(--accent); border-color: var(--accent); }
 
-body.theme-official #hp-bar { background: linear-gradient(#b23f38, #7c241f); }
-body.theme-official #hp-bar-wrap { border: 2px solid #7a6f5a; border-radius: 0; }
+body.pal-official #hp-bar { background: linear-gradient(#b23f38, #7c241f); }
+body.pal-official #hp-bar-wrap { border: 2px solid #7a6f5a; border-radius: 0; }
 
-body.theme-official .btn {
+body.pal-official .btn {
   background: #ece3cf; border: 1px solid #9a8f78; border-radius: 2px;
   font-family: Georgia, serif;
 }
-body.theme-official .btn:hover { background: #ddd2b8; }
-body.theme-official .btn.primary { background: var(--accent); color: #fff; }
+body.pal-official .btn:hover { background: #ddd2b8; }
+body.pal-official .btn.primary { background: var(--accent); color: #fff; }
 
-body.theme-official .dot { border-color: var(--accent); }
-body.theme-official .dot.used { background: var(--accent); }
-body.theme-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
-body.theme-official .toast { background: #3a2f22; }
-
-/* ---------- РАСКЛАДКА official: две колонки, как в официальном PDF ---------- */
-/* «Основное» — широкая шапка сверху (как титульный блок PDF). Размещение
-   колонок делает базовая 12-колоночная сетка (#sheet-grid + --span:6 для
-   official), grid-area/grid-template-areas больше не используются. */
-
-/* характеристики — карточками в ряд (крупный модификатор + значение), как в PDF */
-body.theme-official .abil-table { display: none; }
-body.theme-official .ability-cards { display: flex; gap: 6px; }
-body.theme-official .abil-card { flex: 1; border: 2px double #7a6f5a; border-radius: 0;
-  background: #fff; padding: 8px 4px; }
-body.theme-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
-body.theme-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
-body.theme-official .abil-card input.card-score { border: none; border-bottom: 1px solid #b7ad97; width: 48px; }
-
-/* крупные ПЗ/щит в правом верхнем углу; спасброски — квадратными плитками */
-body.theme-official #hp-shield-panel { display: block; }
-body.theme-official .hps-row { display: flex; gap: 10px; align-items: stretch; }
-body.theme-official .hp-stat, body.theme-official .shield-stat {
-  border: 3px double #7a6f5a; border-radius: 0; background: #fff; min-width: 120px; padding: 8px; }
-body.theme-official .hp-stat b, body.theme-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
-body.theme-official .hp-stat small, body.theme-official .shield-stat small { display: block; color: var(--muted); font-size: 11px; }
-body.theme-official .hps-quick { display: flex; flex-wrap: wrap; gap: 4px; align-content: center; }
-body.theme-official .saves-tiles { display: flex; gap: 8px; margin: 6px 0; }
-body.theme-official .save-tile { flex: 1; text-align: center; border: 2px double #7a6f5a; background: #fff; padding: 4px; }
-body.theme-official .save-tile span { display: block; font-size: 10.5px; color: var(--accent); font-family: Georgia, serif; text-transform: uppercase; }
-body.theme-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }
+body.pal-official .dot { border-color: var(--accent); }
+body.pal-official .dot.used { background: var(--accent); }
+body.pal-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
+body.pal-official .toast { background: #3a2f22; }
 
 
-/* === тема: sanych === */
+/* карточки характеристик и плитки — шрифт/размер в духе PDF (цвета не трогает раскладку) */
+body.pal-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
+body.pal-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
+body.pal-official .hp-stat b, body.pal-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
+body.pal-official .save-tile span { color: var(--accent); font-family: Georgia, serif; }
+body.pal-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }
+
+
+/* === гамма: sanych === */
 /* ==========================================================================
-   Тема "sanych" — в стиле листа существующего персонажа (Саныч.pdf):
+   Гамма "sanych" — цвета листа существующего персонажа (Саныч.pdf):
    тёмное «пергаментно-ночное» оформление, зелёные акценты друида/варвара,
-   компактные таблицы, моноширинные цифры.
+   моноширинные цифры. ТОЛЬКО цвета/шрифты; расположение блоков задаёт
+   тема-раскладка (--theme).
    ========================================================================== */
 
-body.theme-sanych {
+
+body.pal-sanych {
   --bg: #14181c;
   --panel: #1d242b;
   --ink: #d8e2dc;
@@ -1386,23 +1452,23 @@ body.theme-sanych {
     var(--bg);
 }
 
-body.theme-sanych #topbar {
+body.pal-sanych #topbar {
   background: linear-gradient(#10151a, #0b0f13);
   color: var(--ink);
   border-bottom: 2px solid var(--accent);
 }
-body.theme-sanych .brand b { color: var(--accent); }
-body.theme-sanych #character-select { background: #232c34; color: var(--ink); border-color: var(--line); }
-body.theme-sanych .save-state { color: var(--muted); }
-body.theme-sanych #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+body.pal-sanych .brand b { color: var(--accent); }
+body.pal-sanych #character-select { background: #232c34; color: var(--ink); border-color: var(--line); }
+body.pal-sanych .save-state { color: var(--muted); }
+body.pal-sanych #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-body.theme-sanych fieldset {
+body.pal-sanych fieldset {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 4px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.02), 0 2px 8px rgba(0,0,0,.45);
 }
-body.theme-sanych legend {
+body.pal-sanych legend {
   color: var(--accent);
   font-family: Georgia, serif;
   letter-spacing: .12em;
@@ -1412,60 +1478,48 @@ body.theme-sanych legend {
   border-radius: 3px;
 }
 
-body.theme-sanych input, body.theme-sanych textarea, body.theme-sanych select {
+body.pal-sanych input, body.pal-sanych textarea, body.pal-sanych select {
   background: #12171c; color: var(--ink); border: 1px solid var(--line); border-radius: 3px;
 }
-body.theme-sanych input:focus, body.theme-sanych textarea:focus {
+body.pal-sanych input:focus, body.pal-sanych textarea:focus {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(95,174,108,.18);
 }
-body.theme-sanych label { color: var(--muted); }
+body.pal-sanych label { color: var(--muted); }
 
-body.theme-sanych .stat { background: #12171c; border-color: var(--line); }
-body.theme-sanych .stat span { color: var(--muted); }
-body.theme-sanych .stat b { color: var(--accent); font-family: Consolas, monospace; }
+body.pal-sanych .stat { background: #12171c; border-color: var(--line); }
+body.pal-sanych .stat span { color: var(--muted); }
+body.pal-sanych .stat b { color: var(--accent); font-family: Consolas, monospace; }
 
-body.theme-sanych table.mini td { border-top-color: var(--line); }
-body.theme-sanych table.mini th { color: var(--muted); }
-body.theme-sanych .abil-table td { border-top-color: var(--line); }
-body.theme-sanych .mod-badge { background: #223038; color: var(--accent2); font-family: Consolas, monospace; }
+body.pal-sanych table.mini td { border-top-color: var(--line); }
+body.pal-sanych table.mini th { color: var(--muted); }
+body.pal-sanych .abil-table td { border-top-color: var(--line); }
+body.pal-sanych .mod-badge { background: #223038; color: var(--accent2); font-family: Consolas, monospace; }
 
-body.theme-sanych .btn {
+body.pal-sanych .btn {
   background: #223038; color: var(--ink); border: 1px solid var(--line); border-radius: 3px;
 }
-body.theme-sanych .btn:hover { background: #2b3a44; }
-body.theme-sanych .btn.primary { background: var(--accent); color: #0d1210; border-color: var(--accent); }
-body.theme-sanych .btn.danger { background: #3a2226; border-color: #6b3a40; color: #e6b8bd; }
+body.pal-sanych .btn:hover { background: #2b3a44; }
+body.pal-sanych .btn.primary { background: var(--accent); color: #0d1210; border-color: var(--accent); }
+body.pal-sanych .btn.danger { background: #3a2226; border-color: #6b3a40; color: #e6b8bd; }
 
-body.theme-sanych #hp-bar-wrap { background: #12171c; border-color: var(--line); }
-body.theme-sanych #hp-bar { background: linear-gradient(#5fae6c, #3c7a48); }
-body.theme-sanych #hp-text { color: #eaf3ec; text-shadow: 0 1px 2px #000; }
+body.pal-sanych #hp-bar-wrap { background: #12171c; border-color: var(--line); }
+body.pal-sanych #hp-bar { background: linear-gradient(#5fae6c, #3c7a48); }
+body.pal-sanych #hp-text { color: #eaf3ec; text-shadow: 0 1px 2px #000; }
 
-body.theme-sanych .prof-pick button { background: #12171c; color: var(--muted); border-color: var(--line); }
-body.theme-sanych .prof-pick button.on { background: var(--accent2); color: #141210; border-color: var(--accent2); }
+body.pal-sanych .prof-pick button { background: #12171c; color: var(--muted); border-color: var(--line); }
+body.pal-sanych .prof-pick button.on { background: var(--accent2); color: #141210; border-color: var(--accent2); }
 
-body.theme-sanych .dot { background: #12171c; border-color: var(--accent2); }
-body.theme-sanych .dot.used { background: var(--accent2); }
+body.pal-sanych .dot { background: #12171c; border-color: var(--accent2); }
+body.pal-sanych .dot.used { background: var(--accent2); }
 
-body.theme-sanych .feat-item { background: #171f25; border-left-color: var(--accent2); }
-body.theme-sanych .feats-cat { color: var(--accent2); }
-body.theme-sanych .roll-btn { background: #12171c; color: var(--ink); border-color: var(--line); }
-body.theme-sanych .roll-btn:hover { background: #223038; }
-body.theme-sanych #modal { background: var(--panel); color: var(--ink); }
-body.theme-sanych #json-editor { background: #12171c; color: var(--ink); }
-body.theme-sanych code.inline { background: #223038; color: var(--accent2); }
-body.theme-sanych .server-list .srv-item { background: var(--panel); }
-
-/* ---------- РАСКЛАДКА sanych: «боевой» лист — защиты/ПЗ слева, бой-сводка ---------- */
-body.theme-sanych #hp-shield-panel { display: none; }   /* вместо панели — сводка «Бой» */
-body.theme-sanych .combat-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-body.theme-sanych .cstat { border: 1px solid var(--line); background: #12171c; border-radius: 3px;
-  padding: 4px 10px; text-align: center; min-width: 64px; }
-body.theme-sanych .cstat small { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
-body.theme-sanych .cstat b { color: var(--accent); font-family: Consolas, monospace; font-size: 18px; }
-body.theme-sanych .combat-strike { display: flex; align-items: center; gap: 8px;
-  border-top: 1px dashed var(--line); padding: 5px 2px; }
-body.theme-sanych .combat-strike .strike-attack { color: var(--accent2); font-family: Consolas, monospace; min-width: 34px; }
-body.theme-sanych .combat-strike small { color: var(--muted); margin-left: auto; font-family: Consolas, monospace; }
+body.pal-sanych .feat-item { background: #171f25; border-left-color: var(--accent2); }
+body.pal-sanych .feats-cat { color: var(--accent2); }
+body.pal-sanych .roll-btn { background: #12171c; color: var(--ink); border-color: var(--line); }
+body.pal-sanych .roll-btn:hover { background: #223038; }
+body.pal-sanych #modal { background: var(--panel); color: var(--ink); }
+body.pal-sanych #json-editor { background: #12171c; color: var(--ink); }
+body.pal-sanych code.inline { background: #223038; color: var(--accent2); }
+body.pal-sanych .server-list .srv-item { background: var(--panel); }
 
 </style>
 </head>
@@ -1479,7 +1533,8 @@ body.theme-sanych .combat-strike small { color: var(--muted); margin-left: auto;
   </div>
   <div class="save-state" id="save-state">—</div>
   <div class="topbar-appearance">
-    <select id="theme-select" title="Вариант оформления листа"></select>
+    <select id="theme-select" title="Тема: расположение блоков (раскладка)"></select>
+    <select id="palette-select" title="Цветовая гамма оформления"></select>
     <label class="edit-mode-label" title="Разрешить перетаскивание блоков за заголовки и изменение ширины/колонок текста">
       <input type="checkbox" id="edit-mode-check"> Редактирование
     </label>
@@ -1731,6 +1786,7 @@ var LS_CHARS = 'pf2e.characters.v1';     // {id: sheetJson}
 var LS_CURRENT = 'pf2e.currentId';
 var LS_SERVERS = 'pf2e.servers.v1';      // [{url,name,token,user}]
 var LS_THEME = 'pf2e.theme.v1';
+var LS_PALETTE = 'pf2e.palette.v1';   // цветовая гамма (независимо от темы-раскладки)
 var LS_EDITMODE = 'pf2e.editmode.v1';   // чек-бокс «режим редактирования раскладки»
 /* Варианты оформления листа. Тема может быть задана сборщиком build.py
    (плейсхолдер __PF2E_THEME__ / класс на <body>) или выбрана пользователем. */
@@ -1757,16 +1813,16 @@ var SECTIONS = ['abil', 'def', 'skills', 'strikes', 'hp', 'combat', 'magic', 'fe
 function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
 
 var THEMES = [
-  { id: 'default', name: 'Классический', layout: { cols: 3, map: {
+  { id: 'default', name: 'Раскладка: Классическая', layout: { cols: 3, map: {
       left: ['abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'official', name: 'Официальный (Paizo)', layout: { cols: 2, map: {
+  { id: 'official', name: 'Раскладка: Официальная (Paizo)', layout: { cols: 2, map: {
       left: ['abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
       hide: [] } },
-  { id: 'sanych', name: 'Лист персонажа (Саныч)', layout: { cols: 3, map: {
+  { id: 'sanych', name: 'Раскладка: Боевая (Саныч)', layout: { cols: 3, map: {
       left: ['def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
+  { id: 'dark', name: 'Раскладка: Тёмный VTT', layout: { strip: true, cols: 3, map: {
       left: ['abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
@@ -3290,7 +3346,25 @@ function themeById(id) {
   return THEMES[0];
 }
 
-/* Выпадающий список тем в шапке: заполнение, выбор, применение темы. */
+/* ---------------- цветовые гаммы (независимы от тем-раскладок) ----------
+   Тема (--theme / выбор в шапке) отвечает ТОЛЬКО за расположение блоков,
+   гамма (--palette / отдельный список) — ТОЛЬКО за цвета и шрифты. */
+var PALETTES = [
+  { id: 'default',  name: 'Гамма: Классическая (пергамент)' },
+  { id: 'official', name: 'Гамма: Официальная Paizo (cream)' },
+  { id: 'sanych',   name: 'Гамма: Ночная пергаментно-зелёная (Саныч)' },
+  { id: 'dark',     name: 'Гамма: Тёмный VTT (янтарь)' }
+];
+function validPalette(t) {
+  for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === t) return t;
+  return 'default';
+}
+var BUILD_PALETTE = (typeof window !== 'undefined' && window.__PF2E_BUILD_PALETTE__) || '';
+function currentPalette() {
+  return validPalette(localStorage.getItem(LS_PALETTE) || BUILD_PALETTE);
+}
+
+/* Выпадающий список тем-раскладок в шапке: только расположение блоков. */
 function wireThemePicker() {
   var sel = $('#theme-select');
   if (!sel) return;
@@ -3303,7 +3377,7 @@ function wireThemePicker() {
   var apply = function () {
     var id = validTheme(sel.value);
     localStorage.setItem(LS_THEME, id);
-    // переключение темы — классом theme-<id> на <body> (как делает сборщик)
+    // переключение раскладки — классом theme-<id> на <body> (как делает сборщик)
     THEMES.forEach(function (t) { document.body.classList.remove('theme-' + t.id); });
     if (id !== 'default') document.body.classList.add('theme-' + id);
     sel.value = id;
@@ -3315,11 +3389,34 @@ function wireThemePicker() {
   apply();
 }
 
+/* Выпадающий список цветовых гамм в шапке: только цвета/шрифты. */
+function wirePalettePicker() {
+  var sel = $('#palette-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  PALETTES.forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.name;
+    sel.appendChild(o);
+  });
+  var apply = function () {
+    var id = validPalette(sel.value);
+    localStorage.setItem(LS_PALETTE, id);
+    PALETTES.forEach(function (t) { document.body.classList.remove('pal-' + t.id); });
+    if (id !== 'default') document.body.classList.add('pal-' + id);
+    sel.value = id;
+  };
+  sel.value = currentPalette();
+  sel.addEventListener('change', apply);
+  apply();
+}
+
 /* ---------------- инициализация ---------------- */
 function boot() {
   renderTabs();
   ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
+  wirePalettePicker();
   wireTopbar();
   wireIOButtons();
   wireEditMode();

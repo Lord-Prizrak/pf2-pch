@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Гамма "official" — цвета официального Character Sheet от Paizo (PDF):
+   cream-фон, тёмно-красные заголовки секций на плашке, Georgia-шрифты,
+   крупные цифры в квадратах с двойной рамкой. ТОЛЬКО цвета/шрифты;
+   расположение блоков задаёт тема-раскладка (--theme).
+   ========================================================================== */
+
+
+body.pal-official {
+  --bg: #d9d2c5;
+  --panel: #f9f4e6;
+  --ink: #1e1a17;
+  --accent: #932f2b;
+  --accent2: #4a6741;
+  --line: #8d8574;
+  --muted: #6b6152;
+  background: var(--bg);
+}
+
+/* шапка вместо тёмного топа — светлая, как титульная полоса PDF */
+body.pal-official #topbar {
+  background: linear-gradient(#f9f4e6, #ece3cf);
+  color: var(--ink);
+  border-bottom: 3px double var(--accent);
+  box-shadow: 0 2px 5px rgba(0,0,0,.25);
+}
+body.pal-official .brand { font-family: Georgia, 'Times New Roman', serif; color: #3a2f22; }
+body.pal-official .brand b { color: var(--accent); }
+body.pal-official #character-select { background: #fff; }
+body.pal-official .save-state { color: var(--muted); }
+body.pal-official #tabs-nav button { color: #5a4d3a; }
+body.pal-official #tabs-nav button.active {
+  color: var(--accent); background: rgba(147,47,43,.08); border-bottom-color: var(--accent);
+}
+
+/* две колонки, как в официальном PDF */
+body.pal-official main { max-width: 1150px; }
+body.pal-official .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 1000px) { body.pal-official .grid { grid-template-columns: 1fr; } }
+
+/* секции: заголовок-плашка сверху поля, белая подложка */
+body.pal-official fieldset {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #fffdf5;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  padding: 10px 12px 12px;
+}
+body.pal-official legend {
+  background: var(--accent);
+  color: #f6efe0;
+  padding: 3px 14px;
+  border-radius: 2px;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-left: -4px;
+}
+
+body.pal-official input, body.pal-official textarea, body.pal-official select {
+  border: none;
+  border-bottom: 1px solid #b7ad97;
+  border-radius: 0;
+  background: transparent;
+  padding: 2px 4px;
+}
+body.pal-official input:focus, body.pal-official textarea:focus {
+  outline: none; background: #fdf6df; border-bottom-color: var(--accent);
+}
+
+/* крупные квадраты статистики */
+body.pal-official .stat {
+  border: 3px double #7a6f5a;
+  border-radius: 0;
+  background: #fff;
+  padding: 6px 2px;
+}
+body.pal-official .stat span { font-family: Georgia, serif; color: var(--accent); font-weight: 700; }
+body.pal-official .stat b { font-size: 30px; font-family: Georgia, serif; }
+
+body.pal-official .abil-table td:first-child { font-family: Georgia, serif; }
+body.pal-official .mod-badge { background: #ece3cf; border: 1px solid var(--line); border-radius: 2px; }
+body.pal-official .prof-pick button.on { background: var(--accent); border-color: var(--accent); }
+
+body.pal-official #hp-bar { background: linear-gradient(#b23f38, #7c241f); }
+body.pal-official #hp-bar-wrap { border: 2px solid #7a6f5a; border-radius: 0; }
+
+body.pal-official .btn {
+  background: #ece3cf; border: 1px solid #9a8f78; border-radius: 2px;
+  font-family: Georgia, serif;
+}
+body.pal-official .btn:hover { background: #ddd2b8; }
+body.pal-official .btn.primary { background: var(--accent); color: #fff; }
+
+body.pal-official .dot { border-color: var(--accent); }
+body.pal-official .dot.used { background: var(--accent); }
+body.pal-official .feat-item { border-left-color: var(--accent); background: #fbf5e6; }
+body.pal-official .toast { background: #3a2f22; }
+
+
+/* карточки характеристик и плитки — шрифт/размер в духе PDF (цвета не трогает раскладку) */
+body.pal-official .abil-card .card-abbr { font-family: Georgia, serif; color: var(--accent); }
+body.pal-official .abil-card .card-mod { font-size: 30px; font-family: Georgia, serif; }
+body.pal-official .hp-stat b, body.pal-official .shield-stat b { font-size: 34px; font-family: Georgia, serif; color: var(--accent); }
+body.pal-official .save-tile span { color: var(--accent); font-family: Georgia, serif; }
+body.pal-official .save-tile b { font-size: 20px; font-family: Georgia, serif; }

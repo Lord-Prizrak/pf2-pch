@@ -7,10 +7,13 @@
 | `frontend/sheet.html` | **Готовый автономный лист** — один файл со встроенными CSS, JS и JSON-данными персонажей из `sheets/`. Работает без сервера, в т.ч. по `file://`. Не редактируется вручную — собирается из `src/`. |
 | `frontend/sheet-empty.html` | То же, но без встроенных персонажей («чистый лист»). Раздаётся сервером как `/sheet-empty.html`. |
 | `frontend/src/index.template.html` | HTML-шаблон с плейсхолдерами для сборки |
-| `frontend/src/style.css` | Базовые стили (тема `default`) |
-| `frontend/src/theme-official.css` | Тема «Официальный лист Paizo» |
-| `frontend/src/theme-sanych.css` | Тема «Лист существующего персонажа» (Саныч) |
-| `frontend/src/theme-dark.css` | Тема «Тёмный VTT» (фанатский вариант из интернета) |
+| `frontend/src/style.css` | Базовые стили: сетка 12 колонок + тема/гамма `default` |
+| `frontend/src/theme-official.css` | ТЕМА (только расположение блоков): официальный лист Paizo |
+| `frontend/src/theme-sanych.css` | ТЕМА: раскладка листа существующего персонажа (Саныч) |
+| `frontend/src/theme-dark.css` | ТЕМА: раскладка «Тёмный VTT» (лента ПЗ сверху) |
+| `frontend/src/palette-official.css` | ГАММА (только цвета/шрифты): официальная Paizo (cream) |
+| `frontend/src/palette-sanych.css` | ГАММА: ночная пергаментно-зелёная (Саныч) |
+| `frontend/src/palette-dark.css` | ГАММА: почти чёрная с янтарём (фанатская VTT) |
 | `frontend/src/app.js` | Логика приложения (vanilla JS, без фреймворков и сборки) |
 | `frontend/src/data.js` | Заготовки/дефолты канонической схемы |
 

@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Гамма "sanych" — цвета листа существующего персонажа (Саныч.pdf):
+   тёмное «пергаментно-ночное» оформление, зелёные акценты друида/варвара,
+   моноширинные цифры. ТОЛЬКО цвета/шрифты; расположение блоков задаёт
+   тема-раскладка (--theme).
+   ========================================================================== */
+
+
+body.pal-sanych {
+  --bg: #14181c;
+  --panel: #1d242b;
+  --ink: #d8e2dc;
+  --accent: #5fae6c;
+  --accent2: #c9a24b;
+  --line: #35424c;
+  --muted: #7f9099;
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(95,174,108,.10), transparent 60%),
+    var(--bg);
+}
+
+body.pal-sanych #topbar {
+  background: linear-gradient(#10151a, #0b0f13);
+  color: var(--ink);
+  border-bottom: 2px solid var(--accent);
+}
+body.pal-sanych .brand b { color: var(--accent); }
+body.pal-sanych #character-select { background: #232c34; color: var(--ink); border-color: var(--line); }
+body.pal-sanych .save-state { color: var(--muted); }
+body.pal-sanych #tabs-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+body.pal-sanych fieldset {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02), 0 2px 8px rgba(0,0,0,.45);
+}
+body.pal-sanych legend {
+  color: var(--accent);
+  font-family: Georgia, serif;
+  letter-spacing: .12em;
+  border: 1px solid var(--line);
+  background: #10151a;
+  padding: 1px 10px;
+  border-radius: 3px;
+}
+
+body.pal-sanych input, body.pal-sanych textarea, body.pal-sanych select {
+  background: #12171c; color: var(--ink); border: 1px solid var(--line); border-radius: 3px;
+}
+body.pal-sanych input:focus, body.pal-sanych textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(95,174,108,.18);
+}
+body.pal-sanych label { color: var(--muted); }
+
+body.pal-sanych .stat { background: #12171c; border-color: var(--line); }
+body.pal-sanych .stat span { color: var(--muted); }
+body.pal-sanych .stat b { color: var(--accent); font-family: Consolas, monospace; }
+
+body.pal-sanych table.mini td { border-top-color: var(--line); }
+body.pal-sanych table.mini th { color: var(--muted); }
+body.pal-sanych .abil-table td { border-top-color: var(--line); }
+body.pal-sanych .mod-badge { background: #223038; color: var(--accent2); font-family: Consolas, monospace; }
+
+body.pal-sanych .btn {
+  background: #223038; color: var(--ink); border: 1px solid var(--line); border-radius: 3px;
+}
+body.pal-sanych .btn:hover { background: #2b3a44; }
+body.pal-sanych .btn.primary { background: var(--accent); color: #0d1210; border-color: var(--accent); }
+body.pal-sanych .btn.danger { background: #3a2226; border-color: #6b3a40; color: #e6b8bd; }
+
+body.pal-sanych #hp-bar-wrap { background: #12171c; border-color: var(--line); }
+body.pal-sanych #hp-bar { background: linear-gradient(#5fae6c, #3c7a48); }
+body.pal-sanych #hp-text { color: #eaf3ec; text-shadow: 0 1px 2px #000; }
+
+body.pal-sanych .prof-pick button { background: #12171c; color: var(--muted); border-color: var(--line); }
+body.pal-sanych .prof-pick button.on { background: var(--accent2); color: #141210; border-color: var(--accent2); }
+
+body.pal-sanych .dot { background: #12171c; border-color: var(--accent2); }
+body.pal-sanych .dot.used { background: var(--accent2); }
+
+body.pal-sanych .feat-item { background: #171f25; border-left-color: var(--accent2); }
+body.pal-sanych .feats-cat { color: var(--accent2); }
+body.pal-sanych .roll-btn { background: #12171c; color: var(--ink); border-color: var(--line); }
+body.pal-sanych .roll-btn:hover { background: #223038; }
+body.pal-sanych #modal { background: var(--panel); color: var(--ink); }
+body.pal-sanych #json-editor { background: #12171c; color: var(--ink); }
+body.pal-sanych code.inline { background: #223038; color: var(--accent2); }
+body.pal-sanych .server-list .srv-item { background: var(--panel); }
