@@ -331,6 +331,7 @@ function switchTab(id) {
   if (id === 'servers') renderServersUI();
   if (id === 'io') refreshJsonEditor();
   ensureBlockIds(); applyTabStructure(id);
+  applyBlockVisibility();
 }
 
 /* ---------------- переключатель персонажей ---------------- */
@@ -1077,6 +1078,8 @@ function renderAll() {
   renderInventory();
   updateComputed();
   syncCombatStrip();
+  applyBlockVisibility();
+  renderBlockVisUI();
 
   /* Пересобираем раскладку, если пользователь сменил тему между рендерами */
   var grid = $('#sheet-grid');
@@ -1716,8 +1719,9 @@ function ensureBlockIds() {
   // отдельные панели по id (их порядок в DOM зависит от раскладки темы).
   var grid = $('#sheet-grid');
   if (grid) {
-    /* «Основное» — прямой ребёнок #sheet-grid, помечаем первым, чтобы bid
-       был стабильным независимо от порядка обхода колонок. */
+    /* «Основное» (.info-block) физически лежит ВНУТРИ левой колонки
+       (как и все остальные блоки, span одного столбца) — помечаем его
+       первым, чтобы bid 'info' был стабильным. */
     var info = $('.info-block', grid);
     if (info && !info.dataset.bid) info.dataset.bid = 'info';
     $all(':scope > .sheet-area > fieldset', grid).forEach(mark);
@@ -1880,6 +1884,19 @@ function effectiveLayout(themeId) {
     map.full = map.full.filter(function (b) { return b !== 'info'; });
     if (map.left.indexOf('info') < 0) map.left = ['info'].concat(map.left);
   }
+  /* Страховка от наложения: один блок не может жить в двух колонках сразу.
+     При дублях (битые старые сохранения) оставляем первое вхождение;
+     отсутствующие в map блоки дописываем в левую колонку по базовому map. */
+  var seenB = {};
+  ['left', 'mid', 'right'].forEach(function (c) {
+    map[c] = (map[c] || []).filter(function (bid) {
+      if (!bid || seenB[bid]) return false;
+      seenB[bid] = true; return true;
+    });
+  });
+  (bmap.left.concat(bmap.mid, bmap.right)).forEach(function (bid) {
+    if (!seenB[bid]) { map.left.push(bid); seenB[bid] = true; }
+  });
   return { cols: base.cols === 2 ? 2 : 3, map: map,
            textCols: u.textCols || {},
            strip: base.strip, hide: base.hide };
@@ -1962,8 +1979,16 @@ function applyLayout(themeId) {
   });
   var strip = $('.combat-strip', grid);
   if (strip) strip.dataset.col = 'strip';
+  /* «Основное» — обычный блок внутри колонки: убираем любые следы былых
+     полноширинных раскладок (order / data-col / grid-column). */
   var info = $('.info-block', grid);
-  if (info) { delete info.dataset.col; info.classList.add('sheet-sec'); }
+  if (info) {
+    delete info.dataset.col;
+    info.style.order = '';
+    info.style.gridColumn = '';
+    info.classList.add('sheet-sec');
+    if (!info.dataset.bid) info.dataset.bid = 'info';
+  }
 
   /* Санация структуры ДО нормализации: блоки, «убежавшие» прямыми детьми
      #sheet-grid или вложившиеся в чужой fieldset, возвращаем в домашние
@@ -2328,6 +2353,74 @@ function wireEditMode() {
     toast('Раскладка темы сброшена к исходной');
   });
   initDragEvents();
+}
+
+/* ---------- видимость блоков (настройки) ---------- */
+var LS_BLOCKVIS = 'pf2e.blockvis.v1';   // {bid: 0|1} — скрытые блоки помечены 0
+
+function loadBlockVis() {
+  try { return JSON.parse(localStorage.getItem(LS_BLOCKVIS) || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveBlockVis(obj) { localStorage.setItem(LS_BLOCKVIS, JSON.stringify(obj)); }
+
+/* Все drag-блоки всех вкладок данных персонажа («Лист», «Инвентарь»,
+   «Биография») в порядке DOM. Блоки «Серверов» и «Импорта/экспорта» —
+   служебные, не относятся к данным персонажа и в список не входят. */
+function allBlocks() {
+  ensureBlockIds();
+  var out = [];
+  ['tab-sheet', 'tab-inventory', 'tab-bio'].forEach(function (pid) {
+    var page = document.getElementById(pid);
+    if (!page) return;
+    $all('fieldset[data-bid]', page).forEach(function (f) {
+      if (out.indexOf(f) < 0) out.push(f);
+    });
+  });
+  return out;
+}
+function tabNameOf(node) {
+  var p = node.closest ? node.closest('.tabpage') : null;
+  if (!p) return 'Лист';
+  for (var i = 0; i < TABS.length; i++) {
+    if ('tab-' + TABS[i][0] === p.id) return TABS[i][1];
+  }
+  return 'Лист';
+}
+function applyBlockVisibility() {
+  var vis = loadBlockVis();
+  allBlocks().forEach(function (f) {
+    f.classList.toggle('sec-hidden', vis[f.dataset.bid] === 0);
+  });
+}
+function renderBlockVisUI() {
+  var box = $('#block-vis-list');
+  if (!box) return;
+  var vis = loadBlockVis();
+  box.innerHTML = '';
+  allBlocks().forEach(function (f) {
+    var bid = f.dataset.bid;
+    var chk = el('input', { type: 'checkbox' });
+    chk.checked = vis[bid] !== 0;
+    var sel = el('select', { class: 'bv-tab' });
+    TABS.forEach(function (t) {
+      var o = el('option', { value: t[0], text: t[1] });
+      if (t[1] === tabNameOf(f)) o.selected = true;
+      sel.appendChild(o);
+    });
+    var row = el('label', { class: 'bv-row' }, [
+      chk,
+      el('span', { class: 'bv-name', text: blockTitle(f) }),
+      sel
+    ]);
+    chk.addEventListener('change', function () {
+      var v = loadBlockVis();
+      v[bid] = chk.checked ? 1 : 0;
+      saveBlockVis(v);
+      applyBlockVisibility();
+    });
+    box.appendChild(row);
+  });
 }
 
 /* Расстановка drag-обработчиков на все блоки не-листовых вкладок. */

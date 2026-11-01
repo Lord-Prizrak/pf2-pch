@@ -166,9 +166,11 @@ code.inline { background:#eee4cf; padding:1px 5px; border-radius:4px; font-size:
 /* 12-колоночная сетка: колонки листа получают span из --span (4 или 6) */
 #sheet-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
 #sheet-grid > .sheet-area { grid-column: span var(--span, 4); }
-#sheet-grid > [data-col="strip"], #sheet-grid > [data-col="full"] { grid-column: 1 / -1; }
+#sheet-grid > [data-col="strip"] { grid-column: 1 / -1; }
 #sheet-grid > [data-col="strip"] { order: -2; }
-#sheet-grid > .info-block { order: -1; }
+/* «Основное» — обычный блок внутри колонки (один столбец, как все);
+   никакими order/grid-column оно не выделяется. */
+#sheet-grid > .info-block { order: 0; }
 /* якорь пустой колонки: не даёт ей схлопнуться и служит зоной возврата */
 .area-anchor { height: 8px; flex: none; }
 
@@ -294,3 +296,11 @@ html:has(body.pal-official) { background: #d9d2c5; }
 
 body.pal-dark, body.pal-sanych { color-scheme: dark; }
 body.pal-dark, body.pal-sanych { background-color: var(--bg); }
+
+/* ---------- раздел «Видимость блоков» (вкладка Импорт/экспорт) ---------- */
+.block-vis-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.bv-row { display: flex; align-items: center; gap: 8px; padding: 2px 4px;
+  border-radius: 6px; cursor: pointer; }
+.bv-row:hover { background: var(--chip, rgba(0,0,0,.05)); }
+.bv-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bv-tab { flex: 0 0 auto; font-size: .85em; }
