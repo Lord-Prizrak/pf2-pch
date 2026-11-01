@@ -310,7 +310,7 @@ var State = {
 /* ---------------- вкладки ---------------- */
 var TABS = [
   ['sheet', 'Лист'], ['inventory', 'Инвентарь'], ['bio', 'Биография'],
-  ['servers', 'Серверы'], ['io', 'Импорт/Экспорт']
+  ['servers', 'Серверы'], ['blockvis', 'Видимость блоков'], ['io', 'Импорт/Экспорт']
 ];
 function renderTabs() {
   var nav = $('#tabs-nav');
@@ -329,6 +329,7 @@ function switchTab(id) {
   renderTabs();
   applyTabStructure(id);   // восстанавливаем пользовательскую раскладку блоков вкладки
   if (id === 'servers') renderServersUI();
+  if (id === 'blockvis') renderBlockVisUI();
   if (id === 'io') refreshJsonEditor();
   ensureBlockIds(); applyTabStructure(id);
   applyBlockVisibility();
@@ -2379,6 +2380,33 @@ function allBlocks() {
   });
   return out;
 }
+
+/* Перенос блока между разделами (из списка «Видимость блоков»). */
+function moveBlockToTab(node, tabId) {
+  if (!tabDragAllowed(tabId)) return;
+  var cur = node.closest ? node.closest('.tabpage') : null;
+  var curId = cur ? cur.id.replace('tab-', '') : 'sheet';
+  if (curId === tabId) return;
+  var dst = $('#tab-' + tabId);
+  if (!dst) return;
+  var conts = tabContainers(tabId);
+  var target = conts.length ? conts[conts.length - 1] : dst;
+  // убираем блок из сохранённых раскладок обеих вкладок — он встанет в конец целевой
+  var st = loadTabStructures(), changed = false;
+  [curId, tabId].forEach(function (tid) {
+    var s = st[tid];
+    if (s && s.cols) {
+      s.cols.forEach(function (c) {
+        var i = c.indexOf(node.dataset.bid);
+        if (i >= 0) { c.splice(i, 1); changed = true; }
+      });
+    }
+  });
+  if (changed) saveTabStructures(st);
+  target.appendChild(node);
+  wireBlockDrag(node);
+  applyBlockVisibility();
+}
 function tabNameOf(node) {
   var p = node.closest ? node.closest('.tabpage') : null;
   if (!p) return 'Лист';
@@ -2403,7 +2431,9 @@ function renderBlockVisUI() {
     var chk = el('input', { type: 'checkbox' });
     chk.checked = vis[bid] !== 0;
     var sel = el('select', { class: 'bv-tab' });
+    // в списке разделов — только вкладки с данными персонажа (без служебных)
     TABS.forEach(function (t) {
+      if (t[0] === 'blockvis' || t[0] === 'io') return;
       var o = el('option', { value: t[0], text: t[1] });
       if (t[1] === tabNameOf(f)) o.selected = true;
       sel.appendChild(o);
@@ -2418,6 +2448,13 @@ function renderBlockVisUI() {
       v[bid] = chk.checked ? 1 : 0;
       saveBlockVis(v);
       applyBlockVisibility();
+    });
+    sel.addEventListener('change', function () {
+      moveBlockToTab(f, sel.value);
+      var v = loadBlockVis();
+      v[bid] = chk.checked ? 1 : 0;
+      saveBlockVis(v);
+      renderBlockVisUI();   // обновляем привязки в списке
     });
     box.appendChild(row);
   });
