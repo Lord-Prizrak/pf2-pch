@@ -1072,6 +1072,7 @@ body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
    внутри колонки. РАЗМЕР/ШИРИНА БЛОКОВ НЕ РЕГУЛИРУЕТСЯ — она задаётся
    только раскладкой темы (12-колоночная сетка: span 4 / 6).
    ========================================================================== */
+.picker-label { font-size: 12px; opacity: .75; white-space: nowrap; }
 .topbar-appearance { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
 #theme-select { padding: 3px 6px; border-radius: 6px; border: 1px solid #6b543a;
   background: #f3e9d6; color: #2b2117; font-size: 12.5px; }
@@ -1551,7 +1552,9 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
   </div>
   <div class="save-state" id="save-state">—</div>
   <div class="topbar-appearance">
+    <span class="picker-label">Раскладка:</span>
     <select id="theme-select" title="Тема: расположение блоков (раскладка)"></select>
+    <span class="picker-label">Гамма:</span>
     <select id="palette-select" title="Цветовая гамма оформления"></select>
     <label class="edit-mode-label" title="Разрешить перетаскивание блоков за заголовки и изменение ширины/колонок текста">
       <input type="checkbox" id="edit-mode-check"> Редактирование
@@ -1842,16 +1845,16 @@ function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
    «Основное» (bid 'info') — обычный блок шириной в один столбец, как все
    остальные; он размещён первым в левой колонке каждой темы. */
 var THEMES = [
-  { id: 'default', name: 'Раскладка: Классическая', layout: { cols: 3, map: {
+  { id: 'default', name: 'Классическая', layout: { cols: 3, map: {
       left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'official', name: 'Раскладка: Официальная (Paizo)', layout: { cols: 2, map: {
+  { id: 'official', name: 'Официальная (Paizo)', layout: { cols: 2, map: {
       left: ['info', 'abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
       hide: [] } },
-  { id: 'sanych', name: 'Раскладка: Боевая (Саныч)', layout: { cols: 3, map: {
+  { id: 'sanych', name: 'Боевая (Саныч)', layout: { cols: 3, map: {
       left: ['info', 'def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'dark', name: 'Раскладка: Тёмный VTT', layout: { strip: true, cols: 3, map: {
+  { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
       left: ['info', 'abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
@@ -3383,10 +3386,10 @@ function themeById(id) {
    Тема (--theme / выбор в шапке) отвечает ТОЛЬКО за расположение блоков,
    гамма (--palette / отдельный список) — ТОЛЬКО за цвета и шрифты. */
 var PALETTES = [
-  { id: 'default',  name: 'Гамма: Классическая (пергамент)' },
-  { id: 'official', name: 'Гамма: Официальная Paizo (cream)' },
-  { id: 'sanych',   name: 'Гамма: Ночная пергаментно-зелёная (Саныч)' },
-  { id: 'dark',     name: 'Гамма: Тёмный VTT (янтарь)' }
+  { id: 'default',  name: 'Классическая (пергамент)' },
+  { id: 'official', name: 'Официальная Paizo (cream)' },
+  { id: 'sanych',   name: 'Ночная пергаментно-зелёная (Саныч)' },
+  { id: 'dark',     name: 'Тёмный VTT (янтарь)' }
 ];
 function validPalette(t) {
   for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === t) return t;

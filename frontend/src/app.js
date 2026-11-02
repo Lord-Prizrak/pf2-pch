@@ -43,16 +43,16 @@ function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
    «Основное» (bid 'info') — обычный блок шириной в один столбец, как все
    остальные; он размещён первым в левой колонке каждой темы. */
 var THEMES = [
-  { id: 'default', name: 'Раскладка: Классическая', layout: { cols: 3, map: {
+  { id: 'default', name: 'Классическая', layout: { cols: 3, map: {
       left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'official', name: 'Раскладка: Официальная (Paizo)', layout: { cols: 2, map: {
+  { id: 'official', name: 'Официальная (Paizo)', layout: { cols: 2, map: {
       left: ['info', 'abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
       hide: [] } },
-  { id: 'sanych', name: 'Раскладка: Боевая (Саныч)', layout: { cols: 3, map: {
+  { id: 'sanych', name: 'Боевая (Саныч)', layout: { cols: 3, map: {
       left: ['info', 'def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
-  { id: 'dark', name: 'Раскладка: Тёмный VTT', layout: { strip: true, cols: 3, map: {
+  { id: 'dark', name: 'Тёмный VTT', layout: { strip: true, cols: 3, map: {
       left: ['info', 'abil', 'skills'], mid: ['def', 'strikes', 'wpnprof', 'feats'], right: ['magic', 'actions'] },
       hide: ['#hp-shield-panel'] } }
 ];
@@ -1584,10 +1584,10 @@ function themeById(id) {
    Тема (--theme / выбор в шапке) отвечает ТОЛЬКО за расположение блоков,
    гамма (--palette / отдельный список) — ТОЛЬКО за цвета и шрифты. */
 var PALETTES = [
-  { id: 'default',  name: 'Гамма: Классическая (пергамент)' },
-  { id: 'official', name: 'Гамма: Официальная Paizo (cream)' },
-  { id: 'sanych',   name: 'Гамма: Ночная пергаментно-зелёная (Саныч)' },
-  { id: 'dark',     name: 'Гамма: Тёмный VTT (янтарь)' }
+  { id: 'default',  name: 'Классическая (пергамент)' },
+  { id: 'official', name: 'Официальная Paizo (cream)' },
+  { id: 'sanych',   name: 'Ночная пергаментно-зелёная (Саныч)' },
+  { id: 'dark',     name: 'Тёмный VTT (янтарь)' }
 ];
 function validPalette(t) {
   for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === t) return t;

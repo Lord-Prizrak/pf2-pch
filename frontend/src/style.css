@@ -215,6 +215,7 @@ body:not(.theme-sanych):not(.theme-dark) #hp-shield-panel { display: block; }
    внутри колонки. РАЗМЕР/ШИРИНА БЛОКОВ НЕ РЕГУЛИРУЕТСЯ — она задаётся
    только раскладкой темы (12-колоночная сетка: span 4 / 6).
    ========================================================================== */
+.picker-label { font-size: 12px; opacity: .75; white-space: nowrap; }
 .topbar-appearance { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
 #theme-select { padding: 3px 6px; border-radius: 6px; border: 1px solid #6b543a;
   background: #f3e9d6; color: #2b2117; font-size: 12.5px; }
