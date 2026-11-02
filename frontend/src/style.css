@@ -313,3 +313,28 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 .bv-row:hover { background: var(--chip, rgba(0,0,0,.05)); }
 .bv-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bv-tab { flex: 0 0 auto; font-size: .85em; }
+
+/* ---------- Модальное окно редактирования блока ---------- */
+.block-modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0, 0, 0, .45);            /* лёгкое затемнение всего, кроме блока */
+  overflow: auto; padding: 48px 16px 24px;
+}
+.block-modal-panel {
+  position: relative; max-width: 760px; margin: 0 auto;
+  background: var(--panel, #fff); color: var(--fg, inherit);
+  border: 1px solid var(--line, rgba(0,0,0,.2));
+  border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  padding: 8px;
+}
+.block-modal-host fieldset { grid-column: auto !important; width: auto !important; }
+.block-modal-close {
+  position: absolute; z-index: 1001;
+  width: 26px; height: 26px; line-height: 1;
+  border: 1px solid var(--line, rgba(0,0,0,.25)); border-radius: 50%;
+  background: var(--chip, #eee); color: var(--fg, #333);
+  font-size: 14px; cursor: pointer;
+}
+.block-modal-close:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+.bv-table td.bv-c-act { width: 7em; text-align: right; }
+.bv-edit { font-size: .85em; padding: 2px 10px; }

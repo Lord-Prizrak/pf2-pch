@@ -2441,7 +2441,7 @@ function renderBlockVisUI() {
   var table = el('table', { class: 'bv-table' });
   var thead = el('thead');
   var htr = el('tr');
-  ['Видимость', 'Название блока', 'Раздел'].forEach(function (h) {
+  ['Видимость', 'Название блока', 'Раздел', ''].forEach(function (h) {
     htr.appendChild(el('th', { text: h }));
   });
   thead.appendChild(htr);
@@ -2465,7 +2465,11 @@ function renderBlockVisUI() {
       sel.appendChild(o);
     });
     tdT.appendChild(sel);
-    tr.appendChild(tdC); tr.appendChild(tdN); tr.appendChild(tdT);
+    var tdA = el('td', { class: 'bv-c-act' });
+    var btnEdit = el('button', { type: 'button', class: 'btn small bv-edit', text: 'Изменить' });
+    tdA.appendChild(btnEdit);
+    tr.appendChild(tdC); tr.appendChild(tdN); tr.appendChild(tdT); tr.appendChild(tdA);
+    btnEdit.addEventListener('click', function () { openBlockModal(f); });
     chk.addEventListener('change', function () {
       var v = loadBlockVis();
       v[bid] = chk.checked ? 1 : 0;
@@ -2489,6 +2493,56 @@ function renderBlockVisUI() {
 function wireTabBlocks() {
   ensureBlockIds();
   $all('.tabpage fieldset').forEach(wireBlockDrag);
+}
+
+/* ---------- Редактирование блока в модальном окне ---------- */
+var blockModal = null; // { overlay, panel, closeBtn, host, origParent, nextSibling, bid }
+
+function openBlockModal(f) {
+  closeBlockModal();
+  var overlay = el('div', { class: 'block-modal-overlay' });
+  var panel = el('div', { class: 'block-modal-panel' });
+  var closeBtn = el('button', { type: 'button', class: 'block-modal-close', title: 'Закрыть редактирование', text: '✕' });
+  var host = el('div', { class: 'block-modal-host' });
+  // физически переносим блок в панель — все обработчики и данные сохраняются
+  var origParent = f.parentNode, nextSibling = f.nextSibling;
+  host.appendChild(f);
+  panel.appendChild(host);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
+                 origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid };
+  // крестик: справа и чуть выше блока
+  var placeClose = function () {
+    closeBtn.style.left = (panel.offsetLeft + panel.offsetWidth - 6) + 'px';
+    closeBtn.style.top = Math.max(0, panel.offsetTop - 30) + 'px';
+  };
+  requestAnimationFrame(function () {
+    refreshAllTextareas(f);
+    placeClose();
+    overlay.addEventListener('resize', placeClose);
+  });
+  panel.addEventListener('transitionend', placeClose);
+  closeBtn.addEventListener('click', closeBlockModal);
+  overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) closeBlockModal(); });
+  var onKey = function (e) { if (e.key === 'Escape') { closeBlockModal(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+  overlay._onKey = onKey;
+}
+
+function closeBlockModal() {
+  if (!blockModal) return;
+  var m = blockModal; blockModal = null;
+  // возвращаем блок на исходное место, если он всё ещё в панели
+  var child = m.host.firstChild;
+  if (child && child.tagName === 'FIELDSET' && m.origParent && m.origParent.contains !== undefined) {
+    try { m.origParent.insertBefore(child, m.nextSibling); }
+    catch (e) { document.body.appendChild(child); }
+  }
+  if (m.overlay._onKey) document.removeEventListener('keydown', m.overlay._onKey);
+  if (m.overlay.parentNode) m.overlay.parentNode.removeChild(m.overlay);
+  applyBlockVisibility();
+  refreshAllTextareas();
 }
 
 document.addEventListener('DOMContentLoaded', boot);
