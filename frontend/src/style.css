@@ -298,7 +298,15 @@ body.pal-dark, body.pal-sanych { color-scheme: dark; }
 body.pal-dark, body.pal-sanych { background-color: var(--bg); }
 
 /* ---------- раздел «Видимость блоков» (вкладка Импорт/экспорт) ---------- */
-.block-vis-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.block-vis-list { margin-top: 8px; }
+table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
+.bv-table th, .bv-table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line, rgba(0,0,0,.15)); }
+.bv-table th { font-weight: 700; background: var(--chip, rgba(0,0,0,.05)); }
+.bv-table td.bv-c-vis { width: 3.5em; text-align: center; }
+.bv-table td.bv-c-tab { width: 12em; }
+.bv-table tbody tr:hover { background: var(--chip, rgba(0,0,0,.05)); }
+.bv-table select.bv-tab { width: 100%; font-size: .9em; }
+.bv-legacy { display: none; }
 .bv-row { display: flex; align-items: center; gap: 8px; padding: 2px 4px;
   border-radius: 6px; cursor: pointer; }
 .bv-row:hover { background: var(--chip, rgba(0,0,0,.05)); }

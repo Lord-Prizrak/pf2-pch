@@ -2426,10 +2426,24 @@ function renderBlockVisUI() {
   if (!box) return;
   var vis = loadBlockVis();
   box.innerHTML = '';
+  var table = el('table', { class: 'bv-table' });
+  var thead = el('thead');
+  var htr = el('tr');
+  ['Видимость', 'Название блока', 'Раздел'].forEach(function (h) {
+    htr.appendChild(el('th', { text: h }));
+  });
+  thead.appendChild(htr);
+  table.appendChild(thead);
+  var tbody = el('tbody');
   allBlocks().forEach(function (f) {
     var bid = f.dataset.bid;
-    var chk = el('input', { type: 'checkbox' });
+    var tr = el('tr');
+    var tdC = el('td', { class: 'bv-c-vis' });
+    var chk = el('input', { type: 'checkbox', title: 'Показывать блок' });
     chk.checked = vis[bid] !== 0;
+    tdC.appendChild(chk);
+    var tdN = el('td', { class: 'bv-c-name', text: blockTitle(f) });
+    var tdT = el('td', { class: 'bv-c-tab' });
     var sel = el('select', { class: 'bv-tab' });
     // в списке разделов — только вкладки с данными персонажа (без служебных)
     TABS.forEach(function (t) {
@@ -2438,11 +2452,8 @@ function renderBlockVisUI() {
       if (t[1] === tabNameOf(f)) o.selected = true;
       sel.appendChild(o);
     });
-    var row = el('label', { class: 'bv-row' }, [
-      chk,
-      el('span', { class: 'bv-name', text: blockTitle(f) }),
-      sel
-    ]);
+    tdT.appendChild(sel);
+    tr.appendChild(tdC); tr.appendChild(tdN); tr.appendChild(tdT);
     chk.addEventListener('change', function () {
       var v = loadBlockVis();
       v[bid] = chk.checked ? 1 : 0;
@@ -2454,10 +2465,12 @@ function renderBlockVisUI() {
       var v = loadBlockVis();
       v[bid] = chk.checked ? 1 : 0;
       saveBlockVis(v);
-      renderBlockVisUI();   // обновляем привязки в списке
+      renderBlockVisUI();   // обновляем привязки в таблице
     });
-    box.appendChild(row);
+    tbody.appendChild(tr);
   });
+  table.appendChild(tbody);
+  box.appendChild(table);
 }
 
 /* Расстановка drag-обработчиков на все блоки не-листовых вкладок. */
