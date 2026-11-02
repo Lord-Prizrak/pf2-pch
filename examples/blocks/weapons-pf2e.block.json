@@ -1,0 +1,19 @@
+{
+  "formatVersion": 1,
+  "kind": "block",
+  "id": "weapons-pf2e",
+  "title": "Оружие и атаки",
+  "icon": "⚔️",
+  "system": "pf2e",
+  "fields": [
+    { "key": "strikes", "type": "table", "label": "Удары",
+      "columns": [
+        { "key": "name", "type": "text", "label": "Оружие" },
+        { "key": "atk", "type": "computed", "label": "Атака", "expr": "abilities.str.mod + proficiency.level(strike)", "readonly": true },
+        { "key": "damage", "type": "dice", "label": "Урон", "formula": "1d12+5", "labelRoll": "бросить урон" }
+      ],
+      "addRowLabel": "＋ удар" },
+    { "key": "custom.armor_class", "type": "computed", "label": "КД", "expr": "10 + abilities.dex.cap + armor.ac_bonus", "readonly": true }
+  ],
+  "layout": { "span": 4, "order": 2 }
+}

@@ -1,0 +1,37 @@
+{
+  "formatVersion": 1,
+  "kind": "sheetdef",
+  "id": "starfinder-crew",
+  "name": "Starfinder: член экипажа",
+  "system": "starfinder",
+  "theme": "dark",
+  "palette": "dark",
+  "tabs": [
+    { "id": "core", "title": "Основное", "blocks": [
+      { "$ref": "../blocks/identity.block.json" },
+      { "inline": {
+          "formatVersion": 1, "kind": "block", "id": "vitals-sf",
+          "title": "Живучесть", "system": "starfinder",
+          "fields": [
+            { "key": "custom.hp.current", "type": "number", "label": "HP текущие" },
+            { "key": "custom.hp.max", "type": "number", "label": "HP максимум" },
+            { "key": "custom.stamina", "type": "number", "label": "Выносливость" },
+            { "key": "custom.resolve", "type": "number", "label": "Решимость" }
+          ]
+        } },
+      { "inline": {
+          "formatVersion": 1, "kind": "block", "id": "ship-role",
+          "title": "Роль на корабле", "system": "starfinder",
+          "fields": [
+            { "key": "custom.role", "type": "select", "label": "Должность",
+              "options": ["Капитан", "Пилот", "Инженер", "Стрелок", "Медик", "Навигатор"] },
+            { "key": "custom.drives", "type": "checklist", "label": "Драйвы",
+              "itemFields": [ { "key": "name", "type": "text", "label": "Драйв" } ] }
+          ]
+        } }
+    ] },
+    { "id": "combat", "title": "Бой", "blocks": [
+      { "$ref": "../blocks/weapons-pf2e.block.json" }
+    ] }
+  ]
+}

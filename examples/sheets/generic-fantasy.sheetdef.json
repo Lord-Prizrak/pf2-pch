@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "kind": "sheetdef",
+  "id": "generic-fantasy",
+  "name": "Универсальный фэнтези-лист",
+  "system": "generic",
+  "theme": "classic",
+  "palette": "default",
+  "tabs": [
+    { "id": "core", "title": "Лист", "blocks": [
+      { "$ref": "../blocks/identity.block.json" },
+      { "$ref": "../blocks/appearance.block.json" },
+      { "inline": {
+          "formatVersion": 1, "kind": "block", "id": "attributes",
+          "title": "Характеристики", "system": "generic",
+          "fields": [
+            { "key": "custom.attrs.might", "type": "number", "label": "Могущество" },
+            { "key": "custom.attrs.grace", "type": "number", "label": "Ловкость" },
+            { "key": "custom.attrs.wit", "type": "number", "label": "Разум" }
+          ]
+        } }
+    ] },
+    { "id": "gear", "title": "Снаряжение", "blocks": [
+      { "inline": {
+          "formatVersion": 1, "kind": "block", "id": "inventory",
+          "title": "Инвентарь", "system": "generic",
+          "fields": [
+            { "key": "custom.items", "type": "table", "label": "Предметы",
+              "columns": [
+                { "key": "name", "type": "text", "label": "Название" },
+                { "key": "qty", "type": "number", "label": "Кол-во", "min": 0 },
+                { "key": "note", "type": "text", "label": "Примечание" }
+              ], "addRowLabel": "＋ предмет" }
+          ]
+        } }
+    ] },
+    { "id": "bio", "title": "Биография", "blocks": [] }
+  ]
+}

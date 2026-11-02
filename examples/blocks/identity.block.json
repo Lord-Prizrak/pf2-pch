@@ -1,0 +1,13 @@
+{
+  "formatVersion": 1,
+  "kind": "block",
+  "id": "identity",
+  "title": "Кто я",
+  "icon": "🪪",
+  "system": "generic",
+  "fields": [
+    { "key": "custom.name", "type": "text", "label": "Имя персонажа" },
+    { "key": "custom.concept", "type": "textarea", "label": "Концепт", "placeholder": "Кто он в одном абзаце?" }
+  ],
+  "layout": { "span": 4, "order": 0 }
+}

@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Lord-Prizrak/pf2-pch/docs/block-format.schema.json",
+  "title": "Block Format v1 — определение блоков и листов персонажей (NRI-agnostic)",
+  "anyOf": [ {"$ref": "#/definitions/block"}, {"$ref": "#/definitions/sheetdef"} ],
+  "definitions": {
+    "idKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+      "description": "Уникальный идентификатор: строчная латиница/кириллица translit, цифры, дефис, подчёркивание."
+    },
+    "dataKey": {
+      "type": "string",
+      "pattern": "^[A-Za-zа-яёА-ЯЁ_][A-Za-zа-яёА-ЯЁ0-9_.]*$",
+      "description": "Путь в JSON данных персонажа, точки — спуск по объектам."
+    },
+    "fieldCommon": {
+      "type": "object",
+      "required": ["key", "type"],
+      "properties": {
+        "key": {"$ref": "#/definitions/dataKey"},
+        "type": {"type": "string"},
+        "label": {"type": "string"},
+        "help": {"type": "string"},
+        "placeholder": {"type": "string"},
+        "readonly": {"type": "boolean", "default": false},
+        "default": {}
+      }
+    },
+    "scalarField": {
+      "allOf": [
+        {"$ref": "#/definitions/fieldCommon"},
+        {
+          "properties": {
+            "type": {"enum": ["text", "textarea", "number", "checkbox", "select", "dice"]},
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "step": {"type": "number"},
+            "options": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {"type": "string"},
+                  {"type": "object", "required": ["value"], "properties": {"value": {"type": "string"}, "label": {"type": "string"}}}
+                ]
+              }
+            },
+            "formula": {"type": "string", "description": "Для dice: формула кубиков, напр. 1d6+3"},
+            "labelRoll": {"type": "string", "description": "Подпись кнопки броска"}
+          },
+          "if": {"properties": {"type": {"const": "select"}}},
+          "then": {"required": ["options"]},
+          "else": {
+            "if": {"properties": {"type": {"const": "dice"}}},
+            "then": {"required": ["formula"]}
+          }
+        }
+      ],
+      "x-branch": "scalar"
+    },
+    "tableColumn": {
+      "description": "Колонка таблицы — любое поле, кроме вложенных таблиц/списков и skills/spells.",
+      "allOf": [
+        {"$ref": "#/definitions/anyField"},
+        {"properties": {"type": {"not": {"enum": ["table", "checklist", "skills", "spells"]}}}}
+      ]
+    },
+    "compositeField": {
+      "allOf": [
+        {"$ref": "#/definitions/fieldCommon"},
+        {
+          "properties": {
+            "type": {"enum": ["checklist", "table", "skills", "spells", "group", "computed"]},
+            "itemFields": {"type": "array", "items": {"$ref": "#/definitions/anyField"}},
+            "columns": {"type": "array", "items": {"$ref": "#/definitions/tableColumn"}},
+            "fields": {"type": "array", "items": {"$ref": "#/definitions/anyField"}},
+            "expr": {"type": "string", "description": "Для computed: арифметическая формула с путями"},
+            "addRowLabel": {"type": "string"},
+            "formula": {"type": "string"},
+            "labelRoll": {"type": "string"},
+            "options": {"type": "array"},
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "step": {"type": "number"}
+          },
+          "allOf": [
+            {"if": {"properties": {"type": {"const": "checklist"}}}, "then": {"required": ["itemFields"]}},
+            {"if": {"properties": {"type": {"const": "table"}}}, "then": {"required": ["columns"]}},
+            {"if": {"properties": {"type": {"const": "group"}}}, "then": {"required": ["fields"]}},
+            {"if": {"properties": {"type": {"const": "computed"}}}, "then": {"required": ["expr"], "properties": {"readonly": {"const": true}}}}
+          ]
+        }
+      ],
+      "x-branch": "composite"
+    },
+    "anyField": {
+      "type": "object",
+      "required": ["key", "type"],
+      "properties": {
+        "key": {"$ref": "#/definitions/dataKey"},
+        "type": {
+          "enum": ["text", "textarea", "number", "checkbox", "select", "dice",
+                   "checklist", "table", "skills", "spells", "group", "computed"]
+        },
+        "label": {"type": "string"},
+        "help": {"type": "string"},
+        "placeholder": {"type": "string"},
+        "readonly": {"type": "boolean"},
+        "default": {},
+        "min": {"type": "number"},
+        "max": {"type": "number"},
+        "step": {"type": "number"},
+        "options": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "object", "required": ["value"], "properties": {"value": {"type": "string"}, "label": {"type": "string"}}}
+            ]
+          }
+        },
+        "formula": {"type": "string"},
+        "labelRoll": {"type": "string"},
+        "itemFields": {"type": "array", "items": {"$ref": "#/definitions/anyField"}},
+        "columns": {"type": "array", "items": {"$ref": "#/definitions/tableColumn"}},
+        "fields": {"type": "array", "items": {"$ref": "#/definitions/anyField"}},
+        "expr": {"type": "string"},
+        "addRowLabel": {"type": "string"}
+      },
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "select"}}}, "then": {"required": ["options"]}},
+        {"if": {"properties": {"type": {"const": "dice"}}}, "then": {"required": ["formula"]}},
+        {"if": {"properties": {"type": {"const": "checklist"}}}, "then": {"required": ["itemFields"]}},
+        {"if": {"properties": {"type": {"const": "table"}}}, "then": {"required": ["columns"]}},
+        {"if": {"properties": {"type": {"const": "group"}}}, "then": {"required": ["fields"]}},
+        {"if": {"properties": {"type": {"const": "computed"}}}, "then": {"required": ["expr"]}}
+      ]
+    },
+    "blockLayout": {
+      "type": "object",
+      "properties": {
+        "span": {"type": "integer", "enum": [4, 6, 8, 12], "default": 4, "description": "Ширина блока в колонках 12-сетки"},
+        "order": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "required": ["formatVersion", "kind", "id", "title", "fields"],
+      "properties": {
+        "formatVersion": {"type": "integer", "const": 1},
+        "kind": {"const": "block"},
+        "id": {"$ref": "#/definitions/idKey"},
+        "title": {"type": "string", "minLength": 1},
+        "icon": {"type": "string"},
+        "system": {"type": "string", "default": "generic"},
+        "fields": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/anyField"}},
+        "layout": {"$ref": "#/definitions/blockLayout"},
+        "editable": {"type": "boolean", "default": true},
+        "defaultVisible": {"type": "boolean", "default": true}
+      },
+      "additionalProperties": false
+    },
+    "blockRef": {
+      "type": "object",
+      "oneOf": [
+        {"required": ["$ref"], "properties": {"$ref": {"type": "string"}}, "additionalProperties": false},
+        {"required": ["inline"], "properties": {"inline": {"$ref": "#/definitions/block"}}, "additionalProperties": false},
+        {"$ref": "#/definitions/block"}
+      ]
+    },
+    "tab": {
+      "type": "object",
+      "required": ["id", "title", "blocks"],
+      "properties": {
+        "id": {"$ref": "#/definitions/idKey"},
+        "title": {"type": "string", "minLength": 1},
+        "blocks": {"type": "array", "items": {"$ref": "#/definitions/blockRef"}}
+      },
+      "additionalProperties": false
+    },
+    "sheetdef": {
+      "type": "object",
+      "required": ["formatVersion", "kind", "id", "name", "tabs"],
+      "properties": {
+        "formatVersion": {"type": "integer", "const": 1},
+        "kind": {"const": "sheetdef"},
+        "id": {"$ref": "#/definitions/idKey"},
+        "name": {"type": "string", "minLength": 1},
+        "system": {"type": "string", "default": "generic"},
+        "theme": {"type": "string", "enum": ["classic", "official", "sanych", "dark"]},
+        "palette": {"type": "string", "enum": ["default", "official", "sanych", "dark"]},
+        "tabs": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/tab"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}
