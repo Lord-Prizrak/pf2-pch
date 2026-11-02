@@ -2531,6 +2531,7 @@ function createNewBlock() {
   area.insertBefore(fs, area.firstChild);
   wireBlockDrag(fs);
   refreshAllTextareas(fs);
+  if (State.tab === 'blockvis') renderBlockVisUI();  // новый блок сразу появляется в списке блоков
   openBlockModal(fs);                            // сразу открываем редактор нового блока
   toast('Блок «' + def.title + '» создан. Заполните свойства в редакторе.');
 }
