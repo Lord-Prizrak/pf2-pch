@@ -338,3 +338,29 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 .block-modal-close:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
 .bv-table td.bv-c-act { width: 7em; text-align: right; }
 .bv-edit { font-size: .85em; padding: 2px 10px; }
+
+/* ---------- Панель свойств блока (Block Format v1) ---------- */
+.block-modal-panel { display: flex; gap: 14px; align-items: flex-start; max-width: min(1200px, 96vw); }
+.block-modal-host { flex: 1 1 auto; min-width: 0; }
+.block-editor-panel {
+  flex: 0 0 380px; max-height: 82vh; overflow: auto;
+  background: var(--panel, #fff); color: var(--ink, #222);
+  border: 1px solid var(--line, #ccc); border-radius: 8px; padding: 10px 12px; font-size: .85rem;
+}
+.block-editor-panel h3 { margin: 0 0 8px; font-size: 1rem; }
+.block-editor-panel h4 { margin: 12px 0 6px; font-size: .9rem; }
+.bep-form label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.bep-form label > span { flex: 0 0 110px; }
+.bep-form input, .bep-form select, .bep-field-row input, .bep-field-row select {
+  flex: 1 1 auto; min-width: 0; background: var(--field, #fff); color: inherit;
+  border: 1px solid var(--line, #bbb); border-radius: 4px; padding: 3px 6px;
+}
+.bep-fields { display: flex; flex-direction: column; gap: 4px; }
+.bep-field-row { display: flex; gap: 4px; align-items: center; }
+.bep-field-row input[type=text] { flex: 1 1 40%; }
+.bep-ftype { flex: 0 0 62px; font-family: monospace; font-size: .75rem; opacity: .75; }
+.bep-del { flex: 0 0 auto; padding: 1px 6px; }
+.bep-footer { display: flex; gap: 8px; margin-top: 10px; }
+.bep-json-wrap summary { cursor: pointer; margin-top: 10px; }
+.bep-json { white-space: pre-wrap; word-break: break-word; font-size: .72rem; background: var(--chip, #f4f0e6); border-radius: 4px; padding: 8px; max-height: 260px; overflow: auto; }
+@media (max-width: 900px) { .block-modal-panel { flex-direction: column; } .block-editor-panel { flex: 1 1 auto; width: 100%; } }

@@ -2504,12 +2504,101 @@ function openBlockModal(f) {
   var panel = el('div', { class: 'block-modal-panel' });
   var closeBtn = el('button', { type: 'button', class: 'block-modal-close', title: 'Закрыть редактирование', text: '✕' });
   var host = el('div', { class: 'block-modal-host' });
+
+  /* --- Панель свойств блока по Block Format v1 (docs/block-format.md) --- */
+  var legendEl = f.querySelector('legend');
+  var fieldsWrap = el('div', { class: 'bep-fields' });
+  var jsonPre = el('pre', { class: 'bep-json' });
+  function blockTitle() { return (legendEl ? (legendEl.textContent || '') : '').trim() || f.dataset.bid; }
+  var def = {
+    formatVersion: 1, kind: 'block',
+    id: (f.dataset.bid || 'block').toLowerCase().replace(/[^a-z0-9_-]+/g, '-'),
+    title: blockTitle(), system: 'generic',
+    layout: { span: parseInt(f.getAttribute('data-span'), 10) || 4 },
+    fields: []
+  };
+  var propForm = el('form', { class: 'bep-form' }, [
+    el('label', {}, [el('span', { text: 'Заголовок' }), el('input', { name: 'title', value: def.title })]),
+    el('label', {}, [el('span', { text: 'ID' }), el('input', { name: 'id', value: def.id })]),
+    el('label', {}, [el('span', { text: 'Система' }), el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })]),
+    el('label', {}, [el('span', { text: 'Span (12-сетка)' }), (function () {
+      var s = el('select', { name: 'span' });
+      [4, 6, 8, 12].forEach(function (v) { s.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
+      s.value = String(def.layout.span); return s;
+    })()])
+  ]);
+  function syncFromForm() {
+    def.title = propForm.elements.title.value.trim() || def.title;
+    def.id = propForm.elements.id.value.trim() || def.id;
+    def.system = propForm.elements.system.value.trim() || 'generic';
+    def.layout.span = parseInt(propForm.elements.span.value, 10) || 4;
+  }
+  function renderJson() {
+    syncFromForm();
+    jsonPre.textContent = JSON.stringify(def, null, 2);
+  }
+  propForm.addEventListener('input', renderJson);
+  // заголовок блока обновляем на лету
+  propForm.elements.title.addEventListener('input', function () { if (legendEl) legendEl.textContent = this.value; });
+
+  function fieldRow(fd) {
+    var del = el('button', { type: 'button', class: 'btn small bep-del', text: '✕', title: 'Удалить поле' });
+    del.addEventListener('click', function () { row.remove(); fd._removed = true; renderJson(); });
+    var keyIn = el('input', { type: 'text', value: fd.key, placeholder: 'key' });
+    var lblIn = el('input', { type: 'text', value: fd.label, placeholder: 'метка' });
+    var typeSel = el('select');
+    ['text', 'textarea', 'number', 'checkbox', 'select', 'checklist', 'table', 'skills', 'spells'].forEach(function (t) {
+      typeSel.appendChild(el('option', { value: t, text: t }));
+    });
+    typeSel.value = fd.type;
+    keyIn.addEventListener('input', function () { fd.key = this.value; renderJson(); });
+    lblIn.addEventListener('input', function () { fd.label = this.value; renderJson(); });
+    typeSel.addEventListener('change', function () { fd.type = this.value; renderJson(); });
+    var row = el('div', { class: 'bep-field-row' }, [
+      el('span', { class: 'bep-ftype', text: fd.type }), keyIn, lblIn, typeSel, del
+    ]);
+    return row;
+  }
+  function collectFields() {
+    def.fields = [];
+    f.querySelectorAll('input, textarea, select').forEach(function (i) {
+      if (i.closest('.bep-form') || i.closest('.bep-footer')) return;
+      var tag = i.tagName.toLowerCase();
+      var type = tag === 'textarea' ? 'textarea' : tag === 'select' ? 'select' : (i.type || 'text');
+      if (type === 'number') type = 'number';
+      var ph = i.placeholder || '';
+      var lbl = ph || (i.labels && i.labels[0] ? (i.labels[0].textContent || '').trim() : '');
+      var key = i.name || i.dataset.path || ('field-' + def.fields.length);
+      def.fields.push({ key: String(key).slice(0, 60), label: String(lbl || key).slice(0, 60), type: type });
+    });
+    def.fields.slice(0, 40).forEach(function (fd) { fieldsWrap.appendChild(fieldRow(fd)); });
+  }
+  var addBtn = el('button', { type: 'button', class: 'btn small', text: '＋ Поле' });
+  addBtn.addEventListener('click', function () {
+    var fd = { key: 'new_field_' + (def.fields.length + 1), label: 'Новое поле', type: 'text' };
+    def.fields.push(fd); fieldsWrap.appendChild(fieldRow(fd)); renderJson();
+  });
+  var copyBtn = el('button', { type: 'button', class: 'btn small', text: 'Копировать JSON' });
+  copyBtn.addEventListener('click', function () {
+    renderJson();
+    if (navigator.clipboard) navigator.clipboard.writeText(jsonPre.textContent);
+    copyBtn.textContent = 'Скопировано ✓'; setTimeout(function () { copyBtn.textContent = 'Копировать JSON'; }, 1200);
+  });
+  var footer = el('div', { class: 'bep-footer' }, [addBtn, copyBtn]);
+  var propsPanel = el('div', { class: 'block-editor-panel' }, [
+    el('h3', { text: 'Свойства блока' }), propForm,
+    el('h4', { text: 'Поля (fields)' }), fieldsWrap, footer,
+    el('details', { class: 'bep-json-wrap' }, [el('summary', { text: 'JSON определения (Block Format v1)' }), jsonPre])
+  ]);
+
   // физически переносим блок в панель — все обработчики и данные сохраняются
   var origParent = f.parentNode, nextSibling = f.nextSibling;
   host.appendChild(f);
   panel.appendChild(host);
+  panel.appendChild(propsPanel);
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
+  collectFields(); renderJson();
   blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
                  origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid };
   // крестик: справа и чуть выше блока
