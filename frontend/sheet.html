@@ -1893,8 +1893,20 @@ function nowISO() { return new Date().toISOString(); }
    пересчитывает высоты всех полей после программной смены значений,
    перемещения блоков и применения раскладки. */
 function autogrowTa(ta) {
+  /* Поля на неактивных вкладках (.tabpage.hidden) и в скрытых блоках
+     (.sec-hidden) имеют display:none — scrollHeight там равен 0 и авто-
+     рост не срабатывал. Эмулируем видимость: временно снимаем .hidden/.
+     sec-hidden с предков, замеряем, возвращаем классы обратно. */
+  var page = ta.closest('.tabpage');
+  var wasHiddenPage = !!(page && page.classList.contains('hidden'));
+  var sec = ta.closest('.sheet-sec');
+  var wasHiddenSec = !!(sec && sec.classList.contains('sec-hidden'));
+  if (wasHiddenPage && page) page.classList.remove('hidden');
+  if (wasHiddenSec && sec) sec.classList.remove('sec-hidden');
   ta.style.height = 'auto';
   ta.style.height = Math.max(28, ta.scrollHeight + 2) + 'px';
+  if (wasHiddenSec && sec) sec.classList.add('sec-hidden');
+  if (wasHiddenPage && page) page.classList.add('hidden');
 }
 function wireAutogrow(ta) {
   if (ta._autogrow) { autogrowTa(ta); return; }
