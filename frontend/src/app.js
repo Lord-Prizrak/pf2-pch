@@ -2637,6 +2637,13 @@ function openBlockModal(f) {
     el('details', { class: 'bep-json-wrap' }, [el('summary', { text: 'JSON определения (Block Format v1)' }), jsonPre])
   ]);
 
+  /* --- Кнопки действий редактора: Сохранить / Отменить / Закрыть --- */
+  var saveBtn = el('button', { type: 'button', class: 'btn small bep-save', text: 'Сохранить' });
+  var cancelBtn = el('button', { type: 'button', class: 'btn small bep-cancel', text: 'Отменить' });
+  var closeModalBtn = el('button', { type: 'button', class: 'btn small bep-close', text: 'Закрыть' });
+  var actionsBar = el('div', { class: 'bep-actions' }, [saveBtn, cancelBtn, closeModalBtn]);
+  propsPanel.appendChild(actionsBar);
+
   // физически переносим блок в панель — все обработчики и данные сохраняются
   var origParent = f.parentNode, nextSibling = f.nextSibling;
   host.appendChild(f);
@@ -2645,8 +2652,45 @@ function openBlockModal(f) {
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
   collectFields(); renderJson();
+
+  // снимок для отслеживания изменений и отмены
+  var snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+  function isDirty() {
+    syncFromForm();
+    return JSON.stringify({ def: def, html: f.innerHTML }) !== snapshot;
+  }
+  function applyEdits() {
+    syncFromForm();
+    if (legendEl) legendEl.textContent = def.title;
+    f.setAttribute('data-span', String(def.layout.span));
+    f.dataset.blockDef = JSON.stringify(def);   // определение хранится при блоке
+    saveCurrent();                               // фиксируем изменения в localStorage
+    snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+    toast('Блок «' + def.title + '» сохранён.');
+  }
+  function revertChanges() {
+    try {
+      var snap = JSON.parse(snapshot);
+      Object.assign(def, snap.def);
+      if (legendEl) legendEl.textContent = def.title || '';
+      f.innerHTML = snap.html;
+      legendEl = f.querySelector('legend');
+      wireBlockDrag(f);
+      refreshAllTextareas(f);
+    } catch (e) { /* ignore */ }
+  }
+
+  saveBtn.addEventListener('click', applyEdits);
+  cancelBtn.addEventListener('click', function () {
+    if (isDirty() && !confirm('Отменить несохранённые изменения блока?')) return;
+    revertChanges();
+    doCloseBlockModal();
+  });
+  closeModalBtn.addEventListener('click', function () { requestCloseBlockModal(); });
+
   blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
-                 origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid };
+                 origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid,
+                 isDirty: isDirty, applyEdits: applyEdits };
   // крестик: справа и чуть выше блока
   var placeClose = function () {
     closeBtn.style.left = (panel.offsetLeft + panel.offsetWidth - 6) + 'px';
@@ -2658,14 +2702,23 @@ function openBlockModal(f) {
     overlay.addEventListener('resize', placeClose);
   });
   panel.addEventListener('transitionend', placeClose);
-  closeBtn.addEventListener('click', closeBlockModal);
-  overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) closeBlockModal(); });
-  var onKey = function (e) { if (e.key === 'Escape') { closeBlockModal(); document.removeEventListener('keydown', onKey); } };
+  closeBtn.addEventListener('click', function () { requestCloseBlockModal(); });
+  overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) requestCloseBlockModal(); });
+  var onKey = function (e) { if (e.key === 'Escape') { requestCloseBlockModal(); document.removeEventListener('keydown', onKey); } };
   document.addEventListener('keydown', onKey);
   overlay._onKey = onKey;
 }
 
-function closeBlockModal() {
+/* Запрос закрытия редактора: при наличии изменений спрашиваем подтверждение. */
+function requestCloseBlockModal() {
+  if (!blockModal) return;
+  if (blockModal.isDirty && blockModal.isDirty()) {
+    if (!confirm('В блоке есть несохранённые изменения. Всё равно закрыть редактор?')) return;
+  }
+  doCloseBlockModal();
+}
+
+function doCloseBlockModal() {
   if (!blockModal) return;
   var m = blockModal; blockModal = null;
   // возвращаем блок на исходное место, если он всё ещё в панели
@@ -2679,6 +2732,9 @@ function closeBlockModal() {
   applyBlockVisibility();
   refreshAllTextareas();
 }
+
+/* Совместимость: прежнее имя used elsewhere */
+var closeBlockModal = requestCloseBlockModal;
 
 document.addEventListener('DOMContentLoaded', boot);
 window.PF2E = { Store: Store, emptySheet: emptySheet, normalizeSheet: normalizeSheet,

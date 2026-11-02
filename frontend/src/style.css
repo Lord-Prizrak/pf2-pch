@@ -371,3 +371,10 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 .nb-field { display: flex; flex-direction: column; gap: 2px; font-size: .9em; }
 .nb-field > span { opacity: .8; }
 .nb-check { display: flex; align-items: center; gap: 6px; font-size: .95em; }
+
+/* --- Панель действий редактора блока --- */
+.bep-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line, #ccc); }
+.bep-actions .btn { flex: 1 1 auto; text-align: center; }
+.bep-save   { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+.bep-cancel { background: var(--chip, #eee); color: inherit; }
+body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
