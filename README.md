@@ -51,3 +51,11 @@ cd server && go build -o pf2e-server .                   # сборка бина
 ## Требования
 
 Браузер (без внешних зависимостей); Go ≥ 1.19 (stdlib); Python 3 + pypdf/openpyxl для инструментов.
+
+## Формат блоков (Block Format)
+
+Определённый в проекте JSON-формат для описания **блоков** и целых **листов персонажей**
+любой НРИ (не только Pathfinder): состав полей, типы (text/number/select/checklist/table/dice/computed…),
+12-колоночная раскладка. Руководство — [docs/block-format.md](docs/block-format.md),
+схема — [docs/block-format.schema.json](docs/block-format.schema.json),
+примеры — [examples/](examples/), проверка: `python3 tools/validate_block.py <файл>`.
