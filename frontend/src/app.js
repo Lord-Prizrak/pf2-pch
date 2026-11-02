@@ -2487,6 +2487,52 @@ function renderBlockVisUI() {
   });
   table.appendChild(tbody);
   box.appendChild(table);
+  var newBtn = el('button', { type: 'button', class: 'btn bv-new', text: '＋ Новый блок',
+    title: 'Создать новый блок и открыть его редактор' });
+  newBtn.addEventListener('click', createNewBlock);
+  box.appendChild(newBtn);
+}
+
+/* ---------- Создание нового блока (Block Format v1, docs/block-format.md) ---------- */
+var BLOCK_FIELD_TYPES = ['text', 'textarea', 'number', 'checkbox', 'select', 'checklist'];
+
+function blockFieldInput(fd) {
+  switch (fd.type) {
+    case 'textarea': return el('textarea', { rows: '2', placeholder: fd.label || '', name: fd.key });
+    case 'number':   return el('input', { type: 'number', placeholder: fd.label || '', name: fd.key });
+    case 'checkbox': return el('input', { type: 'checkbox', name: fd.key });
+    case 'select':   return el('select', { name: fd.key }, [el('option', { value: '', text: '—' })]);
+    default:         return el('input', { type: 'text', placeholder: fd.label || '', name: fd.key });
+  }
+}
+
+function createNewBlock() {
+  var hostTab = State.tab;                       // текущая вкладка данных персонажа
+  if (hostTab === 'blockvis' || hostTab === 'servers' || hostTab === 'io') hostTab = 'sheet';
+  var page = document.getElementById('tab-' + hostTab);
+  if (!page) return;
+  var n = allBlocks().length + 1;
+  var def = {
+    formatVersion: 1, kind: 'block', id: 'custom-' + n,
+    title: 'Новый блок', system: 'generic',
+    layout: { span: colSpan(currentTheme()) },
+    fields: [{ key: 'field_1', label: 'Поле 1', type: 'text' }]
+  };
+  var fs = el('fieldset', { class: 'sec sec-custom' });
+  fs.appendChild(el('legend', { text: def.title }));
+  var body = el('div', { class: 'new-block-body' });
+  def.fields.forEach(function (fd) {
+    if (fd.type === 'checkbox') body.appendChild(el('label', { class: 'nb-check' }, [blockFieldInput(fd), el('span', { text: ' ' + fd.label })]));
+    else { body.appendChild(el('label', { class: 'nb-field' }, [el('span', { text: fd.label }), blockFieldInput(fd)])); }
+  });
+  fs.appendChild(body);
+  ensureBlockIds();                              // назначит data-bid и класс sheet-area при необходимости
+  var area = $('.sheet-area[data-col="left"]', page) || page;
+  area.insertBefore(fs, area.firstChild);
+  wireBlockDrag(fs);
+  refreshAllTextareas(fs);
+  openBlockModal(fs);                            // сразу открываем редактор нового блока
+  toast('Блок «' + def.title + '» создан. Заполните свойства в редакторе.');
 }
 
 /* Расстановка drag-обработчиков на все блоки не-листовых вкладок. */
