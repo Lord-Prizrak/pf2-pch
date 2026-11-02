@@ -322,7 +322,7 @@ var State = {
 /* ---------------- вкладки ---------------- */
 var TABS = [
   ['sheet', 'Лист'], ['inventory', 'Инвентарь'], ['bio', 'Биография'],
-  ['servers', 'Серверы'], ['blockvis', 'Видимость блоков'], ['io', 'Импорт/Экспорт']
+  ['servers', 'Серверы'], ['blockvis', 'Блоки'], ['io', 'Импорт/Экспорт']
 ];
 function renderTabs() {
   var nav = $('#tabs-nav');
@@ -2393,7 +2393,7 @@ function allBlocks() {
   return out;
 }
 
-/* Перенос блока между разделами (из списка «Видимость блоков»). */
+/* Перенос блока между разделами (из списка «Блоки»). */
 function moveBlockToTab(node, tabId) {
   if (!tabDragAllowed(tabId)) return;
   var cur = node.closest ? node.closest('.tabpage') : null;

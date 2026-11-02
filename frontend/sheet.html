@@ -1838,9 +1838,9 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
     </fieldset>
   </section>
 
-  <!-- ==== Вкладка «Видимость блоков» ==== -->
+  <!-- ==== Вкладка «Блоки» ==== -->
   <section id="tab-blockvis" class="tabpage hidden">
-    <fieldset><legend>Видимость блоков</legend>
+    <fieldset><legend>Блоки</legend>
       <div class="hint">Скрытые блоки не отображаются на вкладках «Лист», «Инвентарь» и «Биография». Настройки хранятся в браузере. Выпадающий список показывает, в каком разделе находится блок.</div>
       <div id="block-vis-list" class="block-vis-list"></div>
     </fieldset>
@@ -2175,7 +2175,7 @@ var State = {
 /* ---------------- вкладки ---------------- */
 var TABS = [
   ['sheet', 'Лист'], ['inventory', 'Инвентарь'], ['bio', 'Биография'],
-  ['servers', 'Серверы'], ['blockvis', 'Видимость блоков'], ['io', 'Импорт/Экспорт']
+  ['servers', 'Серверы'], ['blockvis', 'Блоки'], ['io', 'Импорт/Экспорт']
 ];
 function renderTabs() {
   var nav = $('#tabs-nav');
@@ -4246,7 +4246,7 @@ function allBlocks() {
   return out;
 }
 
-/* Перенос блока между разделами (из списка «Видимость блоков»). */
+/* Перенос блока между разделами (из списка «Блоки»). */
 function moveBlockToTab(node, tabId) {
   if (!tabDragAllowed(tabId)) return;
   var cur = node.closest ? node.closest('.tabpage') : null;
