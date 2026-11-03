@@ -136,3 +136,38 @@ Pathfinder 2e, D&D 5e, Starfinder, Call of Cthulhu и самодельные с�
 * [`../examples/blocks/weapons-pf2e.block.json`](../examples/blocks/weapons-pf2e.block.json) — table + computed + dice (PF2e).
 * [`../examples/sheets/generic-fantasy.sheetdef.json`](../examples/sheets/generic-fantasy.sheetdef.json) — фэнтези-лист без привязки к PF2e.
 * [`../examples/sheets/starfinder.sheetdef.json`](../examples/sheets/starfinder.sheetdef.json) — sci-fi лист (Starfinder).
+
+## Формулы (реализовано)
+
+Поле блока может быть вычисляемым: добавьте в определение поля свойство `formula` —
+строку выражения. Реализация: `frontend/src/app.js` (токенизатор + рекурсивный
+спуск, без eval). Пересчёт выполняется автоматически при любом изменении данных
+(функция `recalcFormulas()` вызывается из `updateComputed()`), результат пишется
+в read-only поле вывода внутри блока. Редактирование формул — в окне «Блоки →
+Изменить» (строка ƒ под каждым полем с живой проверкой синтаксиса).
+
+### Синтаксис
+- **Ссылки на данные персонажа**: `{путь}` или `$путь`, где путь — dot-путь JSON
+  листа (`docs/data-format.md`): `{abilities.str.score}`, `{level}`, `{hitPoints.max}`.
+- **Ссылки на поля блоков**: `#block-id/ключ` (значение поля другого/своего блока).
+- **Операторы**: `+ - * / %` и скобки; приоритеты как в PF2e-модификаторах:
+  мультипликативные (`* / %`) сильнее аддитивных (`+ -`).
+- **PF2e-модификаторы** (постфиксные, к предыдущему операнду): `*2`, `/2`, `//2`
+  (целочисленное деление с округлением вниз), `%2`. Пример: `{abilities.dex.mod}//2`.
+- **Функции**: `min max floor ceil round abs sqrt pow mod if sign dice`;
+  константы `pi`, `e`. `if(условие, тогда, иначе)` — условие истинно, если > 0.
+- Деление на ноль даёт 0; нечисловые значения ссылок тракуются как 0.
+
+### Примеры
+| Формула | Смысл |
+|---|---|
+| `floor(({abilities.str.score}-10)/2)+{level}+1` | мод. силы + уровень + trained |
+| `{abilities.dex.mod}//2+{armor.dexCapLimit}` | ограничение AC от Dex (напр. лёгкие доспехи) |
+| `min({level},10)+max(3,5)` | комбинированные функции |
+| `{hitPoints.max}*2` | удвоенный максимум ПЗ |
+| `if({heroPoints},1,0)` | индикатор наличия очков героя |
+
+### Хранение
+Формула живёт в определении блока (`data-block-def` атрибут `<fieldset>` и поле
+`formula` в JSON по Block Format v1), поэтому экспортируется вместе с листом в
+JSON/HTML и на сервер без специальных мер.

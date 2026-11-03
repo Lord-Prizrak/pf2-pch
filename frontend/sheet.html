@@ -2940,6 +2940,7 @@ function updateComputed() {
       if (all[i] != null) e.textContent = modStr(all[i]);
     });
   }
+  try { recalcFormulas(); } catch (e) { /* движок формул не должен ронять лист */ }
 }
 
 function renderAll() {
@@ -4405,6 +4406,223 @@ function createNewBlock() {
   toast('Блок «' + def.title + '» создан. Заполните свойства в редакторе.');
 }
 
+/* ============================================================
+   ФОРМУЛЫ: движок вычислений по Block Format v1 (docs/block-format.md §Формулы)
+   Синтаксис: {путь} — ссылки на данные персонажа; #block-id/ключ — поля блоков;
+   PF2e-модификаторы +N/-N, *2, /2, //2, %2; функции min/max/floor/ceil/round/
+   abs/sqrt/pow/mod/if/sign/dice; константы pi,e.
+   ============================================================ */
+var FORMULA_FN = {
+  min: Math.min, max: Math.max, floor: Math.floor, ceil: Math.ceil, round: Math.round,
+  abs: Math.abs, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); },
+  pow: Math.pow, mod: function (a, b) { return b === 0 ? 0 : a % b; },
+  sign: Math.sign,
+  if: function (c, a, b) { return c > 0 ? a : (b === undefined ? 0 : b); },
+  dice: function (n, sides) { n = Math.floor(n || 0); sides = Math.floor(sides || 6); var s = 0; for (var i = 0; i < n; i++) s += 1 + Math.floor(Math.random() * Math.max(2, sides)); return s; }
+};
+/* Токены: number | ref{...}/$path | bfld #block/key | id | op | lparen rparen comma */
+function tokenizeFormula(src) {
+  var t = [], i = 0, n = src.length;
+  while (i < n) {
+    var c = src[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(src[i + 1] || ''))) {
+      var m = /^[0-9]*\.?[0-9]+/.exec(src.slice(i));
+      t.push({ k: 'number', v: parseFloat(m[0]) }); i += m[0].length; continue;
+    }
+    if (c === '{') { var e = src.indexOf('}', i); if (e < 0) throw new Error('незакрытая {'); t.push({ k: 'ref', v: src.slice(i + 1, e).trim() }); i = e + 1; continue; }
+    if (c === '$' || c === '#') {
+      var j = i + 1, s = '';
+      while (j < n && /[A-Za-z0-9_.\u0400-\u04FF-]/.test(src[j])) s += src[j++];
+      t.push({ k: c === '#' ? 'bfld' : 'ref', v: s }); i = j; continue;
+    }
+    if (/[A-Za-z_\u0400-\u04FF]/.test(c)) {
+      var j2 = i, s2 = '';
+      while (j2 < n && /[A-Za-z0-9_\u0400-\u04FF]/.test(src[j2])) s2 += src[j2++];
+      t.push({ k: 'id', v: s2.toLowerCase() }); i = j2; continue;
+    }
+    if ('+-*/%'.indexOf(c) >= 0) { t.push({ k: 'op', v: c }); i++; continue; }
+    if (c === '(') { t.push({ k: 'lparen' }); i++; continue; }
+    if (c === ')') { t.push({ k: 'rparen' }); i++; continue; }
+    if (c === ',') { t.push({ k: 'comma' }); i++; continue; }
+    throw new Error('неизвестный символ «' + c + '»');
+  }
+  return t;
+}
+function parseFormula(src) {
+  var toks = tokenizeFormula(src), p = 0;
+  function peek(o) { return toks[p + (o || 0)]; }
+  function isOp(t, v) { return t && t.k === 'op' && t.v === v; }
+  function eat(k) { if (peek() && peek().k === k) { p++; return true; } return false; }
+  /* Грэммар (приоритеты PF2e):
+     expr := add;  add := mul (('+'|'-') mul)*;  mul := pf (('*'|'/'|'%') pf)*;
+     pf   := prim постфиксные *2 /2 //2 %2*;  prim := число|ссылка|(expr)|-prim|fn(args) */
+  function parseExpr() { return parseAdd(); }
+  function parseAdd() {
+    var v = parseMul();
+    while (isOp(peek(), '+') || isOp(peek(), '-')) {
+      var o = toks[p++].v; v = { type: 'bin', op: o, a: v, b: parseMul() };
+    }
+    return v;
+  }
+  function parseMul() {
+    var v = parsePF();
+    while (isOp(peek(), '*') || isOp(peek(), '/') || isOp(peek(), '%')) {
+      var o = toks[p++].v; v = { type: 'bin', op: o, a: v, b: parsePF() };
+    }
+    return v;
+  }
+  function parsePF() {
+    var v = parsePrim();
+    for (;;) {
+      if (isOp(peek(), '*') && peek(1) && peek(1).k === 'number' && peek(1).v === 2) { p += 2; v = { type: 'pf', op: '*2', a: v }; continue; }
+      if (isOp(peek(), '/') && isOp(peek(1), '/') && peek(2) && peek(2).k === 'number' && peek(2).v === 2) { p += 3; v = { type: 'pf', op: '//2', a: v }; continue; }
+      if (isOp(peek(), '%') && peek(1) && peek(1).k === 'number' && peek(1).v === 2) { p += 2; v = { type: 'pf', op: '%2', a: v }; continue; }
+      /* NB: "/2" НЕ постфиксный модификатор — это обычное деление (PF2e //2 пишется как //2). */
+      break;
+    }
+    return v;
+  }
+  function parsePrim() {
+    var t = peek(); if (!t) throw new Error('неожиданный конец формулы');
+    if (isOp(t, '-')) { p++; return { type: 'neg', a: parsePrim() }; }
+    if (isOp(t, '+')) { p++; return parsePrim(); }
+    if (t.k === 'number') { p++; return { type: 'num', v: t.v }; }
+    if (t.k === 'lparen') { p++; var e = parseExpr(); if (!eat('rparen')) throw new Error('ожидалась )'); return e; }
+    if (t.k === 'ref') { p++; return { type: 'ref', path: t.v }; }
+    if (t.k === 'bfld') { p++; return { type: 'bfld', ref: t.v }; }
+    if (t.k === 'id') {
+      p++;
+      if (t.v === 'pi') return { type: 'num', v: Math.PI };
+      if (t.v === 'e') return { type: 'num', v: Math.E };
+      if (FORMULA_FN[t.v]) {
+        var args = [];
+        if (!eat('lparen')) throw new Error('после функции ' + t.v + ' ожидалась (');
+        if (peek() && peek().k !== 'rparen') { args.push(parseExpr()); while (eat('comma')) args.push(parseExpr()); }
+        if (!eat('rparen')) throw new Error('ожидалась )');
+        return { type: 'call', fn: t.v, args: args };
+      }
+      throw new Error('неизвестный идентификатор «' + t.v + '»');
+    }
+    throw new Error('неожиданный элемент «' + t.k + '»');
+  }
+  var ast = parseExpr();
+  if (p < toks.length) throw new Error('лишние символы в формуле');
+  return ast;
+}
+function evalAst(ast, ctx) {
+  switch (ast.type) {
+    case 'num': return ast.v;
+    case 'ref': { var v = getPath(ctx.sheet, ast.path); v = (typeof v === 'number') ? v : parseFloat(v); return isNaN(v) ? 0 : v; }
+    case 'bfld': { var pr = blockFieldResolve(ast.ref, ctx.blocks); var w = parseFloat(pr.el ? pr.raw : NaN); return isNaN(w) ? 0 : w; }
+    case 'neg': return -evalAst(ast.a, ctx);
+    case 'bin': {
+      var a = evalAst(ast.a, ctx), b = evalAst(ast.b, ctx);
+      switch (ast.op) {
+        case '+': return a + b; case '-': return a - b; case '*': return a * b;
+        case '/': return b === 0 ? 0 : a / b;
+        case '%': return b === 0 ? 0 : a - b * Math.trunc(a / b);
+      }
+      throw new Error('неизвестный бинарный оператор');
+    }
+    case 'pf': {
+      var x = evalAst(ast.a, ctx);
+      switch (ast.op) { case '*2': return x * 2; case '/2': return x / 2; case '//2': return Math.trunc(x / 2); case '%2': return x % 2; }
+      throw new Error('неизвестный PF-модификатор');
+    }
+    case 'call': {
+      var args = ast.args.map(function (x) { return evalAst(x, ctx); });
+      return FORMULA_FN[ast.fn].apply(null, args);
+    }
+  }
+  throw new Error('неизвестный узел AST');
+}
+/* Разрешение ссылки вида "block-id/ключ" (или "#block-id/ключ") среди блоков страницы. */
+function blockFieldResolve(ref, blocks) {
+  var slash = ref.lastIndexOf('/');
+  var bid = slash >= 0 ? ref.slice(0, slash) : ref;
+  var key = slash >= 0 ? ref.slice(slash + 1) : '';
+  var el = null;
+  for (var i = 0; i < blocks.length; i++) {
+    var f = blocks[i];
+    if ((f.dataset.bid || '') === bid || f.id === bid) {
+      el = f.querySelector('[name="' + key + '"],[data-path="' + key + '"],#' + key.replace(/[^A-Za-z0-9_-]/g, '')) ||
+           f.querySelectorAll('input,textarea,select')[parseInt(key, 10)] || null;
+      break;
+    }
+  }
+  var raw = '';
+  if (el) raw = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
+  return { el: el, raw: raw, w: parseInt(raw, 10) };
+}
+/* Вычислить все формулы блока def над State.sheet; вернуть map ключ->число. */
+function computeFormulas(def, sheet, blocks) {
+  var out = {};
+  if (!def || !def.fields) return out;
+  var ctx = { sheet: sheet, blocks: blocks || [] };
+  var working = {};
+  def.fields.forEach(function (fd) {
+    if (!fd.formula) return;
+    try {
+      var ast = parseFormula(fd.formula);
+      var saved = {};
+      Object.keys(working).forEach(function (k) { var e = findBlockFieldEl(blocks, k); if (e) saved[k] = e.value; });
+      Object.keys(working).forEach(function (k) { var e = findBlockFieldEl(blocks, k); if (e) e.value = String(working[k]); });
+      out[fd.key] = evalAst(ast, ctx);
+      Object.keys(saved).forEach(function (k) { var e = findBlockFieldEl(blocks, k); if (e) e.value = saved[k]; });
+      working[fd.key] = out[fd.key];
+    } catch (err) { out[fd.key] = { error: err.message }; }
+  });
+  return out;
+}
+function findBlockFieldEl(blocks, refKey) {
+  for (var i = 0; i < blocks.length; i++) {
+    var e = blocks[i].querySelector('[name="' + refKey + '"],[data-path="' + refKey + '"]');
+    if (e) return e;
+  }
+  return null;
+}
+/* Запись результатов формул в DOM: read-only output-поля создаются при необходимости. */
+function applyFormulaOutputs(def, values, blockEl) {
+  if (!def || !def.fields) return;
+  def.fields.forEach(function (fd) {
+    if (!fd.formula) return;
+    var v = values[fd.key];
+    var err = v && typeof v === 'object' ? v.error : null;
+    var res = err != null ? '⚠ ' + err : String(v);
+    var out = blockEl ? blockEl.querySelector('.formula-out[data-fkey="' + fd.key + '"]') : null;
+    if (!out) {
+      var src = blockEl ? blockEl.querySelector('[name="' + fd.key + '"],[data-path="' + fd.key + '"]') : null;
+      if (src) {
+        src.setAttribute('readonly', '');
+        src.classList.add('formula-out');
+        src.dataset.fkey = fd.key;
+        src.value = res;
+      } else if (blockEl) {
+        var holder = blockEl.querySelector('.new-block-body') || blockEl.querySelector('.sec-body-wrap') || blockEl;
+        var lab = el('label', { class: 'nb-field formula-row' });
+        lab.appendChild(el('span', { text: fd.label || fd.key }));
+        var inp = el('input', { type: 'text', name: 'f:' + fd.key, readonly: '', class: 'formula-out' });
+        inp.dataset.fkey = fd.key; inp.value = res;
+        lab.appendChild(inp); holder.appendChild(lab);
+      }
+    } else { out.value = res; }
+  });
+}
+/* Главный пересчёт: вызывается из updateComputed(). */
+function recalcFormulas() {
+  if (!State.sheet) return;
+  var page = document.getElementById('tab-' + State.tab) || document;
+  var blocks = $all('fieldset.sec', page);
+  blocks.forEach(function (f) {
+    var raw = f.dataset.blockDef;
+    if (!raw) return;
+    var def; try { def = JSON.parse(raw); } catch (e) { return; }
+    if (!def.fields || !def.fields.some(function (x) { return x.formula; })) return;
+    applyFormulaOutputs(def, computeFormulas(def, State.sheet, blocks), f);
+  });
+}
+
 /* Расстановка drag-обработчиков на все блоки не-листовых вкладок. */
 function wireTabBlocks() {
   ensureBlockIds();
@@ -4469,11 +4687,26 @@ function openBlockModal(f) {
       typeSel.appendChild(el('option', { value: t, text: t }));
     });
     typeSel.value = fd.type;
+    /* Формула вычисления поля (docs/block-format.md §Формулы). */
+    var fmlIn = el('input', { type: 'text', class: 'bep-formula', value: fd.formula || '',
+      placeholder: 'формула, напр. floor(({abilities.str.score}-10)/2)+{level}+1' });
+    var fmlHint = el('div', { class: 'bep-fml-hint' });
+    function validateFormula() {
+      fmlHint.textContent = ''; fmlHint.className = 'bep-fml-hint';
+      if (!fmlIn.value.trim()) return;
+      try { parseFormula(fmlIn.value); fmlHint.textContent = '✓ синтаксис OK'; fmlHint.classList.add('ok'); }
+      catch (err) { fmlHint.textContent = '⚠ ' + err.message; fmlHint.classList.add('bad'); }
+    }
+    fmlIn.addEventListener('input', function () {
+      if (this.value.trim()) fd.formula = this.value.trim(); else delete fd.formula;
+      validateFormula(); renderJson();
+    });
     keyIn.addEventListener('input', function () { fd.key = this.value; renderJson(); });
     lblIn.addEventListener('input', function () { fd.label = this.value; renderJson(); });
     typeSel.addEventListener('change', function () { fd.type = this.value; renderJson(); });
     var row = el('div', { class: 'bep-field-row' }, [
-      el('span', { class: 'bep-ftype', text: fd.type }), keyIn, lblIn, typeSel, del
+      el('span', { class: 'bep-ftype', text: fd.type }), keyIn, lblIn, typeSel, del,
+      el('div', { class: 'bep-fml-row' }, [el('span', { class: 'bep-ftype', text: 'ƒ' }), fmlIn, fmlHint])
     ]);
     return row;
   }
