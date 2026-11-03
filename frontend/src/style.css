@@ -386,3 +386,26 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 .bep-save   { background: #2e7d32; color: #fff; border-color: #2e7d32; }
 .bep-cancel { background: var(--chip, #eee); color: inherit; }
 body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
+
+/* ===== Редактор блока v2: палитра | блок | свойства ===== */
+.block-modal-panel.be-v2 { display: flex; gap: 14px; align-items: flex-start; max-width: 96vw; }
+.block-modal-panel.be-v2 .be-palette { flex: 0 0 170px; display: flex; flex-direction: column; gap: 6px; background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 80vh; overflow: auto; }
+.block-modal-panel.be-v2 .be-palette h4 { margin: 0 0 4px; font-size: 13px; color: var(--ink-dim, inherit); }
+.be-pal-item { text-align: left; cursor: grab; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); color: inherit; font: inherit; }
+.be-pal-item:hover { outline: 2px solid var(--accent, #b5893e); }
+.block-modal-panel.be-v2 .block-modal-host { flex: 1 1 auto; min-width: 0; }
+.block-modal-panel.be-v2 .block-editor-panel { flex: 0 0 280px; max-height: 80vh; overflow: auto; }
+.be-canvas { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.be-field { position: relative; border: 1px dashed transparent; border-radius: 6px; padding: 4px 6px; cursor: default; }
+.be-field:hover { border-color: var(--line); }
+.be-field .be-flabel { display: block; font-size: 11px; opacity: .75; margin-bottom: 2px; }
+.be-field input, .be-field textarea, .be-field select { width: 100%; box-sizing: border-box; }
+.be-field.be-selected { outline: 2px solid var(--accent, #b5893e); background: color-mix(in srgb, var(--accent, #b5893e) 8%, transparent); }
+.be-field.be-drop-target { border-top: 2px solid var(--accent, #b5893e); }
+.be-field.be-dragging { opacity: .7; box-shadow: 0 6px 18px rgba(0,0,0,.35); background: var(--field); }
+.bep-hint { font-size: 12px; opacity: .7; margin-top: 8px; }
+.be-mini-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.be-chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-size: 12px; background: var(--field); }
+.be-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.be-mini-table td, .be-mini-table th { border: 1px solid var(--line); padding: 2px; }
+@media (max-width: 900px) { .block-modal-panel.be-v2 { flex-wrap: wrap; } .block-modal-panel.be-v2 .block-editor-panel { flex: 1 1 100%; } }

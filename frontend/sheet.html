@@ -1244,6 +1244,29 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 .bep-cancel { background: var(--chip, #eee); color: inherit; }
 body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
 
+/* ===== Редактор блока v2: палитра | блок | свойства ===== */
+.block-modal-panel.be-v2 { display: flex; gap: 14px; align-items: flex-start; max-width: 96vw; }
+.block-modal-panel.be-v2 .be-palette { flex: 0 0 170px; display: flex; flex-direction: column; gap: 6px; background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 80vh; overflow: auto; }
+.block-modal-panel.be-v2 .be-palette h4 { margin: 0 0 4px; font-size: 13px; color: var(--ink-dim, inherit); }
+.be-pal-item { text-align: left; cursor: grab; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); color: inherit; font: inherit; }
+.be-pal-item:hover { outline: 2px solid var(--accent, #b5893e); }
+.block-modal-panel.be-v2 .block-modal-host { flex: 1 1 auto; min-width: 0; }
+.block-modal-panel.be-v2 .block-editor-panel { flex: 0 0 280px; max-height: 80vh; overflow: auto; }
+.be-canvas { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.be-field { position: relative; border: 1px dashed transparent; border-radius: 6px; padding: 4px 6px; cursor: default; }
+.be-field:hover { border-color: var(--line); }
+.be-field .be-flabel { display: block; font-size: 11px; opacity: .75; margin-bottom: 2px; }
+.be-field input, .be-field textarea, .be-field select { width: 100%; box-sizing: border-box; }
+.be-field.be-selected { outline: 2px solid var(--accent, #b5893e); background: color-mix(in srgb, var(--accent, #b5893e) 8%, transparent); }
+.be-field.be-drop-target { border-top: 2px solid var(--accent, #b5893e); }
+.be-field.be-dragging { opacity: .7; box-shadow: 0 6px 18px rgba(0,0,0,.35); background: var(--field); }
+.bep-hint { font-size: 12px; opacity: .7; margin-top: 8px; }
+.be-mini-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.be-chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-size: 12px; background: var(--field); }
+.be-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.be-mini-table td, .be-mini-table th { border: 1px solid var(--line); padding: 2px; }
+@media (max-width: 900px) { .block-modal-panel.be-v2 { flex-wrap: wrap; } .block-modal-panel.be-v2 .block-editor-panel { flex: 1 1 100%; } }
+
 
 /* === тема: dark === */
 /* ==========================================================================
@@ -4710,19 +4733,63 @@ function wireTabBlocks() {
   $all('.tabpage fieldset').forEach(wireBlockDrag);
 }
 
-/* ---------- Редактирование блока в модальном окне ---------- */
-var blockModal = null; // { overlay, panel, closeBtn, host, origParent, nextSibling, bid }
+/* ---------- Редактор блока: палитра | блок в центре | свойства справа ---------- */
+var blockModal = null; // { overlay, panel, closeBtn, host, origParent, nextSibling, bid, isDirty, applyEdits }
+
+var FIELD_PALETTE = [
+  { type: 'text',     label: 'Текст',       icon: 'T' },
+  { type: 'textarea', label: 'Многострочный', icon: '¶' },
+  { type: 'number',   label: 'Число',       icon: '#' },
+  { type: 'checkbox', label: 'Флажок',      icon: '☑' },
+  { type: 'select',   label: 'Выпадающий',  icon: '▾' },
+  { type: 'checklist',label: 'Список',      icon: '≡' },
+  { type: 'table',    label: 'Таблица',     icon: '⊞' },
+  { type: 'skills',   label: 'Навыки',      icon: '◆' },
+  { type: 'spells',   label: 'Заклинания',  icon: '✦' }
+];
+
+/* Создание DOM-представления поля по типу (упрощённо, как в готовых блоках). */
+function makeFieldEl(fd) {
+  var wrap = el('div', { class: 'be-field', 'data-ftype': fd.type });
+  var lab = el('label', { class: 'be-flabel', text: fd.label || fd.key });
+  var input;
+  switch (fd.type) {
+    case 'textarea':
+      input = el('textarea', { rows: '2', placeholder: fd.label || '' }); break;
+    case 'number':
+      input = el('input', { type: 'number', placeholder: fd.label || '' }); break;
+    case 'checkbox':
+      input = el('input', { type: 'checkbox' }); break;
+    case 'select':
+      input = el('select', {}, [el('option', { text: fd.label || '—' })]); break;
+    case 'checklist':
+      input = el('div', { class: 'be-mini-list' }, [el('span', { class: 'be-chip', text: 'пункт 1' }), el('span', { class: 'be-chip', text: '+ пункт' })]); break;
+    case 'table':
+      input = el('table', { class: 'be-mini-table' }, [
+        el('tr', {}, [el('th', { text: 'A' }), el('th', { text: 'B' })]),
+        el('tr', {}, [el('td', {}, [el('input', { type: 'text' })]), el('td', {}, [el('input', { type: 'text' })])])
+      ]); break;
+    case 'skills':
+      input = el('div', { class: 'be-mini-list' }, [el('span', { class: 'be-chip', text: 'Навык +0' })]); break;
+    case 'spells':
+      input = el('div', { class: 'be-mini-list' }, [el('span', { class: 'be-chip', text: 'Слот ▢▢▢' })]); break;
+    default:
+      input = el('input', { type: 'text', placeholder: fd.label || '' });
+  }
+  input.dataset.fkey = fd.key;
+  wrap.appendChild(lab);
+  wrap.appendChild(input);
+  return wrap;
+}
 
 function openBlockModal(f) {
   closeBlockModal();
   var overlay = el('div', { class: 'block-modal-overlay' });
-  var panel = el('div', { class: 'block-modal-panel' });
+  var panel = el('div', { class: 'block-modal-panel be-v2' });
   var closeBtn = el('button', { type: 'button', class: 'block-modal-close', title: 'Закрыть редактирование', text: '✕' });
   var host = el('div', { class: 'block-modal-host' });
 
-  /* --- Панель свойств блока по Block Format v1 (docs/block-format.md) --- */
   var legendEl = f.querySelector('legend');
-  var fieldsWrap = el('div', { class: 'bep-fields' });
   var jsonPre = el('pre', { class: 'bep-json' });
   function blockTitle() { return (legendEl ? (legendEl.textContent || '') : '').trim() || f.dataset.bid; }
   var def = {
@@ -4732,6 +4799,29 @@ function openBlockModal(f) {
     layout: { span: parseInt(f.getAttribute('data-span'), 10) || 4 },
     fields: []
   };
+
+  /* ===== Левая колонка: палитра типов полей ===== */
+  var palette = el('div', { class: 'be-palette' });
+  palette.appendChild(el('h4', { text: 'Палитра полей' }));
+  FIELD_PALETTE.forEach(function (p) {
+    var item = el('button', { type: 'button', class: 'be-pal-item', draggable: 'true',
+      title: 'Добавить поле «' + p.label + '» в блок (клик или перетаскивание)',
+      text: p.icon + '  ' + p.label });
+    item.addEventListener('click', function () { addFieldToBlock(p.type, p.label); });
+    item.addEventListener('dragstart', function (e) {
+      e.dataTransfer.setData('text/x-be-field', p.type);
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    palette.appendChild(item);
+  });
+
+  /* ===== Правая колонка: свойства выделенного объекта ===== */
+  var propsPanel = el('div', { class: 'block-editor-panel' });
+  var propsTitle = el('h3', { text: 'Свойства блока' });
+  var propsBody = el('div', { class: 'bep-props-body' });
+  propsPanel.appendChild(propsTitle);
+  propsPanel.appendChild(propsBody);
+
   function propRow(labelText, inputNode) {
     return el('div', { class: 'bep-prop-row' }, [el('span', { class: 'bep-plabel', text: labelText }), inputNode]);
   }
@@ -4755,91 +4845,246 @@ function openBlockModal(f) {
     jsonPre.textContent = JSON.stringify(def, null, 2);
   }
   propForm.addEventListener('input', renderJson);
-  // заголовок блока обновляем на лету
   propForm.elements.title.addEventListener('input', function () { if (legendEl) legendEl.textContent = this.value; });
 
-  function fieldRow(fd) {
-    var del = el('button', { type: 'button', class: 'btn small bep-del', text: '✕', title: 'Удалить поле' });
-    del.addEventListener('click', function () { row.remove(); fd._removed = true; renderJson(); });
-    var keyIn = el('input', { type: 'text', value: fd.key, placeholder: 'key' });
-    var lblIn = el('input', { type: 'text', value: fd.label, placeholder: 'метка' });
-    var typeSel = el('select');
-    ['text', 'textarea', 'number', 'checkbox', 'select', 'checklist', 'table', 'skills', 'spells'].forEach(function (t) {
-      typeSel.appendChild(el('option', { value: t, text: t }));
-    });
-    typeSel.value = fd.type;
-    /* Формула вычисления поля (docs/block-format.md §Формулы). */
-    var fmlIn = el('input', { type: 'text', class: 'bep-formula', value: fd.formula || '',
-      placeholder: 'формула, напр. floor(({abilities.str.score}-10)/2)+{level}+1' });
-    var fmlHint = el('div', { class: 'bep-fml-hint' });
-    function validateFormula() {
-      fmlHint.textContent = ''; fmlHint.className = 'bep-fml-hint';
-      if (!fmlIn.value.trim()) return;
-      try { parseFormula(fmlIn.value); fmlHint.textContent = '✓ синтаксис OK'; fmlHint.classList.add('ok'); }
+  /* Форма свойств отдельного поля */
+  var fieldForm = el('form', { class: 'bep-form' }, [
+    propRow('Метка', el('input', { name: 'flabel' })),
+    propRow('Key', el('input', { name: 'fkey' })),
+    propRow('Тип', (function () {
+      var s = el('select', { name: 'ftype' });
+      FIELD_PALETTE.forEach(function (p) { s.appendChild(el('option', { value: p.type, text: p.label })); });
+      return s;
+    })()),
+    propRow('Формула', el('input', { name: 'fformula', placeholder: 'напр. floor(({abilities.str.score}-10)/2)+{level}+1' }))
+  ]);
+  var fmlHint = el('div', { class: 'bep-fml-hint' });
+  var delFieldBtn = el('button', { type: 'button', class: 'btn small bep-del', text: 'Удалить поле' });
+  fieldForm.addEventListener('input', function () {
+    if (!selected || !selected.fd) return;
+    var fd = selected.fd, dom = selected.dom;
+    fd.label = fieldForm.elements.flabel.value;
+    fd.key = fieldForm.elements.fkey.value || fd.key;
+    fd.type = fieldForm.elements.ftype.value;
+    if (fieldForm.elements.fformula.value.trim()) fd.formula = fieldForm.elements.fformula.value.trim();
+    else delete fd.formula;
+    var lab = dom.querySelector('.be-flabel'); if (lab) lab.textContent = fd.label;
+    dom.dataset.ftype = fd.type;
+    var txt = fieldForm.elements.fformula.value.trim();
+    fmlHint.textContent = ''; fmlHint.className = 'bep-fml-hint';
+    if (txt) {
+      try { parseFormula(txt); fmlHint.textContent = '✓ синтаксис OK'; fmlHint.classList.add('ok'); }
       catch (err) { fmlHint.textContent = '⚠ ' + err.message; fmlHint.classList.add('bad'); }
     }
-    fmlIn.addEventListener('input', function () {
-      if (this.value.trim()) fd.formula = this.value.trim(); else delete fd.formula;
-      validateFormula(); renderJson();
-    });
-    keyIn.addEventListener('input', function () { fd.key = this.value; renderJson(); });
-    lblIn.addEventListener('input', function () { fd.label = this.value; renderJson(); });
-    typeSel.addEventListener('change', function () { fd.type = this.value; renderJson(); });
-    var row = el('div', { class: 'bep-field-row' }, [
-      el('span', { class: 'bep-ftype', text: fd.type }), keyIn, lblIn, typeSel, del,
-      el('div', { class: 'bep-fml-row' }, [el('span', { class: 'bep-ftype', text: 'ƒ' }), fmlIn, fmlHint])
-    ]);
-    return row;
-  }
-  function collectFields() {
-    def.fields = [];
-    f.querySelectorAll('input, textarea, select').forEach(function (i) {
-      if (i.closest('.bep-form') || i.closest('.bep-footer')) return;
-      var tag = i.tagName.toLowerCase();
-      var type = tag === 'textarea' ? 'textarea' : tag === 'select' ? 'select' : (i.type || 'text');
-      if (type === 'number') type = 'number';
-      var ph = i.placeholder || '';
-      var lbl = ph || (i.labels && i.labels[0] ? (i.labels[0].textContent || '').trim() : '');
-      var key = i.name || i.dataset.path || ('field-' + def.fields.length);
-      def.fields.push({ key: String(key).slice(0, 60), label: String(lbl || key).slice(0, 60), type: type });
-    });
-    def.fields.slice(0, 40).forEach(function (fd) { fieldsWrap.appendChild(fieldRow(fd)); });
-  }
-  var addBtn = el('button', { type: 'button', class: 'btn small', text: '＋ Поле' });
-  addBtn.addEventListener('click', function () {
-    var fd = { key: 'new_field_' + (def.fields.length + 1), label: 'Новое поле', type: 'text' };
-    def.fields.push(fd); fieldsWrap.appendChild(fieldRow(fd)); renderJson();
+    renderJson();
   });
+  delFieldBtn.addEventListener('click', function () {
+    if (!selected || !selected.fd) return;
+    var idx = def.fields.indexOf(selected.fd);
+    if (idx >= 0) def.fields.splice(idx, 1);
+    if (selected.dom.parentNode) selected.dom.parentNode.removeChild(selected.dom);
+    selected = null; showBlockProps(); renderJson();
+  });
+
+  var selected = null; // { fd, dom } — выбранное поле; null = выбран сам блок
+  function showBlockProps() {
+    propsTitle.textContent = 'Свойства блока';
+    propsBody.innerHTML = '';
+    propsBody.appendChild(propForm);
+    propsBody.appendChild(el('div', { class: 'bep-hint', text: 'Кликните по полю внутри блока, чтобы редактировать его свойства.' }));
+  }
+  function showFieldProps(sel) {
+    propsTitle.textContent = 'Свойства поля';
+    propsBody.innerHTML = '';
+    fieldForm.elements.flabel.value = sel.fd.label || '';
+    fieldForm.elements.fkey.value = sel.fd.key || '';
+    fieldForm.elements.ftype.value = sel.fd.type || 'text';
+    fieldForm.elements.fformula.value = sel.fd.formula || '';
+    fmlHint.textContent = ''; fmlHint.className = 'bep-fml-hint';
+    if (sel.fd.formula) {
+      try { parseFormula(sel.fd.formula); fmlHint.textContent = '✓ синтаксис OK'; fmlHint.classList.add('ok'); }
+      catch (err) { fmlHint.textContent = '⚠ ' + err.message; fmlHint.classList.add('bad'); }
+    }
+    propsBody.appendChild(fieldForm);
+    propsBody.appendChild(fmlHint);
+    propsBody.appendChild(delFieldBtn);
+  }
+  function selectField(dom, fd) {
+    if (selected && selected.dom) selected.dom.classList.remove('be-selected');
+    selected = { dom: dom, fd: fd };
+    dom.classList.add('be-selected');
+    showFieldProps(selected);
+  }
+
   var copyBtn = el('button', { type: 'button', class: 'btn small', text: 'Копировать JSON' });
   copyBtn.addEventListener('click', function () {
     renderJson();
     if (navigator.clipboard) navigator.clipboard.writeText(jsonPre.textContent);
     copyBtn.textContent = 'Скопировано ✓'; setTimeout(function () { copyBtn.textContent = 'Копировать JSON'; }, 1200);
   });
-  var footer = el('div', { class: 'bep-footer' }, [addBtn, copyBtn]);
-  var propsPanel = el('div', { class: 'block-editor-panel' }, [
-    el('h3', { text: 'Свойства блока' }), propForm,
-    el('h4', { text: 'Поля (fields)' }), fieldsWrap, footer,
-    el('details', { class: 'bep-json-wrap' }, [el('summary', { text: 'JSON определения (Block Format v1)' }), jsonPre])
-  ]);
+  propsPanel.appendChild(el('div', { class: 'bep-footer' }, [copyBtn]));
+  propsPanel.appendChild(el('details', { class: 'bep-json-wrap' }, [el('summary', { text: 'JSON определения (Block Format v1)' }), jsonPre]));
 
-  /* --- Кнопки действий редактора: Сохранить / Отменить / Закрыть --- */
+  /* ===== Центр: переносим блок; делаем существующие контролы «полями» ===== */
+  var origParent = f.parentNode, nextSibling = f.nextSibling;
+  // оборачиваем не-legend содержимое в .be-canvas, если ещё не обёрнуто
+  var canvas = f.querySelector('.be-canvas');
+  if (!canvas) {
+    canvas = el('div', { class: 'be-canvas' });
+    Array.prototype.slice.call(f.children).forEach(function (c) {
+      if (c.tagName !== 'LEGEND') canvas.appendChild(c);
+    });
+    f.appendChild(canvas);
+  }
+  // инвентаризация полей: каждый input/textarea/select -> .be-field с data-fkey
+  def.fields = [];
+  var seenKeys = {};
+  Array.prototype.slice.call(canvas.querySelectorAll('input, textarea, select')).forEach(function (i, n) {
+    var holder = i.closest('.be-field');
+    if (!holder) {
+      holder = el('div', { class: 'be-field' });
+      i.parentNode.insertBefore(holder, i);
+      holder.appendChild(i);
+    }
+    var tag = i.tagName.toLowerCase();
+    var type = tag === 'textarea' ? 'textarea' : tag === 'select' ? 'select' : (i.type || 'text');
+    var key = i.dataset.fkey || i.name || i.dataset.path || ('field-' + n);
+    key = String(key).slice(0, 60);
+    if (seenKeys[key]) key = key + '-' + n;
+    seenKeys[key] = 1;
+    holder.dataset.fkey = key;
+    holder.dataset.ftype = type;
+    var lblEl = holder.querySelector('.be-flabel');
+    var label = (lblEl && lblEl.textContent) || i.placeholder || key;
+    var fd = { key: key, label: String(label).slice(0, 60), type: type };
+    // перенос ранее заданной формулы из определения
+    if (f.dataset.blockDef) {
+      try {
+        var old = JSON.parse(f.dataset.blockDef);
+        (old.fields || []).forEach(function (o) { if (o.key === key && o.formula) fd.formula = o.formula; });
+      } catch (e) { /* ignore */ }
+    }
+    def.fields.push(fd);
+  });
+
+  function addFieldToBlock(type, label) {
+    var key = 'field_' + (def.fields.length + 1);
+    while (seenKeys[key]) key = key + '_';
+    seenKeys[key] = 1;
+    var fd = { key: key, label: label, type: type };
+    def.fields.push(fd);
+    var dom = makeFieldEl(fd);
+    canvas.appendChild(dom);
+    wireFieldDom(dom, fd);
+    selectField(dom, fd);
+    renderJson();
+    refreshAllTextareas(f);
+  }
+
+  /* mousedown: выбор поля + начало перемещения внутри блока */
+  function wireFieldDom(dom, fd) {
+    dom.addEventListener('mousedown', function (e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        selectField(dom, fd);   // выбор без перехвата ввода
+        return;
+      }
+      selectField(dom, fd);
+      startFieldDrag(e, dom);
+    });
+  }
+  canvas.querySelectorAll('.be-field').forEach(function (dom) {
+    var fd = def.fields.filter(function (x) { return x.key === dom.dataset.fkey; })[0];
+    if (fd) wireFieldDom(dom, fd);
+  });
+
+  function startFieldDrag(e, dom) {
+    e.preventDefault();
+    var moving = dom.cloneNode(true);
+    moving.classList.add('be-dragging');
+    moving.style.position = 'fixed';
+    moving.style.zIndex = '99999';
+    moving.style.pointerEvents = 'none';
+    var r = dom.getBoundingClientRect();
+    moving.style.left = r.left + 'px'; moving.style.top = r.top + 'px'; moving.style.width = r.width + 'px';
+    document.body.appendChild(moving);
+    var ox = e.clientX - r.left, oy = e.clientY - r.top;
+    function onMove(ev) {
+      moving.style.left = (ev.clientX - ox) + 'px';
+      moving.style.top = (ev.clientY - oy) + 'px';
+      var tgt = fieldAtPoint(ev.clientX, ev.clientY);
+      canvas.querySelectorAll('.be-field').forEach(function (x) { x.classList.remove('be-drop-target'); });
+      if (tgt && tgt !== dom) tgt.classList.add('be-drop-target');
+    }
+    function onUp(ev) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      var tgt = fieldAtPoint(ev.clientX, ev.clientY);
+      if (tgt && tgt !== dom) {
+        var rect = tgt.getBoundingClientRect();
+        if (ev.clientY > rect.top + rect.height / 2) tgt.parentNode.insertBefore(dom, tgt.nextSibling);
+        else tgt.parentNode.insertBefore(dom, tgt);
+      }
+      moving.remove();
+      canvas.querySelectorAll('.be-field').forEach(function (x) { x.classList.remove('be-drop-target'); });
+      reorderFieldsFromDOM();
+      renderJson();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+  function fieldAtPoint(x, y) {
+    var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].classList && els[i].classList.contains('be-field') && canvas.contains(els[i])) return els[i];
+    }
+    return null;
+  }
+  function reorderFieldsFromDOM() {
+    var byKey = {};
+    def.fields.forEach(function (fd) { byKey[fd.key] = fd; });
+    var ordered = [];
+    canvas.querySelectorAll('.be-field').forEach(function (dom) {
+      var fd = byKey[dom.dataset.fkey];
+      if (fd) ordered.push(fd);
+    });
+    def.fields.forEach(function (fd) { if (ordered.indexOf(fd) < 0) ordered.push(fd); });
+    def.fields = ordered;
+  }
+
+  /* drop с палитры на холст */
+  canvas.addEventListener('dragover', function (e) {
+    if (e.dataTransfer.types.indexOf('text/x-be-field') >= 0) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+  });
+  canvas.addEventListener('drop', function (e) {
+    var t = e.dataTransfer.getData('text/x-be-field');
+    if (!t) return;
+    e.preventDefault();
+    addFieldToBlock(t, t);
+  });
+  /* клик по пустой области блока — снимаем выбор, показываем свойства блока */
+  f.addEventListener('mousedown', function (e) {
+    if (!e.target.closest('.be-field')) {
+      if (selected && selected.dom) selected.dom.classList.remove('be-selected');
+      selected = null;
+      showBlockProps();
+    }
+  });
+
+  /* Кнопки действий: Сохранить / Отменить / Закрыть */
   var saveBtn = el('button', { type: 'button', class: 'btn small bep-save', text: 'Сохранить' });
   var cancelBtn = el('button', { type: 'button', class: 'btn small bep-cancel', text: 'Отменить' });
   var closeModalBtn = el('button', { type: 'button', class: 'btn small bep-close', text: 'Закрыть' });
   var actionsBar = el('div', { class: 'bep-actions' }, [saveBtn, cancelBtn, closeModalBtn]);
   propsPanel.appendChild(actionsBar);
 
-  // физически переносим блок в панель — все обработчики и данные сохраняются
-  var origParent = f.parentNode, nextSibling = f.nextSibling;
   host.appendChild(f);
-  panel.appendChild(host);
-  panel.appendChild(propsPanel);
+  panel.appendChild(palette);   // слева
+  panel.appendChild(host);      // центр
+  panel.appendChild(propsPanel);// справа
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
-  collectFields(); renderJson();
+  showBlockProps(); renderJson();
 
-  // снимок для отслеживания изменений и отмены
   var snapshot = JSON.stringify({ def: def, html: f.innerHTML });
   function isDirty() {
     syncFromForm();
@@ -4847,10 +5092,11 @@ function openBlockModal(f) {
   }
   function applyEdits() {
     syncFromForm();
+    reorderFieldsFromDOM();
     if (legendEl) legendEl.textContent = def.title;
     f.setAttribute('data-span', String(def.layout.span));
-    f.dataset.blockDef = JSON.stringify(def);   // определение хранится при блоке
-    saveCurrent();                               // фиксируем изменения в localStorage
+    f.dataset.blockDef = JSON.stringify(def);
+    saveCurrent();
     snapshot = JSON.stringify({ def: def, html: f.innerHTML });
     toast('Блок «' + def.title + '» сохранён.');
   }
@@ -4877,7 +5123,6 @@ function openBlockModal(f) {
   blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
                  origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid,
                  isDirty: isDirty, applyEdits: applyEdits };
-  // крестик: справа и чуть выше блока
   var placeClose = function () {
     closeBtn.style.left = (panel.offsetLeft + panel.offsetWidth - 6) + 'px';
     closeBtn.style.top = Math.max(0, panel.offsetTop - 30) + 'px';
