@@ -1215,8 +1215,14 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
   border: 1px solid var(--line, #bbb); border-radius: 4px; padding: 3px 6px;
 }
 .bep-fields { display: flex; flex-direction: column; gap: 4px; }
-.bep-field-row { display: flex; gap: 4px; align-items: center; }
+.bep-field-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .bep-field-row input[type=text] { flex: 1 1 40%; }
+/* Строка формулы — отдельной строкой (на всю ширину) ПОД данными поля */
+.bep-fml-row { flex: 1 1 100%; display: flex; gap: 4px; align-items: center; }
+.bep-fml-row .bep-formula { flex: 1 1 auto; min-width: 0; }
+.bep-fml-hint { font-size: .8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bep-fml-hint.ok { color: var(--ok, #2e7d32); }
+.bep-fml-hint.bad { color: var(--bad, #b3261e); }
 .bep-ftype { flex: 0 0 62px; font-family: monospace; font-size: .75rem; opacity: .75; }
 .bep-del { flex: 0 0 auto; padding: 1px 6px; }
 .bep-footer { display: flex; gap: 8px; margin-top: 10px; }
