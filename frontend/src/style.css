@@ -349,8 +349,10 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 }
 .block-editor-panel h3 { margin: 0 0 8px; font-size: 1rem; }
 .block-editor-panel h4 { margin: 12px 0 6px; font-size: .9rem; }
-.bep-form label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.bep-form label > span { flex: 0 0 110px; }
+/* Свойства блока: метка и значение в одной строке, каждое свойство — отдельная строка */
+.bep-prop-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bep-plabel { flex: 0 0 120px; font-weight: 600; font-size: .85rem; white-space: nowrap; }
+.bep-prop-row input, .bep-prop-row select { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
 .bep-form input, .bep-form select, .bep-field-row input, .bep-field-row select {
   flex: 1 1 auto; min-width: 0; background: var(--field, #fff); color: inherit;
   border: 1px solid var(--line, #bbb); border-radius: 4px; padding: 3px 6px;

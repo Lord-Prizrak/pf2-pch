@@ -1206,8 +1206,10 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 }
 .block-editor-panel h3 { margin: 0 0 8px; font-size: 1rem; }
 .block-editor-panel h4 { margin: 12px 0 6px; font-size: .9rem; }
-.bep-form label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.bep-form label > span { flex: 0 0 110px; }
+/* Свойства блока: метка и значение в одной строке, каждое свойство — отдельная строка */
+.bep-prop-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bep-plabel { flex: 0 0 120px; font-weight: 600; font-size: .85rem; white-space: nowrap; }
+.bep-prop-row input, .bep-prop-row select { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
 .bep-form input, .bep-form select, .bep-field-row input, .bep-field-row select {
   flex: 1 1 auto; min-width: 0; background: var(--field, #fff); color: inherit;
   border: 1px solid var(--line, #bbb); border-radius: 4px; padding: 3px 6px;
@@ -4431,15 +4433,17 @@ function openBlockModal(f) {
     layout: { span: parseInt(f.getAttribute('data-span'), 10) || 4 },
     fields: []
   };
+  function propRow(labelText, inputNode) {
+    return el('div', { class: 'bep-prop-row' }, [el('span', { class: 'bep-plabel', text: labelText }), inputNode]);
+  }
+  var spanSel = el('select', { name: 'span' });
+  [4, 6, 8, 12].forEach(function (v) { spanSel.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
+  spanSel.value = String(def.layout.span);
   var propForm = el('form', { class: 'bep-form' }, [
-    el('label', {}, [el('span', { text: 'Заголовок' }), el('input', { name: 'title', value: def.title })]),
-    el('label', {}, [el('span', { text: 'ID' }), el('input', { name: 'id', value: def.id })]),
-    el('label', {}, [el('span', { text: 'Система' }), el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })]),
-    el('label', {}, [el('span', { text: 'Span (12-сетка)' }), (function () {
-      var s = el('select', { name: 'span' });
-      [4, 6, 8, 12].forEach(function (v) { s.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
-      s.value = String(def.layout.span); return s;
-    })()])
+    propRow('Заголовок', el('input', { name: 'title', value: def.title })),
+    propRow('ID', el('input', { name: 'id', value: def.id })),
+    propRow('Система', el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })),
+    propRow('Span (12-сетка)', spanSel)
   ]);
   function syncFromForm() {
     def.title = propForm.elements.title.value.trim() || def.title;

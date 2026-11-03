@@ -2564,15 +2564,17 @@ function openBlockModal(f) {
     layout: { span: parseInt(f.getAttribute('data-span'), 10) || 4 },
     fields: []
   };
+  function propRow(labelText, inputNode) {
+    return el('div', { class: 'bep-prop-row' }, [el('span', { class: 'bep-plabel', text: labelText }), inputNode]);
+  }
+  var spanSel = el('select', { name: 'span' });
+  [4, 6, 8, 12].forEach(function (v) { spanSel.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
+  spanSel.value = String(def.layout.span);
   var propForm = el('form', { class: 'bep-form' }, [
-    el('label', {}, [el('span', { text: 'Заголовок' }), el('input', { name: 'title', value: def.title })]),
-    el('label', {}, [el('span', { text: 'ID' }), el('input', { name: 'id', value: def.id })]),
-    el('label', {}, [el('span', { text: 'Система' }), el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })]),
-    el('label', {}, [el('span', { text: 'Span (12-сетка)' }), (function () {
-      var s = el('select', { name: 'span' });
-      [4, 6, 8, 12].forEach(function (v) { s.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
-      s.value = String(def.layout.span); return s;
-    })()])
+    propRow('Заголовок', el('input', { name: 'title', value: def.title })),
+    propRow('ID', el('input', { name: 'id', value: def.id })),
+    propRow('Система', el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })),
+    propRow('Span (12-сетка)', spanSel)
   ]);
   function syncFromForm() {
     def.title = propForm.elements.title.value.trim() || def.title;
