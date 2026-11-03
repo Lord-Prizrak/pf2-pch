@@ -2083,6 +2083,10 @@ function normalizeSheet(raw) {
   out.meta.createdAt = out.meta.createdAt || nowISO();
   out.meta.updatedAt = out.meta.updatedAt || nowISO();
   out.schema = SCHEMA;
+  // схема листа (кастомные блоки и определения) — часть данных персонажа
+  if (raw && raw.sheet && typeof raw.sheet === 'object') {
+    out.sheet = { blocks: Array.isArray(raw.sheet.blocks) ? raw.sheet.blocks : [] };
+  }
   // acBase: если есть только итоговое ac (старые данные)
   if (raw && raw.armor && raw.armor.ac != null && raw.armor.acBase == null) {
     out.armor.acBase = raw.armor.ac;
@@ -2272,8 +2276,75 @@ function commitEdits() { /* input-обработчики пишут сразу �
 function saveCurrentState(txt) { setState(txt); }
 function saveCurrent() {
   if (!State.sheet) return;
+  State.sheet.sheet = collectSheetSchema();   // схема листа travels с данными персонажа
   Store.upsert(State.sheet);
   State.dirty = false;
+}
+
+/* ============================================================
+   СХЕМА ЛИСТА (sheet.blocks в JSON персонажа, формат Block v1)
+   Кастомные блоки и их определения хранятся внутри данных
+   персонажа — переживают экспорт/импорт, сохранение в HTML и
+   синхронизацию с сервером. Встроенные блоки не сериализуются:
+   они есть в шаблоне листа.
+   ============================================================ */
+var DATA_TAB_IDS = ['sheet', 'inventory', 'bio'];
+function isCustomBlock(f) {
+  return !!(f.classList && f.classList.contains('sec-custom'));
+}
+function blockHostTab(f) {
+  var page = f.closest ? f.closest('.tabpage') : null;
+  return page ? page.id.replace('tab-', '') : 'sheet';
+}
+function collectSheetSchema() {
+  var blocks = [];
+  $all('.tabpage fieldset.sec-custom').forEach(function (f) {
+    var def = null;
+    try { def = JSON.parse(f.dataset.blockDef || 'null'); } catch (e) { /* ignore */ }
+    if (!def || !def.id) def = { formatVersion: 1, kind: 'block', id: f.dataset.bid || ('custom-' + blocks.length), title: blockTitle(f), fields: [] };
+    def.title = blockTitle(f) || def.title;      // актуальный заголовок из legend
+    var html = '';
+    try {
+      var c = f.cloneNode(true);
+      c.removeAttribute('data-bid'); c.removeAttribute('data-block-def');
+      c.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+      c.querySelectorAll('.sec-controls').forEach(function (n) { n.remove(); });
+      c.querySelectorAll('legend').forEach(function (n) { n.classList.remove('drag-handle'); });
+      html = c.innerHTML;
+    } catch (e) { /* ignore */ }
+    blocks.push({ bid: f.dataset.bid || '', tab: blockHostTab(f), def: def, html: html });
+  });
+  return { version: 1, blocks: blocks };
+}
+function applySheetSchema(sheetData) {
+  // 1) удалить все кастомные блоки текущего персонажа со всех вкладок
+  $all('.tabpage fieldset.sec-custom').forEach(function (f) { f.remove(); });
+  var sch = sheetData && sheetData.sheet;
+  if (!sch || !Array.isArray(sch.blocks)) return;
+  sch.blocks.forEach(function (b) {
+    if (!b || !b.def) return;
+    var page = document.getElementById('tab-' + (b.tab || 'sheet'));
+    if (!page) return;
+    var fs = el('fieldset', { class: 'sec sec-custom' });
+    fs.appendChild(el('legend', { text: (b.def && b.def.title) || 'Блок' }));
+    var body = el('div', { class: 'new-block-body' });
+    if (b.html) {
+      body.innerHTML = b.html;   // восстановленная разметка полей
+      fs.appendChild(body);
+    } else {
+      fs.appendChild(body);
+      ((b.def && b.def.fields) || []).forEach(function (fd) {
+        if (fd.type === 'checkbox') body.appendChild(el('label', { class: 'nb-check' }, [blockFieldInput(fd), el('span', { text: ' ' + fd.label })]));
+        else body.appendChild(el('label', { class: 'nb-field' }, [el('span', { text: fd.label }), blockFieldInput(fd)]));
+      });
+    }
+    var area = $('.sheet-area[data-col="left"]', page) || page;
+    area.insertBefore(fs, area.firstChild);
+    if (b.bid) fs.dataset.bid = b.bid;
+    fs.dataset.blockDef = JSON.stringify(b.def);
+    if (b.def.layout && b.def.layout.span) fs.setAttribute('data-span', String(b.def.layout.span));
+    wireBlockDrag(fs);   // восстановленные блоки перетаскиваются как обычные
+  });
 }
 
 function profPicker(cur, onchange) {
@@ -2951,6 +3022,7 @@ function updateComputed() {
 
 function renderAll() {
   if (!State.sheet) return;
+  applySheetSchema(State.sheet);   // кастомные блоки из данных персонажа
   renderCharSwitcher();
   bindInputs(document);
   renderAbilities();
@@ -3180,6 +3252,7 @@ function importData(data, opts) {
 }
 function exportCurrentJSON(pretty) {
   var s = clone(State.sheet);
+  s.sheet = collectSheetSchema();   // схема листа travels с данными персонажа
   return JSON.stringify(s, null, pretty === false ? 0 : 2);
 }
 function refreshJsonEditor() {
@@ -3246,6 +3319,7 @@ function loadServerCharacters(server) {
 
 function pushToServer(server, sheet, charId) {
   var payload = clone(sheet);
+  payload.sheet = collectSheetSchema();   // схема листа — часть данных персонажа
   return api(server, '/api/characters' + (charId ? '/' + encodeURIComponent(charId) : ''), {
     method: charId ? 'PUT' : 'POST', body: payload
   }).then(function (res) {
@@ -3355,7 +3429,8 @@ function wireIOButtons() {
     download(slugify(State.sheet.name) + '.json', exportCurrentJSON(), 'application/json');
   });
   $('#exp-html').addEventListener('click', function () {
-    download(slugify(State.sheet.name) + '-sheet.html', buildStandaloneHTML([clone(State.sheet)]), 'text/html');
+    var s = clone(State.sheet); s.sheet = collectSheetSchema();
+    download(slugify(State.sheet.name) + '-sheet.html', buildStandaloneHTML([s]), 'text/html');
   });
   $('#exp-all-json').addEventListener('click', function () {
     var map = Store.loadAll();
