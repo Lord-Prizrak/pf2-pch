@@ -1,6 +1,2 @@
-server/charsrv
-server/pf2e-server
-server/pf2e-server.exe
-server/*.exe
-server/data/
-*.bundle
+__pycache__/
+*.pyc
