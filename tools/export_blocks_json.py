@@ -126,6 +126,30 @@ def size_class(node):
     return None
 
 
+def extra_cls(node):
+    """CSS-классы узла, не вошедшие в семантический словарь (role/size).
+    Сохраняются в JSON как cls — чтобы рендерер из JSON воспроизводил
+    разметку 1-в-1 и HTML/JS не нуждались в готовых блоках."""
+    known = {'xs', 's', 'm', 'hidden', 'block', 'grow', 'half'} | DIV_ROLES | set(LIST_KINDS)
+    rest = [c for c in node.cls() if c not in known]
+    return ' '.join(rest) or None
+
+
+def with_common(e, node):
+    """Общие атрибуты: id, классы вне словаря, hidden, data-dkey."""
+    nid = node.attrs.get('id', '')
+    if nid:
+        e['id'] = nid
+    ec = extra_cls(node)
+    if ec:
+        e['cls'] = ec
+    if 'hidden' in node.cls():
+        e['hidden'] = True
+    if 'data-dkey' in node.attrs:
+        e['dkey'] = node.attrs['data-dkey']
+    return e
+
+
 def is_dynamic(node):
     """True, если содержимое элемента вычисляется JS (данные персонажа),
     т.е. в режиме «только дизайн» элемент пустой/обнулённый."""
@@ -206,6 +230,11 @@ def control_of(node):
             ctl['id'] = aid
             if aid in ACTIONS:
                 ctl['action'] = ACTIONS[aid]
+        ec = extra_cls(node)
+        if ec:
+            ctl['cls'] = ec
+        if 'hidden' in node.cls():
+            ctl['hidden'] = True
         return ctl
     if tag == 'textarea':
         ctl = {'kind': 'textarea', 'rows': int(node.attrs.get('rows', 2))}
@@ -215,6 +244,9 @@ def control_of(node):
             ctl['id'] = node.attrs['id']
         if node.attrs.get('spellcheck') == 'false':
             ctl['spellcheck'] = False
+        ec = extra_cls(node)
+        if ec:
+            ctl['cls'] = ec
         return ctl
     if tag == 'select':
         opts = [{'value': o.attrs.get('value', ''), 'label': o.text()}
@@ -222,6 +254,11 @@ def control_of(node):
         ctl = {'kind': 'select', 'options': opts}
         if get_bind(node):
             ctl['bind'] = get_bind(node)
+        if node.attrs.get('id'):
+            ctl['id'] = node.attrs['id']
+        ec = extra_cls(node)
+        if ec:
+            ctl['cls'] = ec
         return ctl
     if tag == 'button':
         ctl = {'kind': 'button', 'type': node.attrs.get('type', 'button'),
@@ -233,6 +270,11 @@ def control_of(node):
             ctl['id'] = aid
             if aid in ACTIONS:
                 ctl['action'] = ACTIONS[aid]
+        ec = extra_cls(node)
+        if ec:
+            ctl['cls'] = ec
+        if 'hidden' in node.cls():
+            ctl['hidden'] = True
         return ctl
     return None
 
@@ -275,6 +317,11 @@ def emit_node(node, out):
             e['role'] = 'grow'
         if node.has_cls('half'):
             e['role'] = 'half'
+        ec = extra_cls(node)
+        if ec:
+            e['cls'] = ec
+        if node.attrs.get('id'):
+            e['forId'] = node.attrs['id']
         if ctl and (ctl.get('bind') or is_dynamic(node)):
             e['dynamic'] = True
         out.append(e)
@@ -289,20 +336,26 @@ def emit_node(node, out):
         return
     if tag == 'span':
         nid = node.attrs.get('id', '')
-        if nid in LIST_KINDS:
+        kids = []
+        walk_children(node, kids)
+        if nid in LIST_KINDS and not kids:
             e = {'kind': 'container', 'ref': nid, 'list': LIST_KINDS[nid]}
             if is_dynamic(node):
                 e['dynamic'] = True
+            with_common(e, node)
             out.append(e)
             return
-        kids = []
-        walk_children(node, kids)
         e = {'kind': 'text', 'role': 'value' if nid else 'inline',
              'html': node.text()}
         if nid:
             e['ref'] = nid
         if kids:
             e['children'] = kids
+        ec = extra_cls(node)
+        if ec:
+            e['cls'] = ec
+        if 'data-dkey' in node.attrs:
+            e['dkey'] = node.attrs['data-dkey']
         if is_dynamic(node):
             e['dynamic'] = True
         out.append(e)
@@ -311,21 +364,36 @@ def emit_node(node, out):
         e = {'kind': 'text', 'role': 'value', 'html': node.text()}
         if node.attrs.get('id'):
             e['ref'] = node.attrs['id']
+        ec = extra_cls(node)
+        if ec:
+            e['cls'] = ec
+        if 'data-dkey' in node.attrs:
+            e['dkey'] = node.attrs['data-dkey']
         if is_dynamic(node):
             e['dynamic'] = True
         out.append(e)
         return
     if tag == 'div':
         nid = node.attrs.get('id', '')
-        if nid in LIST_KINDS:
+        children = []
+        walk_children(node, children)
+        if nid in LIST_KINDS and not children:
             e = {'kind': 'list', 'ref': nid, 'list': LIST_KINDS[nid]}
             if is_dynamic(node):
                 e['dynamic'] = True
+            with_common(e, node)
             out.append(e)
             return
-        children = []
-        walk_children(node, children)
         if not children:
+            # пустой div сохраняем как static — разметка воспроизводится 1-в-1
+            e = {'kind': 'static', 'tag': 'div'}
+            with_common(e, node)
+            role = el_role(node)
+            if role:
+                e['role'] = role
+            if is_dynamic(node):
+                e['dynamic'] = True
+            out.append(e)
             return
         cls = node.cls()
         if any(c in DIV_ROLES for c in cls):
@@ -335,8 +403,17 @@ def emit_node(node, out):
             role = el_role(node)
             if role:
                 e['role'] = role
+        ec = extra_cls(node)
+        if ec:
+            e['cls'] = ec
         if nid:
             e['ref'] = nid
+        if 'hidden' in cls:
+            e['hidden'] = True
+        if 'data-dkey' in node.attrs:
+            e['dkey'] = node.attrs['data-dkey']
+        if is_dynamic(node):
+            e['dynamic'] = True
         out.append(e)
         return
     if tag == 'fieldset':
@@ -362,6 +439,9 @@ def emit_node(node, out):
                     static_rows.append(cells)
         e = {'kind': 'static', 'tag': 'table',
              'headers': headers, 'columns': len(headers)}
+        ec = extra_cls(node)
+        if ec:
+            e['cls'] = ec
         if tbodies and tbodies[0].attrs.get('id'):
             e['ref'] = tbodies[0].attrs['id']
             e['list'] = 'table-rows'

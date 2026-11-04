@@ -381,7 +381,28 @@ function switchCharacter(id) {
    загружает его при старте (window.__BLOCKS_JSON__ инлайнится
    сборщиком для file://, иначе fetch), сверяет блоки страницы
    с определениями и умеет строить блоки из JSON целиком.
+   Рендер-слой (beElement/beControl/...) отвечает ТОЛЬКО за
+   отображение: вся структура блоков берётся из JSON.
    ============================================================ */
+
+/* Словарь типов kind -> тег; неизвестное содержимое хранится в cls/html/id/ref */
+var BE_TAGS = { container: 'div', section: 'div', list: 'div', static: 'div',
+                text: 'span', label: 'label', button: 'button', hint: 'div' };
+/* role контейнера = CSS-класс строкой (row, bigstats, stat, hp-controls...) */
+var BE_ROLES = { row: 1, 'hp-controls': 1, bigstats: 1, stat: 1, 'hps-row': 1,
+                 'hp-stat': 1, 'shield-stat': 1, 'hps-quick': 1, 'abil-table': 1,
+                 'lang-list': 1, 'lang-items': 1, 'lang-add': 1, grid3: 1,
+                 'bio-grid': 1, 'srv-layout': 1, 'srv-left': 1, 'srv-right': 1,
+                 'server-list': 1, 'srv-chars': 1, 'block-vis-list': 1,
+                 'combat-strip': 1, 'sheet-area': 1, 'sheet-grid': 1, hint: 1 };
+/* служебные атрибуты, не превращаемые в HTML-атрибуты напрямую */
+var BE_META = { kind: 1, tag: 1, children: 1, control: 1, ref: 1, role: 1,
+                size: 1, cls: 1, html: 1, text: 1, list: 1, dynamic: 1,
+                rows: 1, columns: 1, headers: 1, hidden: 1, dkey: 1, forId: 1,
+                id: 1, bind: 1, action: 1, hp: 1, type: 1, placeholder: 1,
+                attrSize: 1, spellcheck: 1, accept: 1, value: 1, subRef: 1,
+                subText: 1, label: 1 };
+
 function loadBlocksJson() {
   if (window.__BLOCKS_JSON__) {
     try { State.blocksJson = JSON.parse(window.__BLOCKS_JSON__); } catch (e) { /* ignore */ }

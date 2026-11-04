@@ -162,7 +162,8 @@
          "kind": "container",
          "ref": "languages-list",
          "list": "chips",
-         "dynamic": true
+         "dynamic": true,
+         "id": "languages-list"
         }
        ]
       }
@@ -209,7 +210,8 @@
        "kind": "container",
        "ref": "hero-points",
        "list": "chips",
-       "dynamic": true
+       "dynamic": true,
+       "id": "hero-points"
       }
      ]
     }
@@ -240,7 +242,8 @@
      "kind": "list",
      "ref": "ability-cards",
      "list": "cards",
-     "dynamic": true
+     "dynamic": true,
+     "id": "ability-cards"
     }
    ]
   },
@@ -366,13 +369,15 @@
      "kind": "list",
      "ref": "armor-block",
      "list": "armor",
-     "dynamic": true
+     "dynamic": true,
+     "id": "armor-block"
     },
     {
      "kind": "list",
      "ref": "saves-block",
      "list": "saves",
-     "dynamic": true
+     "dynamic": true,
+     "id": "saves-block"
     },
     {
      "kind": "container",
@@ -519,9 +524,22 @@
      ]
     },
     {
-     "kind": "list",
+     "kind": "section",
+     "children": [
+      {
+       "kind": "static",
+       "tag": "div",
+       "id": "hp-bar"
+      },
+      {
+       "kind": "text",
+       "role": "value",
+       "html": "",
+       "ref": "hp-text",
+       "dynamic": true
+      }
+     ],
      "ref": "hp-bar-wrap",
-     "list": "bar",
      "dynamic": true
     },
     {
@@ -532,31 +550,36 @@
        "kind": "button",
        "type": "button",
        "text": "−1",
-       "action": "hp:-1"
+       "action": "hp:-1",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "−5",
-       "action": "hp:-5"
+       "action": "hp:-5",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "+1",
-       "action": "hp:1"
+       "action": "hp:1",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "+5",
-       "action": "hp:5"
+       "action": "hp:5",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "Отдых",
-       "action": "hp:full"
+       "action": "hp:full",
+       "cls": "btn"
       },
       {
        "kind": "text",
@@ -610,7 +633,8 @@
        "kind": "container",
        "ref": "perception-prof",
        "list": "badge",
-       "dynamic": true
+       "dynamic": true,
+       "id": "perception-prof"
       }
      ]
     },
@@ -618,7 +642,8 @@
      "kind": "list",
      "ref": "skills-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "skills-block"
     }
    ]
   },
@@ -634,7 +659,8 @@
      "kind": "list",
      "ref": "strikes-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "strikes-block"
     }
    ]
   },
@@ -650,7 +676,8 @@
      "kind": "list",
      "ref": "weapon-prof-block",
      "list": "checkbox-grid",
-     "dynamic": true
+     "dynamic": true,
+     "id": "weapon-prof-block"
     },
     {
      "kind": "container",
@@ -737,7 +764,8 @@
        "kind": "list",
        "ref": "hps-quick",
        "list": "buttons",
-       "dynamic": true
+       "dynamic": true,
+       "id": "hps-quick"
       }
      ]
     }
@@ -755,7 +783,8 @@
      "kind": "list",
      "ref": "combat-summary",
      "list": "summary",
-     "dynamic": true
+     "dynamic": true,
+     "id": "combat-summary"
     }
    ]
   },
@@ -771,7 +800,8 @@
      "kind": "list",
      "ref": "spellcasting-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "spellcasting-block"
     }
    ]
   },
@@ -787,7 +817,8 @@
      "kind": "list",
      "ref": "feats-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "feats-block"
     }
    ]
   },
@@ -803,7 +834,8 @@
      "kind": "list",
      "ref": "actions-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "actions-block"
     }
    ]
   },
@@ -890,7 +922,8 @@
      "kind": "list",
      "ref": "inv-worn",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-worn"
     }
    ]
   },
@@ -906,7 +939,8 @@
      "kind": "list",
      "ref": "inv-held",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-held"
     }
    ]
   },
@@ -922,7 +956,8 @@
      "kind": "list",
      "ref": "inv-consumables",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-consumables"
     }
    ]
   },
@@ -938,7 +973,8 @@
      "kind": "list",
      "ref": "inv-other",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-other"
     }
    ]
   },
@@ -1275,6 +1311,7 @@
        "text": "Добавить сервер",
        "id": "srv-add",
        "action": "server:add",
+       "cls": "btn",
        "dynamic": true
       }
      ]
@@ -1283,7 +1320,8 @@
      "kind": "list",
      "ref": "server-list",
      "list": "servers",
-     "dynamic": true
+     "dynamic": true,
+     "id": "server-list"
     }
    ]
   },
@@ -1299,7 +1337,8 @@
      "kind": "list",
      "ref": "srv-auth",
      "list": "auth-form",
-     "dynamic": true
+     "dynamic": true,
+     "id": "srv-auth"
     }
    ]
   },
@@ -1315,7 +1354,8 @@
      "kind": "list",
      "ref": "srv-chars",
      "list": "chars",
-     "dynamic": true
+     "dynamic": true,
+     "id": "srv-chars"
     }
    ]
   },
@@ -1332,35 +1372,40 @@
      "type": "button",
      "text": "Скопировать JSON в буфер",
      "id": "exp-json-clipboard",
-     "action": "export:json-clipboard"
+     "action": "export:json-clipboard",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать JSON-файл",
      "id": "exp-json-file",
-     "action": "export:json-file"
+     "action": "export:json-file",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать HTML с персонажем",
      "id": "exp-html",
-     "action": "export:html"
+     "action": "export:html",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать все персонажи (JSON)",
      "id": "exp-all-json",
-     "action": "export:all-json"
+     "action": "export:all-json",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать HTML со всеми",
      "id": "exp-all-html",
-     "action": "export:all-html"
+     "action": "export:all-html",
+     "cls": "btn"
     }
    ]
   },
@@ -1377,19 +1422,22 @@
      "type": "button",
      "text": "Из буфера обмена",
      "id": "imp-json-clipboard",
-     "action": "import:json-clipboard"
+     "action": "import:json-clipboard",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Из JSON-файла",
      "id": "imp-json-file-btn",
-     "action": "import:json-file"
+     "action": "import:json-file",
+     "cls": "btn"
     },
     {
      "kind": "input",
      "type": "file",
      "id": "imp-json-file",
+     "hidden": true,
      "action": "input:imp-json-file"
     },
     {
@@ -1397,12 +1445,14 @@
      "type": "button",
      "text": "Из HTML-файла листа",
      "id": "imp-html-btn",
-     "action": "import:html"
+     "action": "import:html",
+     "cls": "btn"
     },
     {
      "kind": "input",
      "type": "file",
      "id": "imp-html-file",
+     "hidden": true,
      "action": "input:imp-html-file"
     },
     {
@@ -1410,12 +1460,14 @@
      "type": "button",
      "text": "Из PDF-листа (fields→JSON)",
      "id": "imp-pdf-btn",
-     "action": "import:pdf"
+     "action": "import:pdf",
+     "cls": "btn"
     },
     {
      "kind": "input",
      "type": "file",
      "id": "imp-pdf-file",
+     "hidden": true,
      "action": "input:imp-pdf-file"
     }
    ]
@@ -1433,14 +1485,22 @@
      "type": "button",
      "text": "Загрузить текущего на сервер ⤴",
      "id": "push-server",
-     "action": "server:push"
+     "action": "server:push",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Обновить текущего с сервера ⤓",
      "id": "pull-server",
-     "action": "server:pull"
+     "action": "server:pull",
+     "cls": "btn"
+    },
+    {
+     "kind": "static",
+     "tag": "div",
+     "cls": "hint",
+     "role": "hint"
     }
    ]
   },
@@ -1469,14 +1529,16 @@
        "type": "button",
        "text": "Применить из текстового поля",
        "id": "json-apply",
-       "action": "json:apply"
+       "action": "json:apply",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "Обновить поле из листа",
        "id": "json-refresh",
-       "action": "json:refresh"
+       "action": "json:refresh",
+       "cls": "btn"
       }
      ]
     }
@@ -1489,7 +1551,22 @@
    "domId": null,
    "tab": "blockvis",
    "column": null,
-   "elements": []
+   "elements": [
+    {
+     "kind": "static",
+     "tag": "div",
+     "cls": "hint",
+     "role": "hint"
+    },
+    {
+     "kind": "static",
+     "tag": "div",
+     "id": "block-vis-list",
+     "cls": "block-vis-list",
+     "role": "block-vis-list",
+     "dynamic": true
+    }
+   ]
   }
  ]
 }
