@@ -577,6 +577,7 @@ function beElement(e) {
         var bh = document.createElement('pf2e-field-button');
         if (e.cls) bh.className = e.cls;
         if (e.action) bh.setAttribute('action', e.action);
+        if (e.hp != null) bh.setAttribute('hp', String(e.hp));
         if (e.type) bh.setAttribute('type', e.type);
         bh.textContent = e.text || '';
         if (e.id) bh.id = e.id;
@@ -2168,6 +2169,12 @@ function wireActions() {
     toast('PDF-импорт: сконвертируйте файл tools/extract.py и импортируйте JSON.', true);
     ev.target.value = '';
   });
+  /* action-ключи input:* — клик по соответствующему скрытому file-инпуту/id */
+  A['input:imp-json-file'] = function () { var f = document.getElementById('imp-json-file'); if (f) (f.control || f).click(); };
+  A['input:imp-html-file'] = function () { var f = document.getElementById('imp-html-file'); if (f) (f.control || f).click(); };
+  A['input:imp-pdf-file'] = function () { var f = document.getElementById('imp-pdf-file'); if (f) (f.control || f).click(); };
+  A['input:json-editor'] = function () { var ed = document.getElementById('json-editor'); if (ed) (ed.control || ed).focus(); };
+  A['input:srv-url'] = function () { var inp = document.getElementById('srv-url'); if (inp) (inp.control || inp).focus(); };
 }
 
 /* ---------------- темы оформления (цвета + раскладка) ---------------- */
