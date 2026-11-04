@@ -2960,17 +2960,23 @@ function openBlockModal(f) {
   }
   var designSaved = null; // read-only снимок значений до перехода в режим дизайна
 
-  /* В режиме «только дизайн» блок отображается ЧИСТЫМ — как пустой лист без
-     данных текущего персонажа. Значения input/textarea/select скрываются через
-     CSS (value не трогается — данные возвращаются мгновенно при выключении),
-     списковые строки (языки, навыки, заклинания…) прячутся целиком, чтобы не
-     оставалось пустых плашек и кнопок. Поля можно перемещать и выделять для
+  /* В режиме «только дизайн» блок отображается ЧИСТЫМ — точно как такой же
+     блок на пустом листе нового персонажа: без данных, списков, кнопок и
+     вычисляемых чисел. Реализация — клон исходной разметки блока (f.dataset
+     .blockDef/html снимаются до открытия редактора): в клоне обнуляются
+     значения всех контролов, удаляются контейнеры динамических списков и
+     статические данные; полученный HTML подставляется в canvas. Исходные DOM
+     узлы (со всеми слушателями и значениями) сохраняются в be-ghost и
+     возвращаются при выключении режима. Поля можно перемещать и выделять для
      просмотра свойств, но ввод данных и прочие взаимодействия заблокированы. */
+
   /* Контейнеры, полностью перестраиваемые renderAll(): если редактор открыт
      в режиме дизайна и такой контейнер попадает под перерисовку — сразу же
      прячем его содержимое повторно. */
   var DYNAMIC_LIST_SEL = '#languages-list, #skills-block, #strikes-block, ' +
     '#spellcasting-block, #feats-block, #actions-block, #inventory-block, ' +
+    '#weapon-prof-block, '#hero-points, #armor-block, #saves-block, ' +
+    '#abilities-body, #ability-cards, ' +
     '.lang-items, .lang-add';
   function hideOneList(box) {
     if (box.getAttribute('data-be-hidden')) return;
@@ -2992,18 +2998,67 @@ function openBlockModal(f) {
       box.removeAttribute('data-be-hidden');
     });
   }
+
+  /* ---- «пустой блок»: оригинальный HTML сохраняется в ghost-контейнер ---- */
+  function emptyCanvasHTML(src) {
+    var c = src.cloneNode(true);
+    // все значения контролов — пусто (атрибут value не ставится: placeholder остаётся)
+    $all('input, textarea, select', c).forEach(function (i) {
+      if (i.type === 'checkbox' || i.type === 'radio') { i.removeAttribute('checked'); i.checked = false; }
+      else { i.removeAttribute('value'); i.value = ''; }
+      if (i.tagName === 'SELECT') {
+        Array.prototype.slice.call(i.options, 1).forEach(function (o) { o.remove(); });
+        var first = i.options[0];
+        if (first) { first.selected = true; first.removeAttribute('selected'); }
+      }
+    });
+    // динамические списки целиком убираем из пустого вида
+    $all(DYNAMIC_LIST_SEL, c).forEach(function (n) { n.remove(); });
+    // вычисляемые/данные текстовые узлы <b>/<span>/<p>, у которых есть id или data-dkey
+    $all('b[id], span[id], p[id], [data-dkey]', c).forEach(function (n) {
+      if (n.matches(DYNAMIC_LIST_SEL)) return;
+      if (n.querySelector && n.querySelector('button')) return; // элементы управления не трогаем
+      n.textContent = '';
+    });
+    return c.innerHTML;
+  }
+  function enterDesignMode() {
+    if (canvas.getAttribute('data-be-orig-stored')) return; // уже в пустом виде
+    designSaved = snapshotFieldValues();                    // read-only снимок значений
+    var ghost = document.createElement('div');
+    ghost.className = 'be-ghost';
+    while (canvas.firstChild) ghost.appendChild(canvas.firstChild); // сохраняем узлы со слушателями
+    canvas.appendChild(ghost);
+    canvas.insertAdjacentHTML('afterbegin', emptyCanvasHTML(ghost));
+    canvas.setAttribute('data-be-orig-stored', '1');
+  }
+  function leaveDesignMode() {
+    if (!canvas.getAttribute('data-be-orig-stored')) {
+      // случай, когда renderAll перестроил canvas: просто снимаем скрытие списков
+      showDynamicLists();
+      return;
+    }
+    var ghost = canvas.querySelector(':scope > .be-ghost');
+    if (ghost) while (ghost.firstChild) canvas.appendChild(ghost.firstChild);
+    ghost && ghost.remove();
+    canvas.removeAttribute('data-be-orig-stored');
+    restoreBlockValues(designSaved);
+    designSaved = null;
+    //重新wire drag-обработчики сохранённых полей (слушатели переехали вместе с узлами)
+    canvas.querySelectorAll('.be-field').forEach(function (dom) {
+      var fd = def.fields.filter(function (x) { return x.key === dom.dataset.fkey; })[0];
+      if (fd) wireFieldDom(dom, fd);
+    });
+  }
   function applyDesignMode() {
     f.classList.toggle('be-design-mode', designOnly);
     panel.classList.toggle('be-design-on', designOnly);
     if (designOnly) {
-      designSaved = snapshotFieldValues(); // снимок на всякий случай (CSS-скрытие его не меняет)
-      hideDynamicLists();
+      enterDesignMode();
       toast('Режим «Только дизайн»: блок показан пустым, ввод отключён.');
     } else {
-      /* Возврат к рабочему режиму: снимаем скрытие — данные персонажа те же */
-      showDynamicLists();
-      restoreBlockValues(designSaved);
-      designSaved = null;
+      /* Возврат к рабочему режиму: оригинальные узлы уже на месте */
+      leaveDesignMode();
       refreshAllTextareas(f);
     }
   }
