@@ -320,7 +320,8 @@ var State = {
   tab: 'sheet',
   selectedServer: null, // url
   serverChars: {},      // url -> [chars]
-  autoSaveTimer: null
+  autoSaveTimer: null,
+  blocksJson: null      // описание всех блоков из frontend/blocks.json (Block Format v1)
 };
 
 /* ---------------- вкладки ---------------- */
@@ -371,6 +372,124 @@ function switchCharacter(id) {
   State.sheet = normalizeSheet(map[id]);
   localStorage.setItem(LS_CURRENT, id);
   renderAll();
+}
+
+/* ============================================================
+   BLOCKS.JSON — описание всех блоков листа (Block Format v1)
+   Единый источник структуры: frontend/blocks.json генерируется
+   tools/export_blocks_json.py из разметки шаблона. Приложение
+   загружает его при старте (window.__BLOCKS_JSON__ инлайнится
+   сборщиком для file://, иначе fetch), сверяет блоки страницы
+   с определениями и умеет строить блоки из JSON целиком.
+   ============================================================ */
+function loadBlocksJson() {
+  if (window.__BLOCKS_JSON__) {
+    try { State.blocksJson = JSON.parse(window.__BLOCKS_JSON__); } catch (e) { /* ignore */ }
+    return Promise.resolve(State.blocksJson);
+  }
+  var base = document.currentScript && document.currentScript.src;
+  var url = 'blocks.json';
+  if (base && /^https?:/.test(base)) url = base.replace(/[^/]*$/, 'blocks.json');
+  return fetch(url).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { State.blocksJson = d; return d; })
+    .catch(function () { return null; });
+}
+function blockDefById(id) {
+  var bs = State.blocksJson && State.blocksJson.blocks;
+  if (!bs) return null;
+  for (var i = 0; i < bs.length; i++) if (bs[i].id === id) return bs[i];
+  return null;
+}
+/* Элементы блока -> плоский список (для обхода валидатором/дизайнером) */
+function blockElementsFlat(def) {
+  var out = [];
+  (function walk(list) {
+    (list || []).forEach(function (e) {
+      out.push(e);
+      if (e.children) walk(e.children);
+    });
+  })(def && def.elements);
+  return out;
+}
+function beControl(c) {
+  var inp;
+  if (c.kind === 'textarea') inp = el('textarea', { rows: String(c.rows || 3) });
+  else {
+    inp = el('input', { type: c.type || 'text' });
+    if (c.size) inp.className = c.size;
+    if (c.attrSize) inp.setAttribute('size', String(c.attrSize));
+  }
+  if (c.bind) inp.setAttribute('data-bind', c.bind);
+  if (c.placeholder) inp.placeholder = c.placeholder;
+  if (c.id) inp.id = c.id;
+  return inp;
+}
+/* Построение содержимого fieldset по JSON-определению блока.
+   Динамические контейнеры (списки, таблицы) остаются пустыми —
+   их наполняют штатные render*-функции. */
+function buildBlockFromDef(def) {
+  var body = el('div', { class: 'new-block-body' });
+  (def.elements || []).forEach(function (e) { body.appendChild(beElement(e)); });
+  return body;
+}
+function beElement(e) {
+  switch (e.kind) {
+    case 'container': {
+      var div = el('div', { class: e.role ? ('row' === e.role ? 'row' : e.role) : 'row' });
+      (e.children || []).forEach(function (ch) { div.appendChild(beElement(ch)); });
+      return div;
+    }
+    case 'label': {
+      var lab = el('label', { class: 'nb-field' });
+      if (e.text) lab.appendChild(el('span', { text: e.text }));
+      if (e.control) lab.appendChild(beControl(e.control));
+      (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
+      return lab;
+    }
+    case 'text': {
+      var sp = el('span', {});
+      if (e.html) sp.innerHTML = e.html;
+      if (e.ref) sp.id = e.ref;
+      if (e.dynamic) sp.setAttribute('data-dkey', e.ref || '');
+      (e.children || []).forEach(function (ch) { sp.appendChild(beElement(ch)); });
+      return sp;
+    }
+    case 'input':
+    case 'textarea':
+      return beControl(Object.assign({ kind: e.kind }, e));
+    case 'button': {
+      var b = el('button', { type: e.type || 'button', text: e.text || '' });
+      if (e.action) b.setAttribute('data-action', e.action);
+      if (e.ref) b.id = e.ref;
+      return b;
+    }
+    case 'list':
+    case 'static': {
+      var tag = e.tag || 'div';
+      var n = el(tag, {});
+      if (e.ref) n.id = e.ref;
+      return n;
+    }
+    default:
+      return el('div', {});
+  }
+}
+/* Сверка блоков страницы с blocks.json: возвращает расхождения
+   (used in tests/diagnostics; ничего не меняет). */
+function verifyBlocksAgainstJson() {
+  var diffs = [];
+  var bs = State.blocksJson && State.blocksJson.blocks;
+  if (!bs) return ['blocks.json не загружен'];
+  bs.forEach(function (def) {
+    var els = blockElementsFlat(def);
+    var page = $('#tab-' + (def.tab || 'sheet'));
+    if (!page) { diffs.push('нет вкладки ' + def.tab); return; }
+    els.forEach(function (e) {
+      if (e.bind && !$('[data-bind="' + e.bind + '"]', page)) diffs.push(def.id + ': нет поля ' + e.bind);
+      if (e.ref && !document.getElementById(e.ref)) diffs.push(def.id + ': нет контейнера #' + e.ref);
+    });
+  });
+  return diffs;
 }
 
 /* ---------------- рендеринг листа ---------------- */

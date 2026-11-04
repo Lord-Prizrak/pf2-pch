@@ -399,8 +399,12 @@ def emit_node(node, out):
 def slug(name, used):
     norm = re.sub(r'\s+', ' ', name.lower()).strip()
     norm = norm.replace('/', ' / ')
-    s = ASCII_SLUG.get(norm) or re.sub(r'^-+|-+$', '', norm.replace(' ', '-').replace('/', '-'))
+    s = ASCII_SLUG.get(norm) or norm.replace(' ', '-').replace('/', '-')
+    # дефисы в слагe разрешены только как разделители: схлопываем серии,
+    # затем удаляем прочие символы иLeading/trailing дефисы убираем
+    s = re.sub(r'-{2,}', '-', s)
     s = re.sub(r'[^a-z0-9\-]', '', s)
+    s = s.strip('-')
     if not s:
         s = 'block'
     base = s
