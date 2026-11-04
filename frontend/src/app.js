@@ -464,7 +464,38 @@ function beLabel(e) {
   (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
   return lab;
 }
+/* Web Component-типы полей (frontend/src/fields/*.js): если класс определён —
+   контрол создаётся как кастомный элемент, иначе — обычный input/textarea. */
+var BE_WC_KINDS = { text: 'pf2e-field-text', number: 'pf2e-field-number',
+                    textarea: 'pf2e-field-textarea', file: 'pf2e-field-file' };
+function beWcTag(c) {
+  if (!window.customElements) return null;
+  var k = c.kind === 'textarea' ? 'textarea' : (c.type || 'text');
+  var tag = BE_WC_KINDS[k];
+  return (tag && window.customElements.get(tag)) ? tag : null;
+}
 function beControl(c) {
+  var wc = beWcTag(c);
+  if (wc) {
+    /* кастомный элемент: bind/placeholder/spellcheck/rows передаём атрибутами,
+       класс и id переносим на сам элемент (чтобы [data-bind] и автосохранение
+       продолжали работать через querySelectorAll внутри него) */
+    var hostAttrs = {};
+    if (c.bind) hostAttrs['bind'] = c.bind;
+    if (c.placeholder) hostAttrs['placeholder'] = c.placeholder;
+    if (c.kind === 'textarea') hostAttrs['rows'] = String(c.rows || 3);
+    if (c.spellcheck === false) hostAttrs['spellcheck'] = 'false';
+    if (c.accept) hostAttrs['accept'] = c.accept;
+    var cls = beClassOf(c) + (c.cls ? ' ' + c.cls : '');
+    if (c.size) cls += ' ' + c.size;
+    cls = cls.trim();
+    if (cls) hostAttrs['class'] = cls;
+    var host = document.createElement(wc, hostAttrs);
+    for (var ka in hostAttrs) { /* noop: attrs уже применены */ }
+    if (hostAttrs.class) host.className = hostAttrs.class;
+    if (c.id) host.id = c.id;
+    return host;
+  }
   var inp;
   if (c.kind === 'textarea') {
     inp = el('textarea', { rows: String(c.rows || 3), class: c.cls || '' });
@@ -509,6 +540,19 @@ function beElement(e) {
     case 'textarea':
       return beControl(Object.assign({ kind: e.kind }, e));
     case 'button': {
+      /* Web Component pf2e-field-button (frontend/src/fields/field-button.js),
+         если определён сборщиком */
+      if (window.customElements && window.customElements.get('pf2e-field-button')) {
+        var bh = document.createElement('pf2e-field-button');
+        if (e.cls) bh.className = e.cls;
+        if (e.action) bh.setAttribute('action', e.action);
+        if (e.type) bh.setAttribute('type', e.type);
+        bh.textContent = e.text || '';
+        if (e.id) bh.id = e.id;
+        else if (e.ref) bh.id = e.ref;
+        if (e.hidden) bh.classList.add('hidden');
+        return bh;
+      }
       var b = el('button', { type: e.type || 'button', text: e.text || '', class: e.cls || '' });
       if (e.action) b.setAttribute('data-action', e.action);
       if (e.hp) b.setAttribute('data-hp', String(e.hp));
