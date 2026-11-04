@@ -2970,83 +2970,122 @@ function openBlockModal(f) {
      возвращаются при выключении режима. Поля можно перемещать и выделять для
      просмотра свойств, но ввод данных и прочие взаимодействия заблокированы. */
 
-  /* Контейнеры, полностью перестраиваемые renderAll(): если редактор открыт
-     в режиме дизайна и такой контейнер попадает под перерисовку — сразу же
-     прячем его содержимое повторно. */
+  /* Контейнеры динамических списков (языки, навыки, удары…) и добавочные
+     кнопки («+ язык»): в режиме «только дизайн» они ПОЛНОСТЬЮ удаляются из
+     canvas — пустой блок должен выглядеть как на чистом листе нового
+     персонажа, а не как блок с очищенными данными. Оригинальные DOM-узлы
+     (со всеми слушателями и значениями) сохраняются в be-ghost и возвращаются
+     при выключении режима либо при закрытии редактора. */
   var DYNAMIC_LIST_SEL = '#languages-list, #skills-block, #strikes-block, ' +
     '#spellcasting-block, #feats-block, #actions-block, #inventory-block, ' +
-    '#weapon-prof-block, '#hero-points, #armor-block, #saves-block, ' +
+    '#weapon-prof-block, #hero-points, #armor-block, #saves-block, ' +
     '#abilities-body, #ability-cards, ' +
     '.lang-items, .lang-add';
   function hideOneList(box) {
     if (box.getAttribute('data-be-hidden')) return;
-    if (box.hasChildNodes()) {
-      var ph = document.createElement('div');
-      ph.className = 'be-ghost';
-      while (box.firstChild) ph.appendChild(box.firstChild); // сохраняем узлы для возврата
-      box.appendChild(ph);
-    }
+    var ph = ensureGhost(box.parentNode); // ghost — последний ребёнок родителя
+    ph.appendChild(box);                  // выносим контейнер из потока разметки
     box.setAttribute('data-be-hidden', '1');
   }
+  function ensureGhost(parent) {
+    var ph = null;
+    for (var i = 0; i < parent.children.length; i++) {
+      if (parent.children[i].classList.contains('be-ghost')) { ph = parent.children[i]; break; }
+    }
+    if (!ph) {
+      ph = el('div', { class: 'be-ghost' });
+      parent.appendChild(ph);
+    }
+    return ph;
+  }
   function hideDynamicLists() {
-    $all(DYNAMIC_LIST_SEL, f).forEach(hideOneList);
+    $all(DYNAMIC_LIST_SEL, canvas).forEach(hideOneList);
   }
   function showDynamicLists() {
-    $all('[data-be-hidden]', f).forEach(function (box) {
-      var ph = box.querySelector(':scope > .be-ghost');
-      if (ph) while (ph.firstChild) box.appendChild(ph.firstChild);
+    $all('[data-be-hidden]', canvas).forEach(function (box) {
+      var ph = box.closest('.be-ghost');
+      if (!ph || !ph.parentNode) { box.removeAttribute('data-be-hidden'); return; }
+      var parent = ph.parentNode;
+      var ref = ph.nextElementSibling;   // ghost всегда в конце родителя → вставляем перед ним
+      parent.insertBefore(box, ref);
       box.removeAttribute('data-be-hidden');
     });
+    $all('.be-ghost', canvas).forEach(function (ph) { if (!ph.hasChildNodes()) ph.remove(); });
   }
 
-  /* ---- «пустой блок»: оригинальный HTML сохраняется в ghost-контейнер ---- */
-  function emptyCanvasHTML(src) {
+  /* ---- «пустой блок»: значения обнуляются в клоне, оригиналы не трогаются ---- */
+  function clearOneControl(i) {
+    if (i.type === 'checkbox' || i.type === 'radio') { i.checked = false; i.removeAttribute('checked'); }
+    else if (i.tagName === 'SELECT') {
+      i.selectedIndex = i.options.length ? 0 : -1;
+      Array.prototype.slice.call(i.options).forEach(function (o) { o.selected = o.index === 0; });
+    }
+    else { i.value = ''; i.removeAttribute('value'); }
+  }
+  function makeEmptyClone(src) {
     var c = src.cloneNode(true);
-    // все значения контролов — пусто (атрибут value не ставится: placeholder остаётся)
-    $all('input, textarea, select', c).forEach(function (i) {
-      if (i.type === 'checkbox' || i.type === 'radio') { i.removeAttribute('checked'); i.checked = false; }
-      else { i.removeAttribute('value'); i.value = ''; }
-      if (i.tagName === 'SELECT') {
-        Array.prototype.slice.call(i.options, 1).forEach(function (o) { o.remove(); });
-        var first = i.options[0];
-        if (first) { first.selected = true; first.removeAttribute('selected'); }
-      }
-    });
-    // динамические списки целиком убираем из пустого вида
+    $all('input, textarea, select', c).forEach(clearOneControl);
     $all(DYNAMIC_LIST_SEL, c).forEach(function (n) { n.remove(); });
-    // вычисляемые/данные текстовые узлы <b>/<span>/<p>, у которых есть id или data-dkey
-    $all('b[id], span[id], p[id], [data-dkey]', c).forEach(function (n) {
-      if (n.matches(DYNAMIC_LIST_SEL)) return;
-      if (n.querySelector && n.querySelector('button')) return; // элементы управления не трогаем
+    // вычисляемые/данные подписи <b>/<span>/<p>/<td> с id — очищаем текст
+    $all('b[id], span[id], p[id], td[id], li[id]', c).forEach(function (n) {
+      if (n.querySelector('input, textarea, select, button')) return;
       n.textContent = '';
     });
-    return c.innerHTML;
+    $all('[data-dkey]', c).forEach(function (n) {
+      if (n.querySelector('input, textarea, select, button')) return;
+      n.textContent = '';
+    });
+    return c;
   }
   function enterDesignMode() {
-    if (canvas.getAttribute('data-be-orig-stored')) return; // уже в пустом виде
-    designSaved = snapshotFieldValues();                    // read-only снимок значений
-    var ghost = document.createElement('div');
-    ghost.className = 'be-ghost';
-    while (canvas.firstChild) ghost.appendChild(canvas.firstChild); // сохраняем узлы со слушателями
+    if (canvas.getAttribute('data-be-empty')) return; // уже в пустом виде
+    designSaved = snapshotFieldValues();              // read-only снимок значений
+    var ghost = el('div', { class: 'be-ghost' });
+    while (canvas.firstChild) ghost.appendChild(canvas.firstChild); // оригиналы со слушателями
     canvas.appendChild(ghost);
-    canvas.insertAdjacentHTML('afterbegin', emptyCanvasHTML(ghost));
-    canvas.setAttribute('data-be-orig-stored', '1');
+    var empty = makeEmptyClone(ghost);
+    Array.prototype.slice.call(empty.childNodes).forEach(function (n) { canvas.appendChild(n); });
+    canvas.setAttribute('data-be-empty', '1');
+    rewireCanvasFields();
+  }
+  /* Если renderAll полностью перестроил canvas (вместо клонов появились
+     свежие узлы с данными персонажа) — пересоздаём пустой вид заново. */
+  function refreshEmptyView() {
+    if (!canvas.getAttribute('data-be-empty')) return;
+    $all(':scope > .be-ghost', canvas).forEach(function (g) { g.remove(); });
+    var ghost = el('div', { class: 'be-ghost' });
+    while (canvas.firstChild) ghost.appendChild(canvas.firstChild);
+    canvas.appendChild(ghost);
+    var empty = makeEmptyClone(ghost);
+    Array.prototype.slice.call(empty.childNodes).forEach(function (n) { canvas.insertBefore(n, ghost); });
+    rewireCanvasFields();
   }
   function leaveDesignMode() {
-    if (!canvas.getAttribute('data-be-orig-stored')) {
+    if (!canvas.getAttribute('data-be-empty')) {
       // случай, когда renderAll перестроил canvas: просто снимаем скрытие списков
       showDynamicLists();
       return;
     }
     var ghost = canvas.querySelector(':scope > .be-ghost');
+    // удаляем видимые пустые клоны (без слушателей), затем возвращаем оригиналы
+    Array.prototype.slice.call(canvas.children).forEach(function (c) {
+      if (c !== ghost) c.remove();
+    });
     if (ghost) while (ghost.firstChild) canvas.appendChild(ghost.firstChild);
     ghost && ghost.remove();
-    canvas.removeAttribute('data-be-orig-stored');
+    canvas.removeAttribute('data-be-empty');
     restoreBlockValues(designSaved);
     designSaved = null;
-    //重新wire drag-обработчики сохранённых полей (слушатели переехали вместе с узлами)
+    rewireCanvasFields();
+  }
+  /* Навешиваем mousedown-обработчики на все .be-field, видимые в canvas
+     (и на пустые клоны тоже — выбор/перемещение работают в обоих режимах). */
+  function rewireCanvasFields() {
+    wiredSeq++; // новые узлы должны получить обработчик, старые — нет
+    var byKey = {};
+    def.fields.forEach(function (fd) { byKey[fd.key] = fd; });
     canvas.querySelectorAll('.be-field').forEach(function (dom) {
-      var fd = def.fields.filter(function (x) { return x.key === dom.dataset.fkey; })[0];
+      var fd = byKey[dom.dataset.fkey];
       if (fd) wireFieldDom(dom, fd);
     });
   }
@@ -3068,11 +3107,15 @@ function openBlockModal(f) {
   });
 
   /* Если в режиме дизайна сработает перерисовка листа (renderAll полностью
-     перестраивает динамические контейнеры), сразу пряжем свежие данные. */
+     перестраивает динамические контейнеры), сразу пряжем свежие данные;
+     если canvas был перестроен целиком — пересоздаём пустой вид заново. */
   var origRenderAll = renderAll;
   renderAll = function () {
     var r = origRenderAll.apply(this, arguments);
-    if (blockModal && blockModal.designOnly && document.body.contains(f)) hideDynamicLists();
+    if (blockModal && blockModal.designOnly && document.body.contains(f)) {
+      hideDynamicLists();
+      refreshEmptyView();
+    }
     return r;
   };
   overlay._restoreRenderAll = function () { renderAll = origRenderAll; };
@@ -3239,7 +3282,10 @@ function openBlockModal(f) {
   /* mousedown: выбор поля + начало перемещения внутри блока.
      Данные персонажа в редакторе read-only: ввод в привязанные контролы
      запрещён всегда (в т.ч. в обычном режиме) — дизайнер не меняет реальные данные. */
+  var wiredSeq = 0; // счётчик перенавески: повторный вызов не удваивает обработчик
   function wireFieldDom(dom, fd) {
+    if (dom._beWired === fd.key && dom._beWiredSeq === wiredSeq) return;
+    dom._beWired = fd.key; dom._beWiredSeq = wiredSeq;
     dom.addEventListener('mousedown', function (e) {
       selectField(dom, fd);   // выбор работает в обоих режимах
       var t = e.target;
@@ -3349,17 +3395,28 @@ function openBlockModal(f) {
     return h ? h.dataset.fkey : (i.name || i.dataset.path);
   }
   /* Клон блока с восстановленными значениями полей из designSaved —
-     чтобы временная очистка в режиме «только дизайн» не считалась изменением. */
+     чтобы временная «пустая» подмена в режиме «только дизайн» не считалась
+     изменением: сравниваем оригинальные узлы (из ghost), а не пустые клоны. */
   function htmlForCompare() {
-    if (!designOnly) return f.innerHTML;
+    if (!designOnly || !canvas.getAttribute('data-be-empty')) return f.innerHTML;
     var tmp = f.cloneNode(true);
-    // снятие CSS-скрытия значений и списков (режим «только дизайн»)
-    tmp.classList.remove('be-design-mode');
+    var tc = tmp.querySelector('.be-canvas');
+    if (tc) {
+      var tg = tc.querySelector(':scope > .be-ghost');
+      if (tg) {
+        Array.prototype.slice.call(tc.children).forEach(function (c) { if (c !== tg) c.remove(); });
+        while (tg.firstChild) tc.appendChild(tg.firstChild);
+        tg.remove();
+      }
+    }
+    // снятие скрытия списков, спрятанных renderAll-перехватом
     $all('[data-be-hidden]', tmp).forEach(function (box) {
-      var ph = box.querySelector(':scope > .be-ghost');
-      if (ph) while (ph.firstChild) box.appendChild(ph.firstChild);
+      var ph = box.closest('.be-ghost');
+      if (ph && ph.parentNode) ph.parentNode.insertBefore(box, ph.nextElementSibling);
       box.removeAttribute('data-be-hidden');
     });
+    $all('.be-ghost', tmp).forEach(function (ph) { if (!ph.hasChildNodes()) ph.remove(); });
+    tmp.classList.remove('be-design-mode');
     $all('input, textarea, select', tmp).forEach(function (i) {
       var s = designSaved ? designSaved[fieldKeyOf(i)] : null;
       if (!s) return;
@@ -3439,15 +3496,28 @@ function doCloseBlockModal() {
   // возвращаем блок на исходное место, если он всё ещё в панели
   var child = m.host.firstChild;
   // если редактор закрыли в режиме «только дизайн», снимаем его с блока:
-  // возвращаем скрытые списки и убираем класс — на странице данные персонажа
-  // должны отображаться как обычно
+  // возвращаем оригинальные узлы из be-ghost (пустые клоны удаляются) —
+  // на странице данные персонажа должны отображаться как обычно
   if (child && child.classList) child.classList.remove('be-design-mode');
   if (child && child.tagName === 'FIELDSET') {
-    $all('[data-be-hidden]', child).forEach(function (box) {
-      var ph = box.querySelector(':scope > .be-ghost');
-      if (ph) while (ph.firstChild) box.appendChild(ph.firstChild);
-      box.removeAttribute('data-be-hidden');
-    });
+    var cv = child.querySelector('.be-canvas');
+    if (cv) {
+      var cg = cv.querySelector(':scope > .be-ghost');
+      if (cg && cv.getAttribute('data-be-empty')) {
+        Array.prototype.slice.call(cv.children).forEach(function (c) { if (c !== cg) c.remove(); });
+        while (cg.firstChild) cv.appendChild(cg.firstChild);
+        cg.remove();
+        cv.removeAttribute('data-be-empty');
+      } else if (cg) {
+        // списки, спрятанные renderAll-перехватом: возвращаем на место
+        $all('[data-be-hidden]', cv).forEach(function (box) {
+          var ph = box.closest('.be-ghost');
+          if (ph && ph.parentNode) ph.parentNode.insertBefore(box, ph.nextElementSibling);
+          box.removeAttribute('data-be-hidden');
+        });
+        $all('.be-ghost', cv).forEach(function (ph) { if (!ph.hasChildNodes()) ph.remove(); });
+      }
+    }
   }
   if (m.overlay._restoreRenderAll) m.overlay._restoreRenderAll();
   if (child && child.tagName === 'FIELDSET' && m.origParent && m.origParent.contains !== undefined) {

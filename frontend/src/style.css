@@ -414,20 +414,11 @@ body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
 .bep-design-row { margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); }
 .bep-design-label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; user-select: none; }
 .bep-design-label input[type="checkbox"] { width: auto; cursor: pointer; }
+/* Режим «Только дизайн»: блок отображается ПУСТЫМ — оригинальная разметка
+   спрятана в .be-ghost (display:none), вместо неё показан чистый клон. */
+.be-ghost { display: none !important; }
 .block-modal-panel.be-design-on .be-palette { opacity: .55; pointer-events: none; }
 .be-fieldset-be-design, fieldset.be-design-mode { outline: 2px dashed var(--accent, #b5893e); outline-offset: 4px; }
-/* «Только дизайн»: блок выглядит ПУСТЫМ — как на чистом листе.
-   Значения полей скрыты через color:transparent (value не трогается),
-   списковые контейнеры спрятаны целиком ([data-be-hidden]). */
-fieldset.be-design-mode input:not([type="checkbox"]):not([type="radio"]),
-fieldset.be-design-mode textarea,
-fieldset.be-design-mode select { color: transparent; text-shadow: none !important; -webkit-text-fill-color: transparent; caret-color: transparent; }
-fieldset.be-design-mode input[type="checkbox"],
-fieldset.be-design-mode input[type="radio"] { accent-color: transparent; }
-fieldset.be-design-mode [data-be-hidden] > *:not(.be-ghost) { display: none !important; }
-fieldset.be-design-mode .be-ghost { display: none; }
-fieldset.be-design-mode input::placeholder,
-fieldset.be-design-mode textarea::placeholder { color: transparent; }
-fieldset.be-design-mode .be-chip { opacity: .55; }
+fieldset.be-design-mode .be-canvas > .be-field:not(.be-selected) .be-flabel { opacity: .75; }
 /* Данные персонажа в редакторе блоков — read-only (дизайнер их не меняет) */
 .block-modal-host [data-bind] { background: var(--chip); color: var(--ink); cursor: default; }
