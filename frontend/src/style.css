@@ -420,3 +420,5 @@ fieldset.be-design-mode .be-canvas input,
 fieldset.be-design-mode .be-canvas textarea,
 fieldset.be-design-mode .be-canvas select { pointer-events: none; opacity: .55; }
 fieldset.be-design-mode .be-chip { opacity: .55; }
+/* Данные персонажа в редакторе блоков — read-only (дизайнер их не меняет) */
+.block-modal-host [data-bind] { background: var(--chip); color: var(--ink); cursor: default; }

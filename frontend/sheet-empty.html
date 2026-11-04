@@ -440,6 +440,8 @@ fieldset.be-design-mode .be-canvas input,
 fieldset.be-design-mode .be-canvas textarea,
 fieldset.be-design-mode .be-canvas select { pointer-events: none; opacity: .55; }
 fieldset.be-design-mode .be-chip { opacity: .55; }
+/* Данные персонажа в редакторе блоков — read-only (дизайнер их не меняет) */
+.block-modal-host [data-bind] { background: var(--chip); color: var(--ink); cursor: default; }
 
 
 /* === тема: dark === */
@@ -4002,10 +4004,15 @@ function openBlockModal(f) {
   var designLabel = el('label', { class: 'bep-design-label' }, [designChk, document.createTextNode(' Только дизайн')]);
   propsPanel.appendChild(el('div', { class: 'bep-design-row' }, [designLabel]));
 
-  /* Сохраняем исходные данные персонажа перед очисткой блока. */
+  /* Данные персонажа в редакторе — read-only снимок. Значения полей
+     записываются как DOM-атрибуты (value/checked), поэтому не попадают ни
+     в innerHTML при сравнении, ни в collectSheetSchema, ни в State.sheet.
+     Designer никогда не изменяет реальные данные персонажа. */
+  function isDataInput(i) { return i.hasAttribute('data-bind') || !!i.closest('[data-bind]'); }
   function snapshotFieldValues() {
     var map = {};
     $all('input, textarea, select', f).forEach(function (i) {
+      if (!isDataInput(i)) return;   // только привязанные к данным поля
       var holder = i.closest('.be-field');
       var key = holder ? holder.dataset.fkey : (i.name || i.dataset.path);
       if (!key) return;
@@ -4017,6 +4024,7 @@ function openBlockModal(f) {
   function restoreBlockValues(saved) {
     if (!saved) return;
     $all('input, textarea, select', f).forEach(function (i) {
+      if (!isDataInput(i)) return;
       var holder = i.closest('.be-field');
       var key = holder ? holder.dataset.fkey : (i.name || i.dataset.path);
       if (!key || !saved[key]) return;
@@ -4024,13 +4032,14 @@ function openBlockModal(f) {
       else i.value = saved[key].value != null ? saved[key].value : '';
     });
   }
-  var designSaved = null; // значения полей до перехода в режим дизайна
+  var designSaved = null; // read-only снимок значений до перехода в режим дизайна
 
   /* В режиме «только дизайн» блок отображается чистым (без данных текущего
      персонажа), поля можно перемещать и выделять для просмотра свойств,
      но ввод данных и прочие взаимодействия заблокированы. */
   function clearBlockData() {
     $all('input, textarea, select', f).forEach(function (i) {
+      if (!isDataInput(i)) return;
       if (i.type === 'checkbox' || i.type === 'radio') i.checked = false;
       else i.value = '';
       if (i.tagName === 'SELECT') {
@@ -4049,7 +4058,7 @@ function openBlockModal(f) {
       clearBlockData();
       toast('Режим «Только дизайн»: данные скрыты, ввод отключён.');
     } else {
-      /* Возврат к рабочему режиму: восстанавливаем данные персонажа */
+      /* Возврат к рабочему режиму: восстанавливаем read-only снимок данных */
       restoreBlockValues(designSaved);
       designSaved = null;
       refreshAllTextareas(f);
@@ -4219,14 +4228,17 @@ function openBlockModal(f) {
     refreshAllTextareas(f);
   }
 
-  /* mousedown: выбор поля + начало перемещения внутри блока */
+  /* mousedown: выбор поля + начало перемещения внутри блока.
+     Данные персонажа в редакторе read-only: ввод в привязанные контролы
+     запрещён всегда (в т.ч. в обычном режиме) — дизайнер не меняет реальные данные. */
   function wireFieldDom(dom, fd) {
     dom.addEventListener('mousedown', function (e) {
       selectField(dom, fd);   // выбор работает в обоих режимах
+      var t = e.target;
+      var isCtl = t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT';
       if (designOnly) { e.preventDefault(); return; }  // только выделение, без ввода
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        return;   // выбор без перехвата ввода
-      }
+      if (isCtl && isDataInput(t)) { e.preventDefault(); return; } // read-only снимок данных
+      if (isCtl) return;   // новое поле дизайнера: выбор без перехвата ввода
       startFieldDrag(e, dom);
     });
   }
@@ -4351,17 +4363,10 @@ function openBlockModal(f) {
     if (legendEl) legendEl.textContent = def.title;
     f.setAttribute('data-span', String(def.layout.span));
     f.dataset.blockDef = JSON.stringify(def);
-    /* Не сохраняем очищенный вид блока: на время записи возвращаем данные персонажа */
-    if (designOnly) {
-      restoreBlockValues(designSaved);
-      saveCurrent();
-      snapshot = JSON.stringify({ def: def, html: f.innerHTML });
-      clearBlockData();
-    } else {
-      saveCurrent();
-      snapshot = JSON.stringify({ def: def, html: f.innerHTML });
-    }
-    toast('Блок «' + def.title + '» сохранён.');
+    /* Данные персонажа read-only: ничего не записываем в State.sheet.
+       Сохраняем только дизайн — структуру, расположения и определения полей. */
+    snapshot = JSON.stringify({ def: def, html: htmlForCompare() });
+    toast('Дизайн блока «' + def.title + '» сохранён (данные персонажа не изменены).');
   }
   function revertChanges() {
     try {
