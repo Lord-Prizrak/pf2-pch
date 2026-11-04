@@ -3468,12 +3468,20 @@ function openBlockModal(f) {
     syncFromForm();
     return JSON.stringify({ def: def, html: htmlForCompare() }) !== snapshot;
   }
+  /* Перед сохранением/закрытием разворачиваем служебные обёртки редактора
+     (.be-canvas/.be-field/.be-flabel), чтобы в снимок и разметку страницы
+     не попадало ничего лишнего — структура блока остаётся исходной. */
+  function normalizeBlockDom() {
+    if (designOnly) leaveDesignMode();
+    unwrapCanvas(f);
+  }
   function applyEdits() {
     syncFromForm();
     reorderFieldsFromDOM();
     if (legendEl) legendEl.textContent = def.title;
     f.setAttribute('data-span', String(def.layout.span));
     f.dataset.blockDef = JSON.stringify(def);
+    normalizeBlockDom();
     /* Данные персонажа read-only: ничего не записываем в State.sheet.
        Сохраняем только дизайн — структуру, расположения и определения полей. */
     snapshot = JSON.stringify({ def: def, html: htmlForCompare() });
@@ -3484,6 +3492,7 @@ function openBlockModal(f) {
       var snap = JSON.parse(snapshot);
       Object.assign(def, snap.def);
       if (legendEl) legendEl.textContent = def.title || '';
+      if (designOnly) leaveDesignMode();
       f.innerHTML = snap.html;
       legendEl = f.querySelector('legend');
       wireBlockDrag(f);
@@ -3565,8 +3574,30 @@ function doCloseBlockModal() {
   }
   if (m.overlay._onKey) document.removeEventListener('keydown', m.overlay._onKey);
   if (m.overlay.parentNode) m.overlay.parentNode.removeChild(m.overlay);
+  // редактор закрыт: на рабочей странице блоки не нужны — разворачиваем и
+  // удаляем служебную обёртку .be-canvas (данные остаются в исходных контейнерах)
+  unwrapCanvas(child && child.tagName === 'FIELDSET' ? child : null);
   applyBlockVisibility();
   refreshAllTextareas();
+}
+
+/* Служебная обёртка .be-canvas существует только внутри редактора блоков.
+   Разворачиваем её обратно (после ghost/hidden-восстановления) и снимаем
+   be-field/be-flabel с контролов, чтобы страница выглядела как обычный лист. */
+function unwrapCanvas(onlyFieldset) {
+  var scope = onlyFieldset ? [onlyFieldset] : $all('.tabpage fieldset');
+  scope.forEach(function (f) {
+    var cv = f.querySelector('.be-canvas');
+    if (!cv) return;
+    while (cv.firstChild) f.insertBefore(cv.firstChild, cv);
+    cv.remove();
+  });
+  $all('.be-field', onlyFieldset || document).forEach(function (h) {
+    var ctrl = h.querySelector('input, textarea, select');
+    if (ctrl && h.parentNode) h.parentNode.insertBefore(ctrl, h);
+    h.remove();
+  });
+  $all('.be-flabel', onlyFieldset || document).forEach(function (l) { l.remove(); });
 }
 
 /* Совместимость: прежнее имя used elsewhere */
