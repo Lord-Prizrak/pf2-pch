@@ -432,8 +432,8 @@ body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
 
 /* Режим «Только дизайн»: чекбокс под окном свойств + поведение блока */
 .bep-design-row { margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); }
-.bep-design-label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; user-select: none; }
-.bep-design-label input[type="checkbox"] { width: auto; cursor: pointer; }
+.bep-design-label { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; user-select: none; white-space: nowrap; }
+.bep-design-label input[type="checkbox"] { flex: 0 0 auto; display: inline-block; width: 14px !important; min-width: 0; height: 14px; margin: 0; padding: 0; box-sizing: border-box; accent-color: #e0a45e; cursor: pointer; }
 /* Режим «Только дизайн»: блок отображается ПУСТЫМ — оригинальная разметка
    спрятана в .be-ghost (display:none), вместо неё показан чистый клон. */
 .be-ghost { display: none !important; }
