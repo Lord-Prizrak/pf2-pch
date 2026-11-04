@@ -3136,7 +3136,11 @@ function beControl(c) {
 function beElement(e) {
   switch (e.kind) {
     case 'container': {
-      var div = el('div', { class: beClassOf(e) || 'row' });
+      var div = el(e.tag || 'div', { class: beClassOf(e) });
+      if (!e.cls && e.role !== 'row' && !e.ref) div.className = 'row';
+      if (e.ref) div.id = e.ref;
+      else if (e.id) div.id = e.id;
+      if (e.html) div.innerHTML = e.html;
       (e.children || []).forEach(function (ch) { div.appendChild(beElement(ch)); });
       return div;
     }
@@ -3148,6 +3152,7 @@ function beElement(e) {
       else if (e.text) sp.textContent = e.text;
       if (e.ref) sp.id = e.ref;
       if (e.dynamic) sp.setAttribute('data-dkey', e.ref || '');
+      else sp.setAttribute('data-be-static', '1');   // фиксированный текст: не чистить в пустом блоке
       (e.children || []).forEach(function (ch) { sp.appendChild(beElement(ch)); });
       return sp;
     }
@@ -3186,6 +3191,14 @@ function beElement(e) {
       st.appendChild(bv);
       if (e.subRef) st.appendChild(el('small', { id: e.subRef, text: e.subText || '' }));
       return st;
+    }
+    case 'section': {
+      var sd = el(e.tag || 'div', { class: beClassOf(e) });
+      if (e.ref) sd.id = e.ref;
+      else if (e.id) sd.id = e.id;
+      if (e.html) sd.innerHTML = e.html;
+      (e.children || []).forEach(function (ch) { sd.appendChild(beElement(ch)); });
+      return sd;
     }
     case 'list':
     case 'static': {
