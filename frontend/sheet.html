@@ -3486,6 +3486,137 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
 }
 </script>
 <script>
+/* pf2e-field-button — кнопка (Web Component).
+   Атрибут action ("hp:-1", "export:html", ...) вешает обработчик из
+   реестра window.PF2E_ACTIONS (wireActions в app.js). */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-button')) return;
+  class Pf2eFieldButton extends HTMLElement {
+    connectedCallback() {
+      if (this._btn) return;
+      var b = document.createElement('button');
+      b.type = this.getAttribute('type') || 'button';
+      if (this.textContent.trim()) b.textContent = this.textContent.trim();
+      if (this.className) b.className = this.className;
+      var act = this.getAttribute('action');
+      if (act) b.setAttribute('data-action', act);
+      this.textContent = '';
+      this.appendChild(b);
+      this._btn = b;
+      if (act && window.PF2E_ACTIONS && typeof window.PF2E_ACTIONS[act] === 'function') {
+        b.addEventListener('click', function (ev) { ev.preventDefault(); window.PF2E_ACTIONS[act](ev, b); });
+      }
+    }
+    get control() { return this._btn; }
+  }
+  window.customElements.define('pf2e-field-button', Pf2eFieldButton);
+})();
+/* pf2e-field-file — выбор файла (Web Component). */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-file')) return;
+  class Pf2eFieldFile extends HTMLElement {
+    connectedCallback() {
+      if (this._ctl) return;
+      var inp = document.createElement('input');
+      inp.type = 'file';
+      if (this.hasAttribute('accept')) inp.setAttribute('accept', this.getAttribute('accept'));
+      if (this.className) inp.className = this.className;
+      this.appendChild(inp);
+      this._ctl = inp;
+    }
+    get control() { return this._ctl; }
+  }
+  window.customElements.define('pf2e-field-file', Pf2eFieldFile);
+})();
+/* pf2e-field-list — контейнер динамического списка (Web Component):
+   языки, навыки, удары, инвентарь и т.п. Содержимое наполняют
+   штатные render*-функции приложения по id контейнера. */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-list')) return;
+  class Pf2eFieldList extends HTMLElement {
+    connectedCallback() {
+      if (this._done) return;
+      this._done = true;
+      this.setAttribute('data-be-list', this.getAttribute('list') || '');
+    }
+  }
+  window.customElements.define('pf2e-field-list', Pf2eFieldList);
+})();
+/* pf2e-field-number — числовое поле (Web Component). */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-number')) return;
+  class Pf2eFieldNumber extends HTMLElement {
+    connectedCallback() {
+      if (this._ctl) return;
+      var inp = document.createElement('input');
+      inp.type = 'number';
+      if (this.hasAttribute('bind')) inp.setAttribute('data-bind', this.getAttribute('bind'));
+      if (this.hasAttribute('placeholder')) inp.placeholder = this.getAttribute('placeholder');
+      if (this.className) inp.className = this.className;
+      this.appendChild(inp);
+      this._ctl = inp;
+    }
+    get control() { return this._ctl; }
+  }
+  window.customElements.define('pf2e-field-number', Pf2eFieldNumber);
+})();
+/* pf2e-field-static — фиксированный текст/подпись (Web Component).
+   Не является полем ввода; содержимое задаётся атрибутами text/html. */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-static')) return;
+  class Pf2eFieldStatic extends HTMLElement {
+    connectedCallback() {
+      if (this._done) return;
+      this._done = true;
+      var tag = this.getAttribute('tag') || 'span';
+      var inner = document.createElement(tag);
+      if (this.hasAttribute('html')) inner.innerHTML = this.getAttribute('html');
+      else inner.textContent = this.getAttribute('text') || this.textContent || '';
+      this.textContent = '';
+      this.appendChild(inner);
+    }
+  }
+  window.customElements.define('pf2e-field-static', Pf2eFieldStatic);
+})();
+/* pf2e-field-text — текстовое поле (Web Component).
+   Источник: frontend/src/fields/field-text.js, встраивается сборщиком build.py. */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-text')) return;
+  class Pf2eFieldText extends HTMLElement {
+    connectedCallback() {
+      if (this._ctl) return;
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      if (this.hasAttribute('bind')) inp.setAttribute('data-bind', this.getAttribute('bind'));
+      if (this.hasAttribute('placeholder')) inp.placeholder = this.getAttribute('placeholder');
+      if (this.hasAttribute('attrsize')) inp.setAttribute('size', this.getAttribute('attrsize'));
+      if (this.className) inp.className = this.className;
+      this.appendChild(inp);
+      this._ctl = inp;
+    }
+    get control() { return this._ctl; }
+  }
+  window.customElements.define('pf2e-field-text', Pf2eFieldText);
+})();
+/* pf2e-field-textarea — многострочное поле (Web Component). */
+(function () {
+  if (!window.customElements || window.customElements.get('pf2e-field-textarea')) return;
+  class Pf2eFieldTextarea extends HTMLElement {
+    connectedCallback() {
+      if (this._ctl) return;
+      var ta = document.createElement('textarea');
+      ta.rows = parseInt(this.getAttribute('rows') || '3', 10);
+      if (this.getAttribute('spellcheck') === 'false') ta.setAttribute('spellcheck', 'false');
+      if (this.hasAttribute('bind')) ta.setAttribute('data-bind', this.getAttribute('bind'));
+      if (this.hasAttribute('placeholder')) ta.placeholder = this.getAttribute('placeholder');
+      if (this.className) ta.className = this.className;
+      this.appendChild(ta);
+      this._ctl = ta;
+    }
+    get control() { return this._ctl; }
+  }
+  window.customElements.define('pf2e-field-textarea', Pf2eFieldTextarea);
+})();
 /* ==========================================================================
    PF2e Character Sheet — клиентское приложение (vanilla JS, без сборки).
    Один файл app.js подключается из sheet.html.
@@ -3952,7 +4083,69 @@ function beLabel(e) {
   (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
   return lab;
 }
+/* Web Component-типы полей (frontend/src/fields/*.js): если класс определён —
+   контрол создаётся как кастомный элемент, иначе — обычный input/textarea. */
+var BE_WC_KINDS = { text: 'pf2e-field-text', number: 'pf2e-field-number',
+                    textarea: 'pf2e-field-textarea', file: 'pf2e-field-file' };
+function beWcTag(c) {
+  if (!window.customElements) return null;
+  var k = c.kind === 'textarea' ? 'textarea' : (c.type || 'text');
+  if (k === 'file') k = 'file';
+  var tag = BE_WC_KINDS[k];
+  return (tag && window.customElements.get(tag)) ? tag : null;
+}
+/* Кнопки/поля действий из JSON (action: "hp:-1", "export:html", ...) — реестр
+   window.PF2E_ACTIONS строится в wireActions() (после wireIOButtons);
+   web-компонент pf2e-field-button вешает обработчик по атрибуту action. */
+window.PF2E_ACTIONS = {};
+function beButton(e) {
+  var act = e.action || '';
+  var m = /^hp:(.+)$/.exec(act);
+  var hpAttr = m ? m[1] : (e.hp != null ? String(e.hp) : null);
+  if (window.customElements && window.customElements.get('pf2e-field-button')) {
+    var bh = document.createElement('pf2e-field-button');
+    if (e.cls) bh.className = e.cls;
+    if (act) bh.setAttribute('action', act);
+    if (e.type) bh.setAttribute('type', e.type);
+    bh.textContent = e.text || '';
+    if (e.id) bh.id = e.id;
+    else if (e.ref) bh.id = e.ref;
+    if (e.hidden) bh.classList.add('hidden');
+    if (hpAttr != null) bh.setAttribute('data-hp', hpAttr);
+    return bh;
+  }
+  var b = el('button', { type: e.type || 'button', text: e.text || '', class: e.cls || '' });
+  if (act) b.setAttribute('data-action', act);
+  if (hpAttr != null) b.setAttribute('data-hp', hpAttr);
+  if (e.id) b.id = e.id;
+  else if (e.ref) b.id = e.ref;
+  if (e.hidden) b.classList.add('hidden');
+  return b;
+}
 function beControl(c) {
+  var wc = beWcTag(c);
+  if (wc) {
+    /* кастомный элемент: bind/placeholder/spellcheck/rows передаём атрибутами,
+       класс и id переносим на сам элемент (чтобы [data-bind] и автосохранение
+       продолжали работать через querySelectorAll внутри него) */
+    var hostAttrs = {};
+    if (c.bind) hostAttrs['bind'] = c.bind;
+    if (c.placeholder) hostAttrs['placeholder'] = c.placeholder;
+    if (c.kind === 'textarea') hostAttrs['rows'] = String(c.rows || 3);
+    if (c.spellcheck === false) hostAttrs['spellcheck'] = 'false';
+    if (c.accept) hostAttrs['accept'] = c.accept;
+    var cls = beClassOf(c) + (c.cls ? ' ' + c.cls : '');
+    if (c.size) cls += ' ' + c.size;
+    if (c.hidden) cls = (cls + ' hidden').trim();
+    cls = cls.trim();
+    var host = document.createElement(wc);
+    for (var ka in hostAttrs) host.setAttribute(ka, hostAttrs[ka]);
+    if (cls) host.className = cls;
+    if (c.attrSize) host.setAttribute('attrsize', String(c.attrSize));
+    if (c.id) host.id = c.id;
+    if (c.action) host.setAttribute('data-action', c.action);
+    return host;
+  }
   var inp;
   if (c.kind === 'textarea') {
     inp = el('textarea', { rows: String(c.rows || 3), class: c.cls || '' });
@@ -3997,6 +4190,19 @@ function beElement(e) {
     case 'textarea':
       return beControl(Object.assign({ kind: e.kind }, e));
     case 'button': {
+      /* Web Component pf2e-field-button (frontend/src/fields/field-button.js),
+         если определён сборщиком */
+      if (window.customElements && window.customElements.get('pf2e-field-button')) {
+        var bh = document.createElement('pf2e-field-button');
+        if (e.cls) bh.className = e.cls;
+        if (e.action) bh.setAttribute('action', e.action);
+        if (e.type) bh.setAttribute('type', e.type);
+        bh.textContent = e.text || '';
+        if (e.id) bh.id = e.id;
+        else if (e.ref) bh.id = e.ref;
+        if (e.hidden) bh.classList.add('hidden');
+        return bh;
+      }
       var b = el('button', { type: e.type || 'button', text: e.text || '', class: e.cls || '' });
       if (e.action) b.setAttribute('data-action', e.action);
       if (e.hp) b.setAttribute('data-hp', String(e.hp));
@@ -4037,18 +4243,43 @@ function beElement(e) {
       (e.children || []).forEach(function (ch) { sd.appendChild(beElement(ch)); });
       return sd;
     }
-    case 'list':
+    case 'list': {
+      /* Web Component pf2e-field-list (frontend/src/fields/field-list.js):
+         контейнер динамического списка — наполняется штатными render*-функциями */
+      var ltag = (window.customElements && window.customElements.get('pf2e-field-list'))
+                 ? 'pf2e-field-list' : 'div';
+      var ln = el(ltag, {});
+      if (e.list) ln.setAttribute('list', e.list);
+      var lcls = beClassOf(e); if (e.cls) lcls = (lcls ? lcls + ' ' : '') + e.cls;
+      if (lcls.trim()) ln.className = lcls.trim();
+      if (e.ref) ln.id = e.ref; else if (e.id) ln.id = e.id;
+      if (e.hidden) ln.classList.add('hidden');
+      (e.children || []).forEach(function (ch) { ln.appendChild(beElement(ch)); });
+      return ln;
+    }
     case 'static': {
-      var tag = e.tag || 'div';
-      var cls = beClassOf(e);
-      if (e.cls) cls = (cls ? cls + ' ' : '') + e.cls;
-      var n = el(tag, { class: cls });
-      if (e.ref) n.id = e.ref;
-      else if (e.id) n.id = e.id;
-      if (e.html) n.innerHTML = e.html;
-      else if (e.text) n.textContent = e.text;
-      (e.children || []).forEach(function (ch) { n.appendChild(beElement(ch)); });
-      return n;
+      /* Web Component pf2e-field-static: фиксированный текст/подпись */
+      if (window.customElements && window.customElements.get('pf2e-field-static')) {
+        var sh = document.createElement('pf2e-field-static');
+        sh.setAttribute('tag', e.tag || 'div');
+        if (e.cls) sh.className = e.cls;
+        if (e.html) sh.setAttribute('html', e.html);
+        else if (e.text) sh.setAttribute('text', e.text);
+        if (e.ref) sh.id = e.ref; else if (e.id) sh.id = e.id;
+        if (e.dynamic) sh.setAttribute('data-dkey', e.dkey || e.ref || e.id || '');
+        else sh.setAttribute('data-be-static', '1');
+        if (e.hidden) sh.classList.add('hidden');
+        return sh;
+      }
+      var stag = e.tag || 'div';
+      var scls = beClassOf(e); if (e.cls) scls = (scls ? scls + ' ' : '') + e.cls;
+      var sn = el(stag, { class: scls });
+      if (e.ref) sn.id = e.ref; else if (e.id) sn.id = e.id;
+      if (e.html) sn.innerHTML = e.html;
+      else if (e.text) sn.textContent = e.text;
+      if (e.hidden) sn.classList.add('hidden');
+      (e.children || []).forEach(function (ch) { sn.appendChild(beElement(ch)); });
+      return sn;
     }
     default:
       return el('div', {});
@@ -5448,6 +5679,116 @@ function wireTopbar() {
   });
 }
 
+/* ---------------- реестр действий JSON-кнопок (pf2e-field-button) --------
+   wireActions вызывается после wireIOButtons/wireTopbar: обработчики по id
+   уже навешаны — здесь регистрируются те же функции под action-ключами из
+   blocks.json. Кнопки без id, но с action работают через этот реестр. */
+function actOn(id, evName, fn) {
+  var n = document.getElementById(id);
+  if (!n) return false;
+  n.addEventListener(evName || 'click', fn);
+  return true;
+}
+function wireActions() {
+  var A = window.PF2E_ACTIONS;
+  /* HP-кнопки (дублируют [data-hp]-обработчик wireTopbar для чистых WC-кнопок) */
+  function hpAction(ev, btn) {
+    var act = btn.getAttribute('data-action') || '';
+    var m = /^hp:(.+)$/.exec(act);
+    var v = m ? m[1] : btn.getAttribute('data-hp');
+    if (v === 'full') { State.sheet.hitPoints.current = State.sheet.hitPoints.max; State.sheet.hitPoints.temp = 0; State.sheet.hitPoints.dying = 0; State.sheet.hitPoints.wounded = 0; }
+    else applyDamage(Number(v));
+    markDirty(); updateComputed();
+  }
+  A['hp:-1'] = A['hp:-5'] = A['hp:1'] = A['hp:5'] = A['hp:full'] = hpAction;
+  /* серверы */
+  A['server:add'] = function () {
+    var inp = document.getElementById('srv-url');
+    var url = inp ? (inp.value || (inp.control && inp.control.value) || '').trim() : '';
+    if (!url) { toast('Укажите адрес сервера', true); return; }
+    url = url.replace(/\/+$/, '');
+    var list = getServers();
+    if (!list.filter(function (s) { return s.url === url; }).length) { list.push({ url: url, username: '', token: null, jwt: null }); saveServers(list); }
+    State.selectedServer = url; renderServersUI();
+    loadServerCharacters(findServer(url)).catch(function () {});
+  };
+  /* импорт из скрытых file-инпутов (id заданы в blocks.json) */
+  A['import:json-file'] = function () { var f = document.getElementById('imp-json-file'); if (f) (f.control || f).click(); };
+  A['import:html'] = function () { var f = document.getElementById('imp-html-file'); if (f) (f.control || f).click(); };
+  A['import:pdf'] = function () { toast('Для PDF используйте конвертер tools/extract.py (python), затем импортируйте полученный JSON.', true); };
+  /* экспорт/json — обработчики по id уже висят (wireIOButtons); реестр —
+     для кнопок без id и для вызова из web-компонента */
+  A['export:json-clipboard'] = function () { copyText(exportCurrentJSON()); };
+  A['export:json-file'] = function () { download(slugify(State.sheet.name) + '.json', exportCurrentJSON(), 'application/json'); };
+  A['export:html'] = function () {
+    var s = clone(State.sheet); s.sheet = collectSheetSchema();
+    download(slugify(State.sheet.name) + '-sheet.html', buildStandaloneHTML([s]), 'text/html');
+  };
+  A['export:all-json'] = function () {
+    var map = Store.loadAll();
+    download('pf2e-characters.json', JSON.stringify({ schema: SCHEMA, characters: Object.keys(map).map(function (k) { return map[k]; }) }, null, 2), 'application/json');
+  };
+  A['export:all-html'] = function () {
+    var map = Store.loadAll();
+    download('pf2e-all-sheets.html', buildStandaloneHTML(Object.keys(map).map(function (k) { return map[k]; })), 'text/html');
+  };
+  A['import:json-clipboard'] = function () { pasteText().then(function (t) { if (t) importJSONText(t, { reassignIds: false }); }); };
+  A['json:apply'] = function () {
+    var ed = document.getElementById('json-editor');
+    if (ed) importJSONText((ed.value != null ? ed : (ed.control || ed)).value, { forceNewId: false });
+  };
+  A['json:refresh'] = function () { refreshJsonEditor(); };
+  A['server:push'] = function () {
+    var srv = pickQuickServer(); if (!srv) return;
+    pushToServer(srv, State.sheet).catch(function (e) { toast(e.message, true); });
+  };
+  A['server:pull'] = function () {
+    var srv = pickQuickServer(); if (!srv) return;
+    var chars = State.serverChars[srv.url] || [];
+    var match = chars.filter(function (c) { return c.id === State.sheet.id || c.name === State.sheet.name; })[0];
+    if (!match) { toast('Такого персонажа на сервере нет', true); return; }
+    api(srv, '/api/characters/' + encodeURIComponent(match.id)).then(function (res) {
+      var full = res.character || res;
+      var map = Store.loadAll();
+      var ns = normalizeSheet(full); ns.id = State.sheet.id;
+      map[ns.id] = ns; Store.saveAll(map);
+      switchCharacter(ns.id);
+      toast('Обновлено с сервера');
+    }).catch(function (e) { toast(e.message, true); });
+  };
+  function pickQuickServer() {
+    var list = getServers();
+    if (!list.length) { toast('Нет настроенных серверов — добавьте на вкладке «Серверы»', true); switchTab('servers'); return null; }
+    var srv = list.filter(function (s) { return s.url === State.selectedServer; })[0] || list[0];
+    if (!srv.token && !srv.jwt) { toast('Сервер ' + srv.url + ' не авторизован — войдите или задайте API-ключ', true); switchTab('servers'); return null; }
+    return srv;
+  }
+  /* file-инпуты из JSON: change-чтение (импорт json/html из файла) */
+  actOn('imp-json-file', 'change', function (ev) {
+    var f = ev.target.files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () { importJSONText(String(fr.result)); };
+    fr.readAsText(f); ev.target.value = '';
+  });
+  actOn('imp-html-file', 'change', function (ev) {
+    var f = ev.target.files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var m = /<!-- PF2E-SHEET-DATA:START -->([\s\S]*?)<!-- PF2E-SHEET-DATA:END -->/.exec(String(fr.result));
+      if (!m) { toast('В HTML не найден блок данных персонажа', true); return; }
+      var jm = /<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/.exec(m[1]);
+      if (!jm) { toast('Не найден JSON-блок в HTML', true); return; }
+      importJSONText(jm[1].trim());
+    };
+    fr.readAsText(f); ev.target.value = '';
+  });
+  actOn('imp-pdf-file', 'change', function (ev) {
+    var f = ev.target.files[0]; if (!f) return;
+    toast('PDF-импорт: сконвертируйте файл tools/extract.py и импортируйте JSON.', true);
+    ev.target.value = '';
+  });
+}
+
 /* ---------------- темы оформления (цвета + раскладка) ---------------- */
 var BUILD_THEME = (typeof window !== 'undefined' && window.__PF2E_BUILD_THEME__) || '';
 
@@ -5545,6 +5886,7 @@ function boot() {
   wirePalettePicker();
   wireTopbar();
   wireIOButtons();
+  wireActions();   // реестр window.PF2E_ACTIONS для JSON-кнопок (pf2e-field-button)
   wireEditMode();
 
   // 1) загружаем персонажей: localStorage + встроенные в HTML данные
@@ -6808,7 +7150,7 @@ function openBlockModal(f) {
     $all('[id]', canvas).forEach(function (n) {
       if (/^(inv-|srv-)/.test(n.id)) ids.push(n.id);
     });
-    return '#' + ids.join(', #') + ', [data-dkey], .lang-items, .lang-add';
+    return '#' + ids.join(', #') + ', [data-dkey], .lang-items, .lang-add, pf2e-field-list';
   }
   function hideOneList(box) {
     if (box.getAttribute('data-be-hidden')) return;

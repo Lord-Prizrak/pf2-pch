@@ -9,6 +9,7 @@
       inp.type = 'text';
       if (this.hasAttribute('bind')) inp.setAttribute('data-bind', this.getAttribute('bind'));
       if (this.hasAttribute('placeholder')) inp.placeholder = this.getAttribute('placeholder');
+      if (this.hasAttribute('attrsize')) inp.setAttribute('size', this.getAttribute('attrsize'));
       if (this.className) inp.className = this.className;
       this.appendChild(inp);
       this._ctl = inp;

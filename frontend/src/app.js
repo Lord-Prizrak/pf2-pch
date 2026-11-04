@@ -471,12 +471,14 @@ var BE_WC_KINDS = { text: 'pf2e-field-text', number: 'pf2e-field-number',
 function beWcTag(c) {
   if (!window.customElements) return null;
   var k = c.kind === 'textarea' ? 'textarea' : (c.type || 'text');
+  if (k === 'file') k = 'file';
   var tag = BE_WC_KINDS[k];
   return (tag && window.customElements.get(tag)) ? tag : null;
 }
-/* Кнопки действий из JSON (action: "hp:-1", "export:html", ...) — реестр
-   window.PF2E_ACTIONS строится в wireActions(); web-компонент
-   pf2e-field-button вешает обработчик по атрибуту action. */
+/* Кнопки/поля действий из JSON (action: "hp:-1", "export:html", ...) — реестр
+   window.PF2E_ACTIONS строится в wireActions() (после wireIOButtons);
+   web-компонент pf2e-field-button вешает обработчик по атрибуту action. */
+window.PF2E_ACTIONS = {};
 function beButton(e) {
   var act = e.action || '';
   var m = /^hp:(.+)$/.exec(act);
@@ -519,7 +521,8 @@ function beControl(c) {
     cls = cls.trim();
     var host = document.createElement(wc);
     for (var ka in hostAttrs) host.setAttribute(ka, hostAttrs[ka]);
-    if (hostAttrs.class) host.className = hostAttrs.class;
+    if (cls) host.className = cls;
+    if (c.attrSize) host.setAttribute('attrsize', String(c.attrSize));
     if (c.id) host.id = c.id;
     if (c.action) host.setAttribute('data-action', c.action);
     return host;
@@ -621,18 +624,43 @@ function beElement(e) {
       (e.children || []).forEach(function (ch) { sd.appendChild(beElement(ch)); });
       return sd;
     }
-    case 'list':
+    case 'list': {
+      /* Web Component pf2e-field-list (frontend/src/fields/field-list.js):
+         контейнер динамического списка — наполняется штатными render*-функциями */
+      var ltag = (window.customElements && window.customElements.get('pf2e-field-list'))
+                 ? 'pf2e-field-list' : 'div';
+      var ln = el(ltag, {});
+      if (e.list) ln.setAttribute('list', e.list);
+      var lcls = beClassOf(e); if (e.cls) lcls = (lcls ? lcls + ' ' : '') + e.cls;
+      if (lcls.trim()) ln.className = lcls.trim();
+      if (e.ref) ln.id = e.ref; else if (e.id) ln.id = e.id;
+      if (e.hidden) ln.classList.add('hidden');
+      (e.children || []).forEach(function (ch) { ln.appendChild(beElement(ch)); });
+      return ln;
+    }
     case 'static': {
-      var tag = e.tag || 'div';
-      var cls = beClassOf(e);
-      if (e.cls) cls = (cls ? cls + ' ' : '') + e.cls;
-      var n = el(tag, { class: cls });
-      if (e.ref) n.id = e.ref;
-      else if (e.id) n.id = e.id;
-      if (e.html) n.innerHTML = e.html;
-      else if (e.text) n.textContent = e.text;
-      (e.children || []).forEach(function (ch) { n.appendChild(beElement(ch)); });
-      return n;
+      /* Web Component pf2e-field-static: фиксированный текст/подпись */
+      if (window.customElements && window.customElements.get('pf2e-field-static')) {
+        var sh = document.createElement('pf2e-field-static');
+        sh.setAttribute('tag', e.tag || 'div');
+        if (e.cls) sh.className = e.cls;
+        if (e.html) sh.setAttribute('html', e.html);
+        else if (e.text) sh.setAttribute('text', e.text);
+        if (e.ref) sh.id = e.ref; else if (e.id) sh.id = e.id;
+        if (e.dynamic) sh.setAttribute('data-dkey', e.dkey || e.ref || e.id || '');
+        else sh.setAttribute('data-be-static', '1');
+        if (e.hidden) sh.classList.add('hidden');
+        return sh;
+      }
+      var stag = e.tag || 'div';
+      var scls = beClassOf(e); if (e.cls) scls = (scls ? scls + ' ' : '') + e.cls;
+      var sn = el(stag, { class: scls });
+      if (e.ref) sn.id = e.ref; else if (e.id) sn.id = e.id;
+      if (e.html) sn.innerHTML = e.html;
+      else if (e.text) sn.textContent = e.text;
+      if (e.hidden) sn.classList.add('hidden');
+      (e.children || []).forEach(function (ch) { sn.appendChild(beElement(ch)); });
+      return sn;
     }
     default:
       return el('div', {});
@@ -2032,6 +2060,116 @@ function wireTopbar() {
   });
 }
 
+/* ---------------- реестр действий JSON-кнопок (pf2e-field-button) --------
+   wireActions вызывается после wireIOButtons/wireTopbar: обработчики по id
+   уже навешаны — здесь регистрируются те же функции под action-ключами из
+   blocks.json. Кнопки без id, но с action работают через этот реестр. */
+function actOn(id, evName, fn) {
+  var n = document.getElementById(id);
+  if (!n) return false;
+  n.addEventListener(evName || 'click', fn);
+  return true;
+}
+function wireActions() {
+  var A = window.PF2E_ACTIONS;
+  /* HP-кнопки (дублируют [data-hp]-обработчик wireTopbar для чистых WC-кнопок) */
+  function hpAction(ev, btn) {
+    var act = btn.getAttribute('data-action') || '';
+    var m = /^hp:(.+)$/.exec(act);
+    var v = m ? m[1] : btn.getAttribute('data-hp');
+    if (v === 'full') { State.sheet.hitPoints.current = State.sheet.hitPoints.max; State.sheet.hitPoints.temp = 0; State.sheet.hitPoints.dying = 0; State.sheet.hitPoints.wounded = 0; }
+    else applyDamage(Number(v));
+    markDirty(); updateComputed();
+  }
+  A['hp:-1'] = A['hp:-5'] = A['hp:1'] = A['hp:5'] = A['hp:full'] = hpAction;
+  /* серверы */
+  A['server:add'] = function () {
+    var inp = document.getElementById('srv-url');
+    var url = inp ? (inp.value || (inp.control && inp.control.value) || '').trim() : '';
+    if (!url) { toast('Укажите адрес сервера', true); return; }
+    url = url.replace(/\/+$/, '');
+    var list = getServers();
+    if (!list.filter(function (s) { return s.url === url; }).length) { list.push({ url: url, username: '', token: null, jwt: null }); saveServers(list); }
+    State.selectedServer = url; renderServersUI();
+    loadServerCharacters(findServer(url)).catch(function () {});
+  };
+  /* импорт из скрытых file-инпутов (id заданы в blocks.json) */
+  A['import:json-file'] = function () { var f = document.getElementById('imp-json-file'); if (f) (f.control || f).click(); };
+  A['import:html'] = function () { var f = document.getElementById('imp-html-file'); if (f) (f.control || f).click(); };
+  A['import:pdf'] = function () { toast('Для PDF используйте конвертер tools/extract.py (python), затем импортируйте полученный JSON.', true); };
+  /* экспорт/json — обработчики по id уже висят (wireIOButtons); реестр —
+     для кнопок без id и для вызова из web-компонента */
+  A['export:json-clipboard'] = function () { copyText(exportCurrentJSON()); };
+  A['export:json-file'] = function () { download(slugify(State.sheet.name) + '.json', exportCurrentJSON(), 'application/json'); };
+  A['export:html'] = function () {
+    var s = clone(State.sheet); s.sheet = collectSheetSchema();
+    download(slugify(State.sheet.name) + '-sheet.html', buildStandaloneHTML([s]), 'text/html');
+  };
+  A['export:all-json'] = function () {
+    var map = Store.loadAll();
+    download('pf2e-characters.json', JSON.stringify({ schema: SCHEMA, characters: Object.keys(map).map(function (k) { return map[k]; }) }, null, 2), 'application/json');
+  };
+  A['export:all-html'] = function () {
+    var map = Store.loadAll();
+    download('pf2e-all-sheets.html', buildStandaloneHTML(Object.keys(map).map(function (k) { return map[k]; })), 'text/html');
+  };
+  A['import:json-clipboard'] = function () { pasteText().then(function (t) { if (t) importJSONText(t, { reassignIds: false }); }); };
+  A['json:apply'] = function () {
+    var ed = document.getElementById('json-editor');
+    if (ed) importJSONText((ed.value != null ? ed : (ed.control || ed)).value, { forceNewId: false });
+  };
+  A['json:refresh'] = function () { refreshJsonEditor(); };
+  A['server:push'] = function () {
+    var srv = pickQuickServer(); if (!srv) return;
+    pushToServer(srv, State.sheet).catch(function (e) { toast(e.message, true); });
+  };
+  A['server:pull'] = function () {
+    var srv = pickQuickServer(); if (!srv) return;
+    var chars = State.serverChars[srv.url] || [];
+    var match = chars.filter(function (c) { return c.id === State.sheet.id || c.name === State.sheet.name; })[0];
+    if (!match) { toast('Такого персонажа на сервере нет', true); return; }
+    api(srv, '/api/characters/' + encodeURIComponent(match.id)).then(function (res) {
+      var full = res.character || res;
+      var map = Store.loadAll();
+      var ns = normalizeSheet(full); ns.id = State.sheet.id;
+      map[ns.id] = ns; Store.saveAll(map);
+      switchCharacter(ns.id);
+      toast('Обновлено с сервера');
+    }).catch(function (e) { toast(e.message, true); });
+  };
+  function pickQuickServer() {
+    var list = getServers();
+    if (!list.length) { toast('Нет настроенных серверов — добавьте на вкладке «Серверы»', true); switchTab('servers'); return null; }
+    var srv = list.filter(function (s) { return s.url === State.selectedServer; })[0] || list[0];
+    if (!srv.token && !srv.jwt) { toast('Сервер ' + srv.url + ' не авторизован — войдите или задайте API-ключ', true); switchTab('servers'); return null; }
+    return srv;
+  }
+  /* file-инпуты из JSON: change-чтение (импорт json/html из файла) */
+  actOn('imp-json-file', 'change', function (ev) {
+    var f = ev.target.files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () { importJSONText(String(fr.result)); };
+    fr.readAsText(f); ev.target.value = '';
+  });
+  actOn('imp-html-file', 'change', function (ev) {
+    var f = ev.target.files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var m = /<!-- PF2E-SHEET-DATA:START -->([\s\S]*?)<!-- PF2E-SHEET-DATA:END -->/.exec(String(fr.result));
+      if (!m) { toast('В HTML не найден блок данных персонажа', true); return; }
+      var jm = /<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/.exec(m[1]);
+      if (!jm) { toast('Не найден JSON-блок в HTML', true); return; }
+      importJSONText(jm[1].trim());
+    };
+    fr.readAsText(f); ev.target.value = '';
+  });
+  actOn('imp-pdf-file', 'change', function (ev) {
+    var f = ev.target.files[0]; if (!f) return;
+    toast('PDF-импорт: сконвертируйте файл tools/extract.py и импортируйте JSON.', true);
+    ev.target.value = '';
+  });
+}
+
 /* ---------------- темы оформления (цвета + раскладка) ---------------- */
 var BUILD_THEME = (typeof window !== 'undefined' && window.__PF2E_BUILD_THEME__) || '';
 
@@ -2129,6 +2267,7 @@ function boot() {
   wirePalettePicker();
   wireTopbar();
   wireIOButtons();
+  wireActions();   // реестр window.PF2E_ACTIONS для JSON-кнопок (pf2e-field-button)
   wireEditMode();
 
   // 1) загружаем персонажей: localStorage + встроенные в HTML данные
@@ -3392,7 +3531,7 @@ function openBlockModal(f) {
     $all('[id]', canvas).forEach(function (n) {
       if (/^(inv-|srv-)/.test(n.id)) ids.push(n.id);
     });
-    return '#' + ids.join(', #') + ', [data-dkey], .lang-items, .lang-add';
+    return '#' + ids.join(', #') + ', [data-dkey], .lang-items, .lang-add, pf2e-field-list';
   }
   function hideOneList(box) {
     if (box.getAttribute('data-be-hidden')) return;
