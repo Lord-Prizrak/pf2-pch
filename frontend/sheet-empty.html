@@ -369,15 +369,23 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 }
 .block-editor-panel h3 { margin: 0 0 8px; font-size: 1rem; }
 .block-editor-panel h4 { margin: 12px 0 6px; font-size: .9rem; }
-.bep-form label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.bep-form label > span { flex: 0 0 110px; }
+/* Свойства блока: метка и значение в одной строке, каждое свойство — отдельная строка */
+.bep-prop-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.bep-plabel { flex: 0 0 120px; font-weight: 600; font-size: .85rem; white-space: nowrap; }
+.bep-prop-row input, .bep-prop-row select { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
 .bep-form input, .bep-form select, .bep-field-row input, .bep-field-row select {
   flex: 1 1 auto; min-width: 0; background: var(--field, #fff); color: inherit;
   border: 1px solid var(--line, #bbb); border-radius: 4px; padding: 3px 6px;
 }
 .bep-fields { display: flex; flex-direction: column; gap: 4px; }
-.bep-field-row { display: flex; gap: 4px; align-items: center; }
+.bep-field-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .bep-field-row input[type=text] { flex: 1 1 40%; }
+/* Строка формулы — отдельной строкой (на всю ширину) ПОД данными поля */
+.bep-fml-row { flex: 1 1 100%; display: flex; gap: 4px; align-items: center; }
+.bep-fml-row .bep-formula { flex: 1 1 auto; min-width: 0; }
+.bep-fml-hint { font-size: .8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bep-fml-hint.ok { color: var(--ok, #2e7d32); }
+.bep-fml-hint.bad { color: var(--bad, #b3261e); }
 .bep-ftype { flex: 0 0 62px; font-family: monospace; font-size: .75rem; opacity: .75; }
 .bep-del { flex: 0 0 auto; padding: 1px 6px; }
 .bep-footer { display: flex; gap: 8px; margin-top: 10px; }
@@ -391,6 +399,47 @@ table.bv-table { width: 100%; border-collapse: collapse; font-size: .95em; }
 .nb-field { display: flex; flex-direction: column; gap: 2px; font-size: .9em; }
 .nb-field > span { opacity: .8; }
 .nb-check { display: flex; align-items: center; gap: 6px; font-size: .95em; }
+
+/* --- Панель действий редактора блока --- */
+.bep-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line, #ccc); }
+.bep-actions .btn { flex: 1 1 auto; text-align: center; }
+.bep-save   { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+.bep-cancel { background: var(--chip, #eee); color: inherit; }
+body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
+
+/* ===== Редактор блока v2: палитра | блок | свойства ===== */
+.block-modal-panel.be-v2 { display: flex; gap: 14px; align-items: flex-start; max-width: 96vw; }
+.block-modal-panel.be-v2 .be-palette { flex: 0 0 170px; display: flex; flex-direction: column; gap: 6px; background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 80vh; overflow: auto; }
+.block-modal-panel.be-v2 .be-palette h4 { margin: 0 0 4px; font-size: 13px; color: var(--ink-dim, inherit); }
+.be-pal-item { text-align: left; cursor: grab; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); color: inherit; font: inherit; }
+.be-pal-item:hover { outline: 2px solid var(--accent, #b5893e); }
+.block-modal-panel.be-v2 .block-modal-host { flex: 1 1 auto; min-width: 0; }
+.block-modal-panel.be-v2 .block-editor-panel { flex: 0 0 280px; max-height: 80vh; overflow: auto; }
+.be-canvas { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+.be-field { position: relative; border: 1px dashed transparent; border-radius: 6px; padding: 4px 6px; cursor: default; }
+.be-field:hover { border-color: var(--line); }
+.be-field .be-flabel { display: block; font-size: 11px; opacity: .75; margin-bottom: 2px; }
+.be-field input, .be-field textarea, .be-field select { width: 100%; box-sizing: border-box; }
+.be-field.be-selected { outline: 2px solid var(--accent, #b5893e); background: color-mix(in srgb, var(--accent, #b5893e) 8%, transparent); }
+.be-field.be-drop-target { border-top: 2px solid var(--accent, #b5893e); }
+.be-field.be-dragging { opacity: .7; box-shadow: 0 6px 18px rgba(0,0,0,.35); background: var(--field); }
+.bep-hint { font-size: 12px; opacity: .7; margin-top: 8px; }
+.be-mini-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.be-chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-size: 12px; background: var(--field); }
+.be-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.be-mini-table td, .be-mini-table th { border: 1px solid var(--line); padding: 2px; }
+@media (max-width: 900px) { .block-modal-panel.be-v2 { flex-wrap: wrap; } .block-modal-panel.be-v2 .block-editor-panel { flex: 1 1 100%; } }
+
+/* Режим «Только дизайн»: чекбокс под окном свойств + поведение блока */
+.bep-design-row { margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); }
+.bep-design-label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; user-select: none; }
+.bep-design-label input[type="checkbox"] { width: auto; cursor: pointer; }
+.block-modal-panel.be-design-on .be-palette { opacity: .55; pointer-events: none; }
+.be-fieldset-be-design, fieldset.be-design-mode { outline: 2px dashed var(--accent, #b5893e); outline-offset: 4px; }
+fieldset.be-design-mode .be-canvas input,
+fieldset.be-design-mode .be-canvas textarea,
+fieldset.be-design-mode .be-canvas select { pointer-events: none; opacity: .55; }
+fieldset.be-design-mode .be-chip { opacity: .55; }
 
 
 /* === тема: dark === */
@@ -1231,6 +1280,10 @@ function normalizeSheet(raw) {
   out.meta.createdAt = out.meta.createdAt || nowISO();
   out.meta.updatedAt = out.meta.updatedAt || nowISO();
   out.schema = SCHEMA;
+  // схема листа (кастомные блоки и определения) — часть данных персонажа
+  if (raw && raw.sheet && typeof raw.sheet === 'object') {
+    out.sheet = { blocks: Array.isArray(raw.sheet.blocks) ? raw.sheet.blocks : [] };
+  }
   // acBase: если есть только итоговое ac (старые данные)
   if (raw && raw.armor && raw.armor.ac != null && raw.armor.acBase == null) {
     out.armor.acBase = raw.armor.ac;
@@ -1420,8 +1473,75 @@ function commitEdits() { /* input-обработчики пишут сразу �
 function saveCurrentState(txt) { setState(txt); }
 function saveCurrent() {
   if (!State.sheet) return;
+  State.sheet.sheet = collectSheetSchema();   // схема листа travels с данными персонажа
   Store.upsert(State.sheet);
   State.dirty = false;
+}
+
+/* ============================================================
+   СХЕМА ЛИСТА (sheet.blocks в JSON персонажа, формат Block v1)
+   Кастомные блоки и их определения хранятся внутри данных
+   персонажа — переживают экспорт/импорт, сохранение в HTML и
+   синхронизацию с сервером. Встроенные блоки не сериализуются:
+   они есть в шаблоне листа.
+   ============================================================ */
+var DATA_TAB_IDS = ['sheet', 'inventory', 'bio'];
+function isCustomBlock(f) {
+  return !!(f.classList && f.classList.contains('sec-custom'));
+}
+function blockHostTab(f) {
+  var page = f.closest ? f.closest('.tabpage') : null;
+  return page ? page.id.replace('tab-', '') : 'sheet';
+}
+function collectSheetSchema() {
+  var blocks = [];
+  $all('.tabpage fieldset.sec-custom').forEach(function (f) {
+    var def = null;
+    try { def = JSON.parse(f.dataset.blockDef || 'null'); } catch (e) { /* ignore */ }
+    if (!def || !def.id) def = { formatVersion: 1, kind: 'block', id: f.dataset.bid || ('custom-' + blocks.length), title: blockTitle(f), fields: [] };
+    def.title = blockTitle(f) || def.title;      // актуальный заголовок из legend
+    var html = '';
+    try {
+      var c = f.cloneNode(true);
+      c.removeAttribute('data-bid'); c.removeAttribute('data-block-def');
+      c.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+      c.querySelectorAll('.sec-controls').forEach(function (n) { n.remove(); });
+      c.querySelectorAll('legend').forEach(function (n) { n.classList.remove('drag-handle'); });
+      html = c.innerHTML;
+    } catch (e) { /* ignore */ }
+    blocks.push({ bid: f.dataset.bid || '', tab: blockHostTab(f), def: def, html: html });
+  });
+  return { version: 1, blocks: blocks };
+}
+function applySheetSchema(sheetData) {
+  // 1) удалить все кастомные блоки текущего персонажа со всех вкладок
+  $all('.tabpage fieldset.sec-custom').forEach(function (f) { f.remove(); });
+  var sch = sheetData && sheetData.sheet;
+  if (!sch || !Array.isArray(sch.blocks)) return;
+  sch.blocks.forEach(function (b) {
+    if (!b || !b.def) return;
+    var page = document.getElementById('tab-' + (b.tab || 'sheet'));
+    if (!page) return;
+    var fs = el('fieldset', { class: 'sec sec-custom' });
+    fs.appendChild(el('legend', { text: (b.def && b.def.title) || 'Блок' }));
+    var body = el('div', { class: 'new-block-body' });
+    if (b.html) {
+      body.innerHTML = b.html;   // восстановленная разметка полей
+      fs.appendChild(body);
+    } else {
+      fs.appendChild(body);
+      ((b.def && b.def.fields) || []).forEach(function (fd) {
+        if (fd.type === 'checkbox') body.appendChild(el('label', { class: 'nb-check' }, [blockFieldInput(fd), el('span', { text: ' ' + fd.label })]));
+        else body.appendChild(el('label', { class: 'nb-field' }, [el('span', { text: fd.label }), blockFieldInput(fd)]));
+      });
+    }
+    var area = $('.sheet-area[data-col="left"]', page) || page;
+    area.insertBefore(fs, area.firstChild);
+    if (b.bid) fs.dataset.bid = b.bid;
+    fs.dataset.blockDef = JSON.stringify(b.def);
+    if (b.def.layout && b.def.layout.span) fs.setAttribute('data-span', String(b.def.layout.span));
+    wireBlockDrag(fs);   // восстановленные блоки перетаскиваются как обычные
+  });
 }
 
 function profPicker(cur, onchange) {
@@ -2094,10 +2214,12 @@ function updateComputed() {
       if (all[i] != null) e.textContent = modStr(all[i]);
     });
   }
+  try { recalcFormulas(); } catch (e) { /* движок формул не должен ронять лист */ }
 }
 
 function renderAll() {
   if (!State.sheet) return;
+  applySheetSchema(State.sheet);   // кастомные блоки из данных персонажа
   renderCharSwitcher();
   bindInputs(document);
   renderAbilities();
@@ -2327,6 +2449,7 @@ function importData(data, opts) {
 }
 function exportCurrentJSON(pretty) {
   var s = clone(State.sheet);
+  s.sheet = collectSheetSchema();   // схема листа travels с данными персонажа
   return JSON.stringify(s, null, pretty === false ? 0 : 2);
 }
 function refreshJsonEditor() {
@@ -2393,6 +2516,7 @@ function loadServerCharacters(server) {
 
 function pushToServer(server, sheet, charId) {
   var payload = clone(sheet);
+  payload.sheet = collectSheetSchema();   // схема листа — часть данных персонажа
   return api(server, '/api/characters' + (charId ? '/' + encodeURIComponent(charId) : ''), {
     method: charId ? 'PUT' : 'POST', body: payload
   }).then(function (res) {
@@ -2502,7 +2626,8 @@ function wireIOButtons() {
     download(slugify(State.sheet.name) + '.json', exportCurrentJSON(), 'application/json');
   });
   $('#exp-html').addEventListener('click', function () {
-    download(slugify(State.sheet.name) + '-sheet.html', buildStandaloneHTML([clone(State.sheet)]), 'text/html');
+    var s = clone(State.sheet); s.sheet = collectSheetSchema();
+    download(slugify(State.sheet.name) + '-sheet.html', buildStandaloneHTML([s]), 'text/html');
   });
   $('#exp-all-json').addEventListener('click', function () {
     var map = Store.loadAll();
@@ -3554,8 +3679,226 @@ function createNewBlock() {
   area.insertBefore(fs, area.firstChild);
   wireBlockDrag(fs);
   refreshAllTextareas(fs);
+  if (State.tab === 'blockvis') renderBlockVisUI();  // новый блок сразу появляется в списке блоков
   openBlockModal(fs);                            // сразу открываем редактор нового блока
   toast('Блок «' + def.title + '» создан. Заполните свойства в редакторе.');
+}
+
+/* ============================================================
+   ФОРМУЛЫ: движок вычислений по Block Format v1 (docs/block-format.md §Формулы)
+   Синтаксис: {путь} — ссылки на данные персонажа; #block-id/ключ — поля блоков;
+   PF2e-модификаторы +N/-N, *2, /2, //2, %2; функции min/max/floor/ceil/round/
+   abs/sqrt/pow/mod/if/sign/dice; константы pi,e.
+   ============================================================ */
+var FORMULA_FN = {
+  min: Math.min, max: Math.max, floor: Math.floor, ceil: Math.ceil, round: Math.round,
+  abs: Math.abs, sqrt: function (x) { return Math.sqrt(Math.max(0, x)); },
+  pow: Math.pow, mod: function (a, b) { return b === 0 ? 0 : a % b; },
+  sign: Math.sign,
+  if: function (c, a, b) { return c > 0 ? a : (b === undefined ? 0 : b); },
+  dice: function (n, sides) { n = Math.floor(n || 0); sides = Math.floor(sides || 6); var s = 0; for (var i = 0; i < n; i++) s += 1 + Math.floor(Math.random() * Math.max(2, sides)); return s; }
+};
+/* Токены: number | ref{...}/$path | bfld #block/key | id | op | lparen rparen comma */
+function tokenizeFormula(src) {
+  var t = [], i = 0, n = src.length;
+  while (i < n) {
+    var c = src[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(src[i + 1] || ''))) {
+      var m = /^[0-9]*\.?[0-9]+/.exec(src.slice(i));
+      t.push({ k: 'number', v: parseFloat(m[0]) }); i += m[0].length; continue;
+    }
+    if (c === '{') { var e = src.indexOf('}', i); if (e < 0) throw new Error('незакрытая {'); t.push({ k: 'ref', v: src.slice(i + 1, e).trim() }); i = e + 1; continue; }
+    if (c === '$' || c === '#') {
+      var j = i + 1, s = '';
+      while (j < n && /[A-Za-z0-9_.\u0400-\u04FF-]/.test(src[j])) s += src[j++];
+      t.push({ k: c === '#' ? 'bfld' : 'ref', v: s }); i = j; continue;
+    }
+    if (/[A-Za-z_\u0400-\u04FF]/.test(c)) {
+      var j2 = i, s2 = '';
+      while (j2 < n && /[A-Za-z0-9_\u0400-\u04FF]/.test(src[j2])) s2 += src[j2++];
+      t.push({ k: 'id', v: s2.toLowerCase() }); i = j2; continue;
+    }
+    if ('+-*/%'.indexOf(c) >= 0) { t.push({ k: 'op', v: c }); i++; continue; }
+    if (c === '(') { t.push({ k: 'lparen' }); i++; continue; }
+    if (c === ')') { t.push({ k: 'rparen' }); i++; continue; }
+    if (c === ',') { t.push({ k: 'comma' }); i++; continue; }
+    throw new Error('неизвестный символ «' + c + '»');
+  }
+  return t;
+}
+function parseFormula(src) {
+  var toks = tokenizeFormula(src), p = 0;
+  function peek(o) { return toks[p + (o || 0)]; }
+  function isOp(t, v) { return t && t.k === 'op' && t.v === v; }
+  function eat(k) { if (peek() && peek().k === k) { p++; return true; } return false; }
+  /* Грэммар (приоритеты PF2e):
+     expr := add;  add := mul (('+'|'-') mul)*;  mul := pf (('*'|'/'|'%') pf)*;
+     pf   := prim постфиксные *2 /2 //2 %2*;  prim := число|ссылка|(expr)|-prim|fn(args) */
+  function parseExpr() { return parseAdd(); }
+  function parseAdd() {
+    var v = parseMul();
+    while (isOp(peek(), '+') || isOp(peek(), '-')) {
+      var o = toks[p++].v; v = { type: 'bin', op: o, a: v, b: parseMul() };
+    }
+    return v;
+  }
+  function parseMul() {
+    var v = parsePF();
+    while (isOp(peek(), '*') || isOp(peek(), '/') || isOp(peek(), '%')) {
+      var o = toks[p++].v; v = { type: 'bin', op: o, a: v, b: parsePF() };
+    }
+    return v;
+  }
+  function parsePF() {
+    var v = parsePrim();
+    for (;;) {
+      if (isOp(peek(), '*') && peek(1) && peek(1).k === 'number' && peek(1).v === 2) { p += 2; v = { type: 'pf', op: '*2', a: v }; continue; }
+      if (isOp(peek(), '/') && isOp(peek(1), '/') && peek(2) && peek(2).k === 'number' && peek(2).v === 2) { p += 3; v = { type: 'pf', op: '//2', a: v }; continue; }
+      if (isOp(peek(), '%') && peek(1) && peek(1).k === 'number' && peek(1).v === 2) { p += 2; v = { type: 'pf', op: '%2', a: v }; continue; }
+      /* NB: "/2" НЕ постфиксный модификатор — это обычное деление (PF2e //2 пишется как //2). */
+      break;
+    }
+    return v;
+  }
+  function parsePrim() {
+    var t = peek(); if (!t) throw new Error('неожиданный конец формулы');
+    if (isOp(t, '-')) { p++; return { type: 'neg', a: parsePrim() }; }
+    if (isOp(t, '+')) { p++; return parsePrim(); }
+    if (t.k === 'number') { p++; return { type: 'num', v: t.v }; }
+    if (t.k === 'lparen') { p++; var e = parseExpr(); if (!eat('rparen')) throw new Error('ожидалась )'); return e; }
+    if (t.k === 'ref') { p++; return { type: 'ref', path: t.v }; }
+    if (t.k === 'bfld') { p++; return { type: 'bfld', ref: t.v }; }
+    if (t.k === 'id') {
+      p++;
+      if (t.v === 'pi') return { type: 'num', v: Math.PI };
+      if (t.v === 'e') return { type: 'num', v: Math.E };
+      if (FORMULA_FN[t.v]) {
+        var args = [];
+        if (!eat('lparen')) throw new Error('после функции ' + t.v + ' ожидалась (');
+        if (peek() && peek().k !== 'rparen') { args.push(parseExpr()); while (eat('comma')) args.push(parseExpr()); }
+        if (!eat('rparen')) throw new Error('ожидалась )');
+        return { type: 'call', fn: t.v, args: args };
+      }
+      throw new Error('неизвестный идентификатор «' + t.v + '»');
+    }
+    throw new Error('неожиданный элемент «' + t.k + '»');
+  }
+  var ast = parseExpr();
+  if (p < toks.length) throw new Error('лишние символы в формуле');
+  return ast;
+}
+function evalAst(ast, ctx) {
+  switch (ast.type) {
+    case 'num': return ast.v;
+    case 'ref': { var v = getPath(ctx.sheet, ast.path); v = (typeof v === 'number') ? v : parseFloat(v); return isNaN(v) ? 0 : v; }
+    case 'bfld': { var pr = blockFieldResolve(ast.ref, ctx.blocks); var w = parseFloat(pr.el ? pr.raw : NaN); return isNaN(w) ? 0 : w; }
+    case 'neg': return -evalAst(ast.a, ctx);
+    case 'bin': {
+      var a = evalAst(ast.a, ctx), b = evalAst(ast.b, ctx);
+      switch (ast.op) {
+        case '+': return a + b; case '-': return a - b; case '*': return a * b;
+        case '/': return b === 0 ? 0 : a / b;
+        case '%': return b === 0 ? 0 : a - b * Math.trunc(a / b);
+      }
+      throw new Error('неизвестный бинарный оператор');
+    }
+    case 'pf': {
+      var x = evalAst(ast.a, ctx);
+      switch (ast.op) { case '*2': return x * 2; case '/2': return x / 2; case '//2': return Math.trunc(x / 2); case '%2': return x % 2; }
+      throw new Error('неизвестный PF-модификатор');
+    }
+    case 'call': {
+      var args = ast.args.map(function (x) { return evalAst(x, ctx); });
+      return FORMULA_FN[ast.fn].apply(null, args);
+    }
+  }
+  throw new Error('неизвестный узел AST');
+}
+/* Разрешение ссылки вида "block-id/ключ" (или "#block-id/ключ") среди блоков страницы. */
+function blockFieldResolve(ref, blocks) {
+  var slash = ref.lastIndexOf('/');
+  var bid = slash >= 0 ? ref.slice(0, slash) : ref;
+  var key = slash >= 0 ? ref.slice(slash + 1) : '';
+  var el = null;
+  for (var i = 0; i < blocks.length; i++) {
+    var f = blocks[i];
+    if ((f.dataset.bid || '') === bid || f.id === bid) {
+      el = f.querySelector('[name="' + key + '"],[data-path="' + key + '"],#' + key.replace(/[^A-Za-z0-9_-]/g, '')) ||
+           f.querySelectorAll('input,textarea,select')[parseInt(key, 10)] || null;
+      break;
+    }
+  }
+  var raw = '';
+  if (el) raw = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
+  return { el: el, raw: raw, w: parseInt(raw, 10) };
+}
+/* Вычислить все формулы блока def над State.sheet; вернуть map ключ->число. */
+function computeFormulas(def, sheet, blocks) {
+  var out = {};
+  if (!def || !def.fields) return out;
+  var ctx = { sheet: sheet, blocks: blocks || [] };
+  var working = {};
+  def.fields.forEach(function (fd) {
+    if (!fd.formula) return;
+    try {
+      var ast = parseFormula(fd.formula);
+      var saved = {};
+      Object.keys(working).forEach(function (k) { var e = findBlockFieldEl(blocks, k); if (e) saved[k] = e.value; });
+      Object.keys(working).forEach(function (k) { var e = findBlockFieldEl(blocks, k); if (e) e.value = String(working[k]); });
+      out[fd.key] = evalAst(ast, ctx);
+      Object.keys(saved).forEach(function (k) { var e = findBlockFieldEl(blocks, k); if (e) e.value = saved[k]; });
+      working[fd.key] = out[fd.key];
+    } catch (err) { out[fd.key] = { error: err.message }; }
+  });
+  return out;
+}
+function findBlockFieldEl(blocks, refKey) {
+  for (var i = 0; i < blocks.length; i++) {
+    var e = blocks[i].querySelector('[name="' + refKey + '"],[data-path="' + refKey + '"]');
+    if (e) return e;
+  }
+  return null;
+}
+/* Запись результатов формул в DOM: read-only output-поля создаются при необходимости. */
+function applyFormulaOutputs(def, values, blockEl) {
+  if (!def || !def.fields) return;
+  def.fields.forEach(function (fd) {
+    if (!fd.formula) return;
+    var v = values[fd.key];
+    var err = v && typeof v === 'object' ? v.error : null;
+    var res = err != null ? '⚠ ' + err : String(v);
+    var out = blockEl ? blockEl.querySelector('.formula-out[data-fkey="' + fd.key + '"]') : null;
+    if (!out) {
+      var src = blockEl ? blockEl.querySelector('[name="' + fd.key + '"],[data-path="' + fd.key + '"]') : null;
+      if (src) {
+        src.setAttribute('readonly', '');
+        src.classList.add('formula-out');
+        src.dataset.fkey = fd.key;
+        src.value = res;
+      } else if (blockEl) {
+        var holder = blockEl.querySelector('.new-block-body') || blockEl.querySelector('.sec-body-wrap') || blockEl;
+        var lab = el('label', { class: 'nb-field formula-row' });
+        lab.appendChild(el('span', { text: fd.label || fd.key }));
+        var inp = el('input', { type: 'text', name: 'f:' + fd.key, readonly: '', class: 'formula-out' });
+        inp.dataset.fkey = fd.key; inp.value = res;
+        lab.appendChild(inp); holder.appendChild(lab);
+      }
+    } else { out.value = res; }
+  });
+}
+/* Главный пересчёт: вызывается из updateComputed(). */
+function recalcFormulas() {
+  if (!State.sheet) return;
+  var page = document.getElementById('tab-' + State.tab) || document;
+  var blocks = $all('fieldset.sec', page);
+  blocks.forEach(function (f) {
+    var raw = f.dataset.blockDef;
+    if (!raw) return;
+    var def; try { def = JSON.parse(raw); } catch (e) { return; }
+    if (!def.fields || !def.fields.some(function (x) { return x.formula; })) return;
+    applyFormulaOutputs(def, computeFormulas(def, State.sheet, blocks), f);
+  });
 }
 
 /* Расстановка drag-обработчиков на все блоки не-листовых вкладок. */
@@ -3564,19 +3907,63 @@ function wireTabBlocks() {
   $all('.tabpage fieldset').forEach(wireBlockDrag);
 }
 
-/* ---------- Редактирование блока в модальном окне ---------- */
-var blockModal = null; // { overlay, panel, closeBtn, host, origParent, nextSibling, bid }
+/* ---------- Редактор блока: палитра | блок в центре | свойства справа ---------- */
+var blockModal = null; // { overlay, panel, closeBtn, host, origParent, nextSibling, bid, isDirty, applyEdits }
+
+var FIELD_PALETTE = [
+  { type: 'text',     label: 'Текст',       icon: 'T' },
+  { type: 'textarea', label: 'Многострочный', icon: '¶' },
+  { type: 'number',   label: 'Число',       icon: '#' },
+  { type: 'checkbox', label: 'Флажок',      icon: '☑' },
+  { type: 'select',   label: 'Выпадающий',  icon: '▾' },
+  { type: 'checklist',label: 'Список',      icon: '≡' },
+  { type: 'table',    label: 'Таблица',     icon: '⊞' },
+  { type: 'skills',   label: 'Навыки',      icon: '◆' },
+  { type: 'spells',   label: 'Заклинания',  icon: '✦' }
+];
+
+/* Создание DOM-представления поля по типу (упрощённо, как в готовых блоках). */
+function makeFieldEl(fd) {
+  var wrap = el('div', { class: 'be-field', 'data-ftype': fd.type });
+  var lab = el('label', { class: 'be-flabel', text: fd.label || fd.key });
+  var input;
+  switch (fd.type) {
+    case 'textarea':
+      input = el('textarea', { rows: '2', placeholder: fd.label || '' }); break;
+    case 'number':
+      input = el('input', { type: 'number', placeholder: fd.label || '' }); break;
+    case 'checkbox':
+      input = el('input', { type: 'checkbox' }); break;
+    case 'select':
+      input = el('select', {}, [el('option', { text: fd.label || '—' })]); break;
+    case 'checklist':
+      input = el('div', { class: 'be-mini-list' }, [el('span', { class: 'be-chip', text: 'пункт 1' }), el('span', { class: 'be-chip', text: '+ пункт' })]); break;
+    case 'table':
+      input = el('table', { class: 'be-mini-table' }, [
+        el('tr', {}, [el('th', { text: 'A' }), el('th', { text: 'B' })]),
+        el('tr', {}, [el('td', {}, [el('input', { type: 'text' })]), el('td', {}, [el('input', { type: 'text' })])])
+      ]); break;
+    case 'skills':
+      input = el('div', { class: 'be-mini-list' }, [el('span', { class: 'be-chip', text: 'Навык +0' })]); break;
+    case 'spells':
+      input = el('div', { class: 'be-mini-list' }, [el('span', { class: 'be-chip', text: 'Слот ▢▢▢' })]); break;
+    default:
+      input = el('input', { type: 'text', placeholder: fd.label || '' });
+  }
+  input.dataset.fkey = fd.key;
+  wrap.appendChild(lab);
+  wrap.appendChild(input);
+  return wrap;
+}
 
 function openBlockModal(f) {
   closeBlockModal();
   var overlay = el('div', { class: 'block-modal-overlay' });
-  var panel = el('div', { class: 'block-modal-panel' });
+  var panel = el('div', { class: 'block-modal-panel be-v2' });
   var closeBtn = el('button', { type: 'button', class: 'block-modal-close', title: 'Закрыть редактирование', text: '✕' });
   var host = el('div', { class: 'block-modal-host' });
 
-  /* --- Панель свойств блока по Block Format v1 (docs/block-format.md) --- */
   var legendEl = f.querySelector('legend');
-  var fieldsWrap = el('div', { class: 'bep-fields' });
   var jsonPre = el('pre', { class: 'bep-json' });
   function blockTitle() { return (legendEl ? (legendEl.textContent || '') : '').trim() || f.dataset.bid; }
   var def = {
@@ -3586,15 +3973,104 @@ function openBlockModal(f) {
     layout: { span: parseInt(f.getAttribute('data-span'), 10) || 4 },
     fields: []
   };
+
+  /* ===== Левая колонка: палитра типов полей ===== */
+  var palette = el('div', { class: 'be-palette' });
+  palette.appendChild(el('h4', { text: 'Палитра полей' }));
+  FIELD_PALETTE.forEach(function (p) {
+    var item = el('button', { type: 'button', class: 'be-pal-item', draggable: 'true',
+      title: 'Добавить поле «' + p.label + '» в блок (клик или перетаскивание)',
+      text: p.icon + '  ' + p.label });
+    item.addEventListener('click', function () { addFieldToBlock(p.type, p.label); });
+    item.addEventListener('dragstart', function (e) {
+      e.dataTransfer.setData('text/x-be-field', p.type);
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    palette.appendChild(item);
+  });
+
+  /* ===== Правая колонка: свойства выделенного объекта ===== */
+  var propsPanel = el('div', { class: 'block-editor-panel' });
+  var propsTitle = el('h3', { text: 'Свойства блока' });
+  var propsBody = el('div', { class: 'bep-props-body' });
+  propsPanel.appendChild(propsTitle);
+  propsPanel.appendChild(propsBody);
+
+  /* ===== Чекбокс «Только дизайн» (под окном свойств) ===== */
+  var designOnly = false;
+  var designChk = el('input', { type: 'checkbox', id: 'be-design-only' });
+  var designLabel = el('label', { class: 'bep-design-label' }, [designChk, document.createTextNode(' Только дизайн')]);
+  propsPanel.appendChild(el('div', { class: 'bep-design-row' }, [designLabel]));
+
+  /* Сохраняем исходные данные персонажа перед очисткой блока. */
+  function snapshotFieldValues() {
+    var map = {};
+    $all('input, textarea, select', f).forEach(function (i) {
+      var holder = i.closest('.be-field');
+      var key = holder ? holder.dataset.fkey : (i.name || i.dataset.path);
+      if (!key) return;
+      if (i.type === 'checkbox' || i.type === 'radio') map[key] = { checked: i.checked };
+      else map[key] = { value: i.value };
+    });
+    return map;
+  }
+  function restoreBlockValues(saved) {
+    if (!saved) return;
+    $all('input, textarea, select', f).forEach(function (i) {
+      var holder = i.closest('.be-field');
+      var key = holder ? holder.dataset.fkey : (i.name || i.dataset.path);
+      if (!key || !saved[key]) return;
+      if (i.type === 'checkbox' || i.type === 'radio') i.checked = !!saved[key].checked;
+      else i.value = saved[key].value != null ? saved[key].value : '';
+    });
+  }
+  var designSaved = null; // значения полей до перехода в режим дизайна
+
+  /* В режиме «только дизайн» блок отображается чистым (без данных текущего
+     персонажа), поля можно перемещать и выделять для просмотра свойств,
+     но ввод данных и прочие взаимодействия заблокированы. */
+  function clearBlockData() {
+    $all('input, textarea, select', f).forEach(function (i) {
+      if (i.type === 'checkbox' || i.type === 'radio') i.checked = false;
+      else i.value = '';
+      if (i.tagName === 'SELECT') {
+        for (var o = i.options.length - 1; o >= 0; o--) i.remove(o);
+        i.appendChild(el('option', { text: '—' }));
+        i.selectedIndex = 0;
+      }
+    });
+    $all('.be-chip', f).forEach(function (c) { c.textContent = ''; });
+  }
+  function applyDesignMode() {
+    f.classList.toggle('be-design-mode', designOnly);
+    panel.classList.toggle('be-design-on', designOnly);
+    if (designOnly) {
+      designSaved = snapshotFieldValues();
+      clearBlockData();
+      toast('Режим «Только дизайн»: данные скрыты, ввод отключён.');
+    } else {
+      /* Возврат к рабочему режиму: восстанавливаем данные персонажа */
+      restoreBlockValues(designSaved);
+      designSaved = null;
+      refreshAllTextareas(f);
+    }
+  }
+  designChk.addEventListener('change', function () {
+    designOnly = this.checked;
+    applyDesignMode();
+  });
+
+  function propRow(labelText, inputNode) {
+    return el('div', { class: 'bep-prop-row' }, [el('span', { class: 'bep-plabel', text: labelText }), inputNode]);
+  }
+  var spanSel = el('select', { name: 'span' });
+  [4, 6, 8, 12].forEach(function (v) { spanSel.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
+  spanSel.value = String(def.layout.span);
   var propForm = el('form', { class: 'bep-form' }, [
-    el('label', {}, [el('span', { text: 'Заголовок' }), el('input', { name: 'title', value: def.title })]),
-    el('label', {}, [el('span', { text: 'ID' }), el('input', { name: 'id', value: def.id })]),
-    el('label', {}, [el('span', { text: 'Система' }), el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })]),
-    el('label', {}, [el('span', { text: 'Span (12-сетка)' }), (function () {
-      var s = el('select', { name: 'span' });
-      [4, 6, 8, 12].forEach(function (v) { s.appendChild(el('option', { value: String(v), text: v + ' кол.' })); });
-      s.value = String(def.layout.span); return s;
-    })()])
+    propRow('Заголовок', el('input', { name: 'title', value: def.title })),
+    propRow('ID', el('input', { name: 'id', value: def.id })),
+    propRow('Система', el('input', { name: 'system', value: def.system, placeholder: 'pf2e / dnd5e / generic…' })),
+    propRow('Span (12-сетка)', spanSel)
   ]);
   function syncFromForm() {
     def.title = propForm.elements.title.value.trim() || def.title;
@@ -3607,70 +4083,310 @@ function openBlockModal(f) {
     jsonPre.textContent = JSON.stringify(def, null, 2);
   }
   propForm.addEventListener('input', renderJson);
-  // заголовок блока обновляем на лету
   propForm.elements.title.addEventListener('input', function () { if (legendEl) legendEl.textContent = this.value; });
 
-  function fieldRow(fd) {
-    var del = el('button', { type: 'button', class: 'btn small bep-del', text: '✕', title: 'Удалить поле' });
-    del.addEventListener('click', function () { row.remove(); fd._removed = true; renderJson(); });
-    var keyIn = el('input', { type: 'text', value: fd.key, placeholder: 'key' });
-    var lblIn = el('input', { type: 'text', value: fd.label, placeholder: 'метка' });
-    var typeSel = el('select');
-    ['text', 'textarea', 'number', 'checkbox', 'select', 'checklist', 'table', 'skills', 'spells'].forEach(function (t) {
-      typeSel.appendChild(el('option', { value: t, text: t }));
-    });
-    typeSel.value = fd.type;
-    keyIn.addEventListener('input', function () { fd.key = this.value; renderJson(); });
-    lblIn.addEventListener('input', function () { fd.label = this.value; renderJson(); });
-    typeSel.addEventListener('change', function () { fd.type = this.value; renderJson(); });
-    var row = el('div', { class: 'bep-field-row' }, [
-      el('span', { class: 'bep-ftype', text: fd.type }), keyIn, lblIn, typeSel, del
-    ]);
-    return row;
-  }
-  function collectFields() {
-    def.fields = [];
-    f.querySelectorAll('input, textarea, select').forEach(function (i) {
-      if (i.closest('.bep-form') || i.closest('.bep-footer')) return;
-      var tag = i.tagName.toLowerCase();
-      var type = tag === 'textarea' ? 'textarea' : tag === 'select' ? 'select' : (i.type || 'text');
-      if (type === 'number') type = 'number';
-      var ph = i.placeholder || '';
-      var lbl = ph || (i.labels && i.labels[0] ? (i.labels[0].textContent || '').trim() : '');
-      var key = i.name || i.dataset.path || ('field-' + def.fields.length);
-      def.fields.push({ key: String(key).slice(0, 60), label: String(lbl || key).slice(0, 60), type: type });
-    });
-    def.fields.slice(0, 40).forEach(function (fd) { fieldsWrap.appendChild(fieldRow(fd)); });
-  }
-  var addBtn = el('button', { type: 'button', class: 'btn small', text: '＋ Поле' });
-  addBtn.addEventListener('click', function () {
-    var fd = { key: 'new_field_' + (def.fields.length + 1), label: 'Новое поле', type: 'text' };
-    def.fields.push(fd); fieldsWrap.appendChild(fieldRow(fd)); renderJson();
+  /* Форма свойств отдельного поля */
+  var fieldForm = el('form', { class: 'bep-form' }, [
+    propRow('Метка', el('input', { name: 'flabel' })),
+    propRow('Key', el('input', { name: 'fkey' })),
+    propRow('Тип', (function () {
+      var s = el('select', { name: 'ftype' });
+      FIELD_PALETTE.forEach(function (p) { s.appendChild(el('option', { value: p.type, text: p.label })); });
+      return s;
+    })()),
+    propRow('Формула', el('input', { name: 'fformula', placeholder: 'напр. floor(({abilities.str.score}-10)/2)+{level}+1' }))
+  ]);
+  var fmlHint = el('div', { class: 'bep-fml-hint' });
+  var delFieldBtn = el('button', { type: 'button', class: 'btn small bep-del', text: 'Удалить поле' });
+  fieldForm.addEventListener('input', function () {
+    if (!selected || !selected.fd) return;
+    var fd = selected.fd, dom = selected.dom;
+    fd.label = fieldForm.elements.flabel.value;
+    fd.key = fieldForm.elements.fkey.value || fd.key;
+    fd.type = fieldForm.elements.ftype.value;
+    if (fieldForm.elements.fformula.value.trim()) fd.formula = fieldForm.elements.fformula.value.trim();
+    else delete fd.formula;
+    var lab = dom.querySelector('.be-flabel'); if (lab) lab.textContent = fd.label;
+    dom.dataset.ftype = fd.type;
+    var txt = fieldForm.elements.fformula.value.trim();
+    fmlHint.textContent = ''; fmlHint.className = 'bep-fml-hint';
+    if (txt) {
+      try { parseFormula(txt); fmlHint.textContent = '✓ синтаксис OK'; fmlHint.classList.add('ok'); }
+      catch (err) { fmlHint.textContent = '⚠ ' + err.message; fmlHint.classList.add('bad'); }
+    }
+    renderJson();
   });
+  delFieldBtn.addEventListener('click', function () {
+    if (!selected || !selected.fd) return;
+    var idx = def.fields.indexOf(selected.fd);
+    if (idx >= 0) def.fields.splice(idx, 1);
+    if (selected.dom.parentNode) selected.dom.parentNode.removeChild(selected.dom);
+    selected = null; showBlockProps(); renderJson();
+  });
+
+  var selected = null; // { fd, dom } — выбранное поле; null = выбран сам блок
+  function showBlockProps() {
+    propsTitle.textContent = 'Свойства блока';
+    propsBody.innerHTML = '';
+    propsBody.appendChild(propForm);
+    propsBody.appendChild(el('div', { class: 'bep-hint', text: 'Кликните по полю внутри блока, чтобы редактировать его свойства.' }));
+  }
+  function showFieldProps(sel) {
+    propsTitle.textContent = 'Свойства поля';
+    propsBody.innerHTML = '';
+    fieldForm.elements.flabel.value = sel.fd.label || '';
+    fieldForm.elements.fkey.value = sel.fd.key || '';
+    fieldForm.elements.ftype.value = sel.fd.type || 'text';
+    fieldForm.elements.fformula.value = sel.fd.formula || '';
+    fmlHint.textContent = ''; fmlHint.className = 'bep-fml-hint';
+    if (sel.fd.formula) {
+      try { parseFormula(sel.fd.formula); fmlHint.textContent = '✓ синтаксис OK'; fmlHint.classList.add('ok'); }
+      catch (err) { fmlHint.textContent = '⚠ ' + err.message; fmlHint.classList.add('bad'); }
+    }
+    propsBody.appendChild(fieldForm);
+    propsBody.appendChild(fmlHint);
+    propsBody.appendChild(delFieldBtn);
+  }
+  function selectField(dom, fd) {
+    if (selected && selected.dom) selected.dom.classList.remove('be-selected');
+    selected = { dom: dom, fd: fd };
+    dom.classList.add('be-selected');
+    showFieldProps(selected);
+  }
+
   var copyBtn = el('button', { type: 'button', class: 'btn small', text: 'Копировать JSON' });
   copyBtn.addEventListener('click', function () {
     renderJson();
     if (navigator.clipboard) navigator.clipboard.writeText(jsonPre.textContent);
     copyBtn.textContent = 'Скопировано ✓'; setTimeout(function () { copyBtn.textContent = 'Копировать JSON'; }, 1200);
   });
-  var footer = el('div', { class: 'bep-footer' }, [addBtn, copyBtn]);
-  var propsPanel = el('div', { class: 'block-editor-panel' }, [
-    el('h3', { text: 'Свойства блока' }), propForm,
-    el('h4', { text: 'Поля (fields)' }), fieldsWrap, footer,
-    el('details', { class: 'bep-json-wrap' }, [el('summary', { text: 'JSON определения (Block Format v1)' }), jsonPre])
-  ]);
+  propsPanel.appendChild(el('div', { class: 'bep-footer' }, [copyBtn]));
+  propsPanel.appendChild(el('details', { class: 'bep-json-wrap' }, [el('summary', { text: 'JSON определения (Block Format v1)' }), jsonPre]));
 
-  // физически переносим блок в панель — все обработчики и данные сохраняются
+  /* ===== Центр: переносим блок; делаем существующие контролы «полями» ===== */
   var origParent = f.parentNode, nextSibling = f.nextSibling;
+  // оборачиваем не-legend содержимое в .be-canvas, если ещё не обёрнуто
+  var canvas = f.querySelector('.be-canvas');
+  if (!canvas) {
+    canvas = el('div', { class: 'be-canvas' });
+    Array.prototype.slice.call(f.children).forEach(function (c) {
+      if (c.tagName !== 'LEGEND') canvas.appendChild(c);
+    });
+    f.appendChild(canvas);
+  }
+  // инвентаризация полей: каждый input/textarea/select -> .be-field с data-fkey
+  def.fields = [];
+  var seenKeys = {};
+  Array.prototype.slice.call(canvas.querySelectorAll('input, textarea, select')).forEach(function (i, n) {
+    var holder = i.closest('.be-field');
+    if (!holder) {
+      holder = el('div', { class: 'be-field' });
+      i.parentNode.insertBefore(holder, i);
+      holder.appendChild(i);
+    }
+    var tag = i.tagName.toLowerCase();
+    var type = tag === 'textarea' ? 'textarea' : tag === 'select' ? 'select' : (i.type || 'text');
+    var key = i.dataset.fkey || i.name || i.dataset.path || ('field-' + n);
+    key = String(key).slice(0, 60);
+    if (seenKeys[key]) key = key + '-' + n;
+    seenKeys[key] = 1;
+    holder.dataset.fkey = key;
+    holder.dataset.ftype = type;
+    var lblEl = holder.querySelector('.be-flabel');
+    var label = (lblEl && lblEl.textContent) || i.placeholder || key;
+    var fd = { key: key, label: String(label).slice(0, 60), type: type };
+    // перенос ранее заданной формулы из определения
+    if (f.dataset.blockDef) {
+      try {
+        var old = JSON.parse(f.dataset.blockDef);
+        (old.fields || []).forEach(function (o) { if (o.key === key && o.formula) fd.formula = o.formula; });
+      } catch (e) { /* ignore */ }
+    }
+    def.fields.push(fd);
+  });
+
+  function addFieldToBlock(type, label) {
+    var key = 'field_' + (def.fields.length + 1);
+    while (seenKeys[key]) key = key + '_';
+    seenKeys[key] = 1;
+    var fd = { key: key, label: label, type: type };
+    def.fields.push(fd);
+    var dom = makeFieldEl(fd);
+    canvas.appendChild(dom);
+    wireFieldDom(dom, fd);
+    selectField(dom, fd);
+    renderJson();
+    refreshAllTextareas(f);
+  }
+
+  /* mousedown: выбор поля + начало перемещения внутри блока */
+  function wireFieldDom(dom, fd) {
+    dom.addEventListener('mousedown', function (e) {
+      selectField(dom, fd);   // выбор работает в обоих режимах
+      if (designOnly) { e.preventDefault(); return; }  // только выделение, без ввода
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;   // выбор без перехвата ввода
+      }
+      startFieldDrag(e, dom);
+    });
+  }
+  canvas.querySelectorAll('.be-field').forEach(function (dom) {
+    var fd = def.fields.filter(function (x) { return x.key === dom.dataset.fkey; })[0];
+    if (fd) wireFieldDom(dom, fd);
+  });
+
+  function startFieldDrag(e, dom) {
+    e.preventDefault();
+    var moving = dom.cloneNode(true);
+    moving.classList.add('be-dragging');
+    moving.style.position = 'fixed';
+    moving.style.zIndex = '99999';
+    moving.style.pointerEvents = 'none';
+    var r = dom.getBoundingClientRect();
+    moving.style.left = r.left + 'px'; moving.style.top = r.top + 'px'; moving.style.width = r.width + 'px';
+    document.body.appendChild(moving);
+    var ox = e.clientX - r.left, oy = e.clientY - r.top;
+    function onMove(ev) {
+      moving.style.left = (ev.clientX - ox) + 'px';
+      moving.style.top = (ev.clientY - oy) + 'px';
+      var tgt = fieldAtPoint(ev.clientX, ev.clientY);
+      canvas.querySelectorAll('.be-field').forEach(function (x) { x.classList.remove('be-drop-target'); });
+      if (tgt && tgt !== dom) tgt.classList.add('be-drop-target');
+    }
+    function onUp(ev) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      var tgt = fieldAtPoint(ev.clientX, ev.clientY);
+      if (tgt && tgt !== dom) {
+        var rect = tgt.getBoundingClientRect();
+        if (ev.clientY > rect.top + rect.height / 2) tgt.parentNode.insertBefore(dom, tgt.nextSibling);
+        else tgt.parentNode.insertBefore(dom, tgt);
+      }
+      moving.remove();
+      canvas.querySelectorAll('.be-field').forEach(function (x) { x.classList.remove('be-drop-target'); });
+      reorderFieldsFromDOM();
+      renderJson();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+  function fieldAtPoint(x, y) {
+    var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].classList && els[i].classList.contains('be-field') && canvas.contains(els[i])) return els[i];
+    }
+    return null;
+  }
+  function reorderFieldsFromDOM() {
+    var byKey = {};
+    def.fields.forEach(function (fd) { byKey[fd.key] = fd; });
+    var ordered = [];
+    canvas.querySelectorAll('.be-field').forEach(function (dom) {
+      var fd = byKey[dom.dataset.fkey];
+      if (fd) ordered.push(fd);
+    });
+    def.fields.forEach(function (fd) { if (ordered.indexOf(fd) < 0) ordered.push(fd); });
+    def.fields = ordered;
+  }
+
+  /* drop с палитры на холст */
+  canvas.addEventListener('dragover', function (e) {
+    if (e.dataTransfer.types.indexOf('text/x-be-field') >= 0) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+  });
+  canvas.addEventListener('drop', function (e) {
+    var t = e.dataTransfer.getData('text/x-be-field');
+    if (!t) return;
+    e.preventDefault();
+    addFieldToBlock(t, t);
+  });
+  /* клик по пустой области блока — снимаем выбор, показываем свойства блока */
+  f.addEventListener('mousedown', function (e) {
+    if (!e.target.closest('.be-field')) {
+      if (selected && selected.dom) selected.dom.classList.remove('be-selected');
+      selected = null;
+      showBlockProps();
+    }
+  });
+
+  /* Кнопки действий: Сохранить / Отменить / Закрыть */
+  var saveBtn = el('button', { type: 'button', class: 'btn small bep-save', text: 'Сохранить' });
+  var cancelBtn = el('button', { type: 'button', class: 'btn small bep-cancel', text: 'Отменить' });
+  var closeModalBtn = el('button', { type: 'button', class: 'btn small bep-close', text: 'Закрыть' });
+  var actionsBar = el('div', { class: 'bep-actions' }, [saveBtn, cancelBtn, closeModalBtn]);
+  propsPanel.appendChild(actionsBar);
+
   host.appendChild(f);
-  panel.appendChild(host);
-  panel.appendChild(propsPanel);
+  panel.appendChild(palette);   // слева
+  panel.appendChild(host);      // центр
+  panel.appendChild(propsPanel);// справа
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
-  collectFields(); renderJson();
+  showBlockProps(); renderJson();
+
+  var snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+  function fieldKeyOf(i) {
+    var h = i.closest('.be-field');
+    return h ? h.dataset.fkey : (i.name || i.dataset.path);
+  }
+  /* Клон блока с восстановленными значениями полей из designSaved —
+     чтобы временная очистка в режиме «только дизайн» не считалась изменением. */
+  function htmlForCompare() {
+    if (!designOnly || !designSaved) return f.innerHTML;
+    var tmp = f.cloneNode(true);
+    $all('input, textarea, select', tmp).forEach(function (i) {
+      var s = designSaved[fieldKeyOf(i)];
+      if (!s) return;
+      if (i.type === 'checkbox' || i.type === 'radio') i.checked = !!s.checked;
+      else i.value = s.value != null ? s.value : '';
+    });
+    return tmp.innerHTML;
+  }
+  function isDirty() {
+    syncFromForm();
+    return JSON.stringify({ def: def, html: htmlForCompare() }) !== snapshot;
+  }
+  function applyEdits() {
+    syncFromForm();
+    reorderFieldsFromDOM();
+    if (legendEl) legendEl.textContent = def.title;
+    f.setAttribute('data-span', String(def.layout.span));
+    f.dataset.blockDef = JSON.stringify(def);
+    /* Не сохраняем очищенный вид блока: на время записи возвращаем данные персонажа */
+    if (designOnly) {
+      restoreBlockValues(designSaved);
+      saveCurrent();
+      snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+      clearBlockData();
+    } else {
+      saveCurrent();
+      snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+    }
+    toast('Блок «' + def.title + '» сохранён.');
+  }
+  function revertChanges() {
+    try {
+      var snap = JSON.parse(snapshot);
+      Object.assign(def, snap.def);
+      if (legendEl) legendEl.textContent = def.title || '';
+      f.innerHTML = snap.html;
+      legendEl = f.querySelector('legend');
+      wireBlockDrag(f);
+      refreshAllTextareas(f);
+    } catch (e) { /* ignore */ }
+  }
+
+  saveBtn.addEventListener('click', applyEdits);
+  cancelBtn.addEventListener('click', function () {
+    if (isDirty() && !confirm('Отменить несохранённые изменения блока?')) return;
+    revertChanges();
+    doCloseBlockModal();
+  });
+  closeModalBtn.addEventListener('click', function () { requestCloseBlockModal(); });
+
   blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
-                 origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid };
-  // крестик: справа и чуть выше блока
+                 origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid,
+                 isDirty: isDirty, applyEdits: applyEdits,
+                 designChk: designChk };
   var placeClose = function () {
     closeBtn.style.left = (panel.offsetLeft + panel.offsetWidth - 6) + 'px';
     closeBtn.style.top = Math.max(0, panel.offsetTop - 30) + 'px';
@@ -3681,18 +4397,30 @@ function openBlockModal(f) {
     overlay.addEventListener('resize', placeClose);
   });
   panel.addEventListener('transitionend', placeClose);
-  closeBtn.addEventListener('click', closeBlockModal);
-  overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) closeBlockModal(); });
-  var onKey = function (e) { if (e.key === 'Escape') { closeBlockModal(); document.removeEventListener('keydown', onKey); } };
+  closeBtn.addEventListener('click', function () { requestCloseBlockModal(); });
+  overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) requestCloseBlockModal(); });
+  var onKey = function (e) { if (e.key === 'Escape') { requestCloseBlockModal(); document.removeEventListener('keydown', onKey); } };
   document.addEventListener('keydown', onKey);
   overlay._onKey = onKey;
 }
 
-function closeBlockModal() {
+/* Запрос закрытия редактора: при наличии изменений спрашиваем подтверждение. */
+function requestCloseBlockModal() {
+  if (!blockModal) return;
+  if (blockModal.isDirty && blockModal.isDirty()) {
+    if (!confirm('В блоке есть несохранённые изменения. Всё равно закрыть редактор?')) return;
+  }
+  doCloseBlockModal();
+}
+
+function doCloseBlockModal() {
   if (!blockModal) return;
   var m = blockModal; blockModal = null;
   // возвращаем блок на исходное место, если он всё ещё в панели
   var child = m.host.firstChild;
+  // если редактор закрыли в режиме «только дизайн», снимаем его с блока:
+  // на странице данные персонажа должны отображаться как обычно
+  if (child && child.classList) child.classList.remove('be-design-mode');
   if (child && child.tagName === 'FIELDSET' && m.origParent && m.origParent.contains !== undefined) {
     try { m.origParent.insertBefore(child, m.nextSibling); }
     catch (e) { document.body.appendChild(child); }
@@ -3702,6 +4430,9 @@ function closeBlockModal() {
   applyBlockVisibility();
   refreshAllTextareas();
 }
+
+/* Совместимость: прежнее имя used elsewhere */
+var closeBlockModal = requestCloseBlockModal;
 
 document.addEventListener('DOMContentLoaded', boot);
 window.PF2E = { Store: Store, emptySheet: emptySheet, normalizeSheet: normalizeSheet,

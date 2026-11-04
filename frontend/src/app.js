@@ -2924,6 +2924,70 @@ function openBlockModal(f) {
   propsPanel.appendChild(propsTitle);
   propsPanel.appendChild(propsBody);
 
+  /* ===== Чекбокс «Только дизайн» (под окном свойств) ===== */
+  var designOnly = false;
+  var designChk = el('input', { type: 'checkbox', id: 'be-design-only' });
+  var designLabel = el('label', { class: 'bep-design-label' }, [designChk, document.createTextNode(' Только дизайн')]);
+  propsPanel.appendChild(el('div', { class: 'bep-design-row' }, [designLabel]));
+
+  /* Сохраняем исходные данные персонажа перед очисткой блока. */
+  function snapshotFieldValues() {
+    var map = {};
+    $all('input, textarea, select', f).forEach(function (i) {
+      var holder = i.closest('.be-field');
+      var key = holder ? holder.dataset.fkey : (i.name || i.dataset.path);
+      if (!key) return;
+      if (i.type === 'checkbox' || i.type === 'radio') map[key] = { checked: i.checked };
+      else map[key] = { value: i.value };
+    });
+    return map;
+  }
+  function restoreBlockValues(saved) {
+    if (!saved) return;
+    $all('input, textarea, select', f).forEach(function (i) {
+      var holder = i.closest('.be-field');
+      var key = holder ? holder.dataset.fkey : (i.name || i.dataset.path);
+      if (!key || !saved[key]) return;
+      if (i.type === 'checkbox' || i.type === 'radio') i.checked = !!saved[key].checked;
+      else i.value = saved[key].value != null ? saved[key].value : '';
+    });
+  }
+  var designSaved = null; // значения полей до перехода в режим дизайна
+
+  /* В режиме «только дизайн» блок отображается чистым (без данных текущего
+     персонажа), поля можно перемещать и выделять для просмотра свойств,
+     но ввод данных и прочие взаимодействия заблокированы. */
+  function clearBlockData() {
+    $all('input, textarea, select', f).forEach(function (i) {
+      if (i.type === 'checkbox' || i.type === 'radio') i.checked = false;
+      else i.value = '';
+      if (i.tagName === 'SELECT') {
+        for (var o = i.options.length - 1; o >= 0; o--) i.remove(o);
+        i.appendChild(el('option', { text: '—' }));
+        i.selectedIndex = 0;
+      }
+    });
+    $all('.be-chip', f).forEach(function (c) { c.textContent = ''; });
+  }
+  function applyDesignMode() {
+    f.classList.toggle('be-design-mode', designOnly);
+    panel.classList.toggle('be-design-on', designOnly);
+    if (designOnly) {
+      designSaved = snapshotFieldValues();
+      clearBlockData();
+      toast('Режим «Только дизайн»: данные скрыты, ввод отключён.');
+    } else {
+      /* Возврат к рабочему режиму: восстанавливаем данные персонажа */
+      restoreBlockValues(designSaved);
+      designSaved = null;
+      refreshAllTextareas(f);
+    }
+  }
+  designChk.addEventListener('change', function () {
+    designOnly = this.checked;
+    applyDesignMode();
+  });
+
   function propRow(labelText, inputNode) {
     return el('div', { class: 'bep-prop-row' }, [el('span', { class: 'bep-plabel', text: labelText }), inputNode]);
   }
@@ -3086,11 +3150,11 @@ function openBlockModal(f) {
   /* mousedown: выбор поля + начало перемещения внутри блока */
   function wireFieldDom(dom, fd) {
     dom.addEventListener('mousedown', function (e) {
+      selectField(dom, fd);   // выбор работает в обоих режимах
+      if (designOnly) { e.preventDefault(); return; }  // только выделение, без ввода
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        selectField(dom, fd);   // выбор без перехвата ввода
-        return;
+        return;   // выбор без перехвата ввода
       }
-      selectField(dom, fd);
       startFieldDrag(e, dom);
     });
   }
@@ -3188,9 +3252,26 @@ function openBlockModal(f) {
   showBlockProps(); renderJson();
 
   var snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+  function fieldKeyOf(i) {
+    var h = i.closest('.be-field');
+    return h ? h.dataset.fkey : (i.name || i.dataset.path);
+  }
+  /* Клон блока с восстановленными значениями полей из designSaved —
+     чтобы временная очистка в режиме «только дизайн» не считалась изменением. */
+  function htmlForCompare() {
+    if (!designOnly || !designSaved) return f.innerHTML;
+    var tmp = f.cloneNode(true);
+    $all('input, textarea, select', tmp).forEach(function (i) {
+      var s = designSaved[fieldKeyOf(i)];
+      if (!s) return;
+      if (i.type === 'checkbox' || i.type === 'radio') i.checked = !!s.checked;
+      else i.value = s.value != null ? s.value : '';
+    });
+    return tmp.innerHTML;
+  }
   function isDirty() {
     syncFromForm();
-    return JSON.stringify({ def: def, html: f.innerHTML }) !== snapshot;
+    return JSON.stringify({ def: def, html: htmlForCompare() }) !== snapshot;
   }
   function applyEdits() {
     syncFromForm();
@@ -3198,8 +3279,16 @@ function openBlockModal(f) {
     if (legendEl) legendEl.textContent = def.title;
     f.setAttribute('data-span', String(def.layout.span));
     f.dataset.blockDef = JSON.stringify(def);
-    saveCurrent();
-    snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+    /* Не сохраняем очищенный вид блока: на время записи возвращаем данные персонажа */
+    if (designOnly) {
+      restoreBlockValues(designSaved);
+      saveCurrent();
+      snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+      clearBlockData();
+    } else {
+      saveCurrent();
+      snapshot = JSON.stringify({ def: def, html: f.innerHTML });
+    }
     toast('Блок «' + def.title + '» сохранён.');
   }
   function revertChanges() {
@@ -3224,7 +3313,8 @@ function openBlockModal(f) {
 
   blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
                  origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid,
-                 isDirty: isDirty, applyEdits: applyEdits };
+                 isDirty: isDirty, applyEdits: applyEdits,
+                 designChk: designChk };
   var placeClose = function () {
     closeBtn.style.left = (panel.offsetLeft + panel.offsetWidth - 6) + 'px';
     closeBtn.style.top = Math.max(0, panel.offsetTop - 30) + 'px';
@@ -3256,6 +3346,9 @@ function doCloseBlockModal() {
   var m = blockModal; blockModal = null;
   // возвращаем блок на исходное место, если он всё ещё в панели
   var child = m.host.firstChild;
+  // если редактор закрыли в режиме «только дизайн», снимаем его с блока:
+  // на странице данные персонажа должны отображаться как обычно
+  if (child && child.classList) child.classList.remove('be-design-mode');
   if (child && child.tagName === 'FIELDSET' && m.origParent && m.origParent.contains !== undefined) {
     try { m.origParent.insertBefore(child, m.nextSibling); }
     catch (e) { document.body.appendChild(child); }

@@ -409,3 +409,14 @@ body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
 .be-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .be-mini-table td, .be-mini-table th { border: 1px solid var(--line); padding: 2px; }
 @media (max-width: 900px) { .block-modal-panel.be-v2 { flex-wrap: wrap; } .block-modal-panel.be-v2 .block-editor-panel { flex: 1 1 100%; } }
+
+/* Режим «Только дизайн»: чекбокс под окном свойств + поведение блока */
+.bep-design-row { margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); }
+.bep-design-label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; user-select: none; }
+.bep-design-label input[type="checkbox"] { width: auto; cursor: pointer; }
+.block-modal-panel.be-design-on .be-palette { opacity: .55; pointer-events: none; }
+.be-fieldset-be-design, fieldset.be-design-mode { outline: 2px dashed var(--accent, #b5893e); outline-offset: 4px; }
+fieldset.be-design-mode .be-canvas input,
+fieldset.be-design-mode .be-canvas textarea,
+fieldset.be-design-mode .be-canvas select { pointer-events: none; opacity: .55; }
+fieldset.be-design-mode .be-chip { opacity: .55; }
