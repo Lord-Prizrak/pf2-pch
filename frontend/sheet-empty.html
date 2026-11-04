@@ -1239,7 +1239,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
          "kind": "container",
          "ref": "languages-list",
          "list": "chips",
-         "dynamic": true
+         "dynamic": true,
+         "id": "languages-list"
         }
        ]
       }
@@ -1286,7 +1287,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
        "kind": "container",
        "ref": "hero-points",
        "list": "chips",
-       "dynamic": true
+       "dynamic": true,
+       "id": "hero-points"
       }
      ]
     }
@@ -1317,7 +1319,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "ability-cards",
      "list": "cards",
-     "dynamic": true
+     "dynamic": true,
+     "id": "ability-cards"
     }
    ]
   },
@@ -1443,13 +1446,15 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "armor-block",
      "list": "armor",
-     "dynamic": true
+     "dynamic": true,
+     "id": "armor-block"
     },
     {
      "kind": "list",
      "ref": "saves-block",
      "list": "saves",
-     "dynamic": true
+     "dynamic": true,
+     "id": "saves-block"
     },
     {
      "kind": "container",
@@ -1596,9 +1601,22 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      ]
     },
     {
-     "kind": "list",
+     "kind": "section",
+     "children": [
+      {
+       "kind": "static",
+       "tag": "div",
+       "id": "hp-bar"
+      },
+      {
+       "kind": "text",
+       "role": "value",
+       "html": "",
+       "ref": "hp-text",
+       "dynamic": true
+      }
+     ],
      "ref": "hp-bar-wrap",
-     "list": "bar",
      "dynamic": true
     },
     {
@@ -1609,31 +1627,36 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
        "kind": "button",
        "type": "button",
        "text": "−1",
-       "action": "hp:-1"
+       "action": "hp:-1",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "−5",
-       "action": "hp:-5"
+       "action": "hp:-5",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "+1",
-       "action": "hp:1"
+       "action": "hp:1",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "+5",
-       "action": "hp:5"
+       "action": "hp:5",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "Отдых",
-       "action": "hp:full"
+       "action": "hp:full",
+       "cls": "btn"
       },
       {
        "kind": "text",
@@ -1687,7 +1710,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
        "kind": "container",
        "ref": "perception-prof",
        "list": "badge",
-       "dynamic": true
+       "dynamic": true,
+       "id": "perception-prof"
       }
      ]
     },
@@ -1695,7 +1719,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "skills-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "skills-block"
     }
    ]
   },
@@ -1711,7 +1736,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "strikes-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "strikes-block"
     }
    ]
   },
@@ -1727,7 +1753,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "weapon-prof-block",
      "list": "checkbox-grid",
-     "dynamic": true
+     "dynamic": true,
+     "id": "weapon-prof-block"
     },
     {
      "kind": "container",
@@ -1814,7 +1841,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
        "kind": "list",
        "ref": "hps-quick",
        "list": "buttons",
-       "dynamic": true
+       "dynamic": true,
+       "id": "hps-quick"
       }
      ]
     }
@@ -1832,7 +1860,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "combat-summary",
      "list": "summary",
-     "dynamic": true
+     "dynamic": true,
+     "id": "combat-summary"
     }
    ]
   },
@@ -1848,7 +1877,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "spellcasting-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "spellcasting-block"
     }
    ]
   },
@@ -1864,7 +1894,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "feats-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "feats-block"
     }
    ]
   },
@@ -1880,7 +1911,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "actions-block",
      "list": "items",
-     "dynamic": true
+     "dynamic": true,
+     "id": "actions-block"
     }
    ]
   },
@@ -1967,7 +1999,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "inv-worn",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-worn"
     }
    ]
   },
@@ -1983,7 +2016,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "inv-held",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-held"
     }
    ]
   },
@@ -1999,7 +2033,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "inv-consumables",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-consumables"
     }
    ]
   },
@@ -2015,7 +2050,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "inv-other",
      "list": "inventory",
-     "dynamic": true
+     "dynamic": true,
+     "id": "inv-other"
     }
    ]
   },
@@ -2352,6 +2388,7 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
        "text": "Добавить сервер",
        "id": "srv-add",
        "action": "server:add",
+       "cls": "btn",
        "dynamic": true
       }
      ]
@@ -2360,7 +2397,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "server-list",
      "list": "servers",
-     "dynamic": true
+     "dynamic": true,
+     "id": "server-list"
     }
    ]
   },
@@ -2376,7 +2414,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "srv-auth",
      "list": "auth-form",
-     "dynamic": true
+     "dynamic": true,
+     "id": "srv-auth"
     }
    ]
   },
@@ -2392,7 +2431,8 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "kind": "list",
      "ref": "srv-chars",
      "list": "chars",
-     "dynamic": true
+     "dynamic": true,
+     "id": "srv-chars"
     }
    ]
   },
@@ -2409,35 +2449,40 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "type": "button",
      "text": "Скопировать JSON в буфер",
      "id": "exp-json-clipboard",
-     "action": "export:json-clipboard"
+     "action": "export:json-clipboard",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать JSON-файл",
      "id": "exp-json-file",
-     "action": "export:json-file"
+     "action": "export:json-file",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать HTML с персонажем",
      "id": "exp-html",
-     "action": "export:html"
+     "action": "export:html",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать все персонажи (JSON)",
      "id": "exp-all-json",
-     "action": "export:all-json"
+     "action": "export:all-json",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Скачать HTML со всеми",
      "id": "exp-all-html",
-     "action": "export:all-html"
+     "action": "export:all-html",
+     "cls": "btn"
     }
    ]
   },
@@ -2454,19 +2499,22 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "type": "button",
      "text": "Из буфера обмена",
      "id": "imp-json-clipboard",
-     "action": "import:json-clipboard"
+     "action": "import:json-clipboard",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Из JSON-файла",
      "id": "imp-json-file-btn",
-     "action": "import:json-file"
+     "action": "import:json-file",
+     "cls": "btn"
     },
     {
      "kind": "input",
      "type": "file",
      "id": "imp-json-file",
+     "hidden": true,
      "action": "input:imp-json-file"
     },
     {
@@ -2474,12 +2522,14 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "type": "button",
      "text": "Из HTML-файла листа",
      "id": "imp-html-btn",
-     "action": "import:html"
+     "action": "import:html",
+     "cls": "btn"
     },
     {
      "kind": "input",
      "type": "file",
      "id": "imp-html-file",
+     "hidden": true,
      "action": "input:imp-html-file"
     },
     {
@@ -2487,12 +2537,14 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "type": "button",
      "text": "Из PDF-листа (fields→JSON)",
      "id": "imp-pdf-btn",
-     "action": "import:pdf"
+     "action": "import:pdf",
+     "cls": "btn"
     },
     {
      "kind": "input",
      "type": "file",
      "id": "imp-pdf-file",
+     "hidden": true,
      "action": "input:imp-pdf-file"
     }
    ]
@@ -2510,14 +2562,22 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
      "type": "button",
      "text": "Загрузить текущего на сервер ⤴",
      "id": "push-server",
-     "action": "server:push"
+     "action": "server:push",
+     "cls": "btn"
     },
     {
      "kind": "button",
      "type": "button",
      "text": "Обновить текущего с сервера ⤓",
      "id": "pull-server",
-     "action": "server:pull"
+     "action": "server:pull",
+     "cls": "btn"
+    },
+    {
+     "kind": "static",
+     "tag": "div",
+     "cls": "hint",
+     "role": "hint"
     }
    ]
   },
@@ -2546,14 +2606,16 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
        "type": "button",
        "text": "Применить из текстового поля",
        "id": "json-apply",
-       "action": "json:apply"
+       "action": "json:apply",
+       "cls": "btn"
       },
       {
        "kind": "button",
        "type": "button",
        "text": "Обновить поле из листа",
        "id": "json-refresh",
-       "action": "json:refresh"
+       "action": "json:refresh",
+       "cls": "btn"
       }
      ]
     }
@@ -2566,7 +2628,22 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
    "domId": null,
    "tab": "blockvis",
    "column": null,
-   "elements": []
+   "elements": [
+    {
+     "kind": "static",
+     "tag": "div",
+     "cls": "hint",
+     "role": "hint"
+    },
+    {
+     "kind": "static",
+     "tag": "div",
+     "id": "block-vis-list",
+     "cls": "block-vis-list",
+     "role": "block-vis-list",
+     "dynamic": true
+    }
+   ]
   }
  ]
 }
@@ -2618,11 +2695,11 @@ function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
    остальные; он размещён первым в левой колонке каждой темы. */
 var THEMES = [
   { id: 'default', name: 'Классическая', layout: { cols: 3, map: {
-      left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
-      hide: ['#hp-shield-panel'] } },
+      left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['hp-top', 'magic', 'feats', 'actions'] },
+      hide: [] } },
   { id: 'official', name: 'Официальная (Paizo)', layout: { cols: 2, map: {
       left: ['info', 'abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
-      hide: [] } },
+      hide: ['#hp-shield-panel'] } },
   { id: 'sanych', name: 'Боевая (Саныч)', layout: { cols: 3, map: {
       left: ['info', 'def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
@@ -2955,7 +3032,28 @@ function switchCharacter(id) {
    загружает его при старте (window.__BLOCKS_JSON__ инлайнится
    сборщиком для file://, иначе fetch), сверяет блоки страницы
    с определениями и умеет строить блоки из JSON целиком.
+   Рендер-слой (beElement/beControl/...) отвечает ТОЛЬКО за
+   отображение: вся структура блоков берётся из JSON.
    ============================================================ */
+
+/* Словарь типов kind -> тег; неизвестное содержимое хранится в cls/html/id/ref */
+var BE_TAGS = { container: 'div', section: 'div', list: 'div', static: 'div',
+                text: 'span', label: 'label', button: 'button', hint: 'div' };
+/* role контейнера = CSS-класс строкой (row, bigstats, stat, hp-controls...) */
+var BE_ROLES = { row: 1, 'hp-controls': 1, bigstats: 1, stat: 1, 'hps-row': 1,
+                 'hp-stat': 1, 'shield-stat': 1, 'hps-quick': 1, 'abil-table': 1,
+                 'lang-list': 1, 'lang-items': 1, 'lang-add': 1, grid3: 1,
+                 'bio-grid': 1, 'srv-layout': 1, 'srv-left': 1, 'srv-right': 1,
+                 'server-list': 1, 'srv-chars': 1, 'block-vis-list': 1,
+                 'combat-strip': 1, 'sheet-area': 1, 'sheet-grid': 1, hint: 1 };
+/* служебные атрибуты, не превращаемые в HTML-атрибуты напрямую */
+var BE_META = { kind: 1, tag: 1, children: 1, control: 1, ref: 1, role: 1,
+                size: 1, cls: 1, html: 1, text: 1, list: 1, dynamic: 1,
+                rows: 1, columns: 1, headers: 1, hidden: 1, dkey: 1, forId: 1,
+                id: 1, bind: 1, action: 1, hp: 1, type: 1, placeholder: 1,
+                attrSize: 1, spellcheck: 1, accept: 1, value: 1, subRef: 1,
+                subText: 1, label: 1 };
+
 function loadBlocksJson() {
   if (window.__BLOCKS_JSON__) {
     try { State.blocksJson = JSON.parse(window.__BLOCKS_JSON__); } catch (e) { /* ignore */ }
@@ -2994,19 +3092,6 @@ function blockElementsFlat(def) {
   })(def && def.elements);
   return out;
 }
-function beControl(c) {
-  var inp;
-  if (c.kind === 'textarea') inp = el('textarea', { rows: String(c.rows || 3) });
-  else {
-    inp = el('input', { type: c.type || 'text' });
-    if (c.size) inp.className = c.size;
-    if (c.attrSize) inp.setAttribute('size', String(c.attrSize));
-  }
-  if (c.bind) inp.setAttribute('data-bind', c.bind);
-  if (c.placeholder) inp.placeholder = c.placeholder;
-  if (c.id) inp.id = c.id;
-  return inp;
-}
 /* Построение содержимого fieldset по JSON-определению блока.
    Динамические контейнеры (списки, таблицы) остаются пустыми —
    их наполняют штатные render*-функции. */
@@ -3015,23 +3100,52 @@ function buildBlockFromDef(def) {
   (def.elements || []).forEach(function (e) { body.appendChild(beElement(e)); });
   return body;
 }
+function beClassOf(e) {
+  var cls = [];
+  if (e.size) cls.push(e.size);           // xs / s / m — ширина поля
+  if (e.role && e.role !== 'row') cls.push(e.role);  // grow / half и т.п.
+  return cls.join(' ');
+}
+function beLabel(e) {
+  /* label с текстом и вложенным контролом (нативная привязка input внутри label) */
+  var attrs = { class: beClassOf(e) };
+  var lab = el('label', attrs);
+  if (e.text) lab.appendChild(document.createTextNode(e.text));
+  if (e.control) lab.appendChild(beControl(e.control));
+  (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
+  return lab;
+}
+function beControl(c) {
+  var inp;
+  if (c.kind === 'textarea') {
+    inp = el('textarea', { rows: String(c.rows || 3), class: c.cls || '' });
+    if (c.spellcheck === false) inp.setAttribute('spellcheck', 'false');
+  } else if (c.kind === 'file' || c.type === 'file') {
+    inp = el('input', { type: 'file', class: c.cls || '' });
+    if (c.accept) inp.setAttribute('accept', c.accept);
+  } else {
+    inp = el('input', { type: c.type || 'text', class: c.cls || '' });
+    if (c.size) inp.className = ((inp.className ? inp.className + ' ' : '') + c.size).trim();
+    if (c.attrSize) inp.setAttribute('size', String(c.attrSize));
+  }
+  if (c.bind) inp.setAttribute('data-bind', c.bind);
+  if (c.placeholder) inp.placeholder = c.placeholder;
+  if (c.id) inp.id = c.id;
+  return inp;
+}
 function beElement(e) {
   switch (e.kind) {
     case 'container': {
-      var div = el('div', { class: e.role ? ('row' === e.role ? 'row' : e.role) : 'row' });
+      var div = el('div', { class: beClassOf(e) || 'row' });
       (e.children || []).forEach(function (ch) { div.appendChild(beElement(ch)); });
       return div;
     }
-    case 'label': {
-      var lab = el('label', { class: 'nb-field' });
-      if (e.text) lab.appendChild(el('span', { text: e.text }));
-      if (e.control) lab.appendChild(beControl(e.control));
-      (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
-      return lab;
-    }
+    case 'label':
+      return beLabel(e);
     case 'text': {
-      var sp = el('span', {});
+      var sp = el('span', { class: beClassOf(e) });
       if (e.html) sp.innerHTML = e.html;
+      else if (e.text) sp.textContent = e.text;
       if (e.ref) sp.id = e.ref;
       if (e.dynamic) sp.setAttribute('data-dkey', e.ref || '');
       (e.children || []).forEach(function (ch) { sp.appendChild(beElement(ch)); });
@@ -3041,20 +3155,149 @@ function beElement(e) {
     case 'textarea':
       return beControl(Object.assign({ kind: e.kind }, e));
     case 'button': {
-      var b = el('button', { type: e.type || 'button', text: e.text || '' });
+      var b = el('button', { type: e.type || 'button', text: e.text || '', class: e.cls || '' });
       if (e.action) b.setAttribute('data-action', e.action);
-      if (e.ref) b.id = e.ref;
+      if (e.hp) b.setAttribute('data-hp', String(e.hp));
+      if (e.id) b.id = e.id;
+      else if (e.ref) b.id = e.ref;
       return b;
+    }
+    case 'table': {
+      var t = el('table', { class: e.cls || '' });
+      var heads = e.headers || [];
+      if (heads.length) {
+        var thead = el('thead'), htr = el('tr');
+        heads.forEach(function (h) { htr.appendChild(el('th', { html: h || '&nbsp;' })); });
+        thead.appendChild(htr); t.appendChild(thead);
+      }
+      var tb = el('tbody');
+      if (e.ref) tb.id = e.ref;
+      t.appendChild(tb);
+      return t;
+    }
+    case 'hint':
+      return el('div', { class: 'hint' + (e.cls ? ' ' + e.cls : ''), html: e.html || '', text: e.html ? undefined : (e.text || '') });
+    case 'stat': {
+      /* bigstats/hps-row ячейка: <div class="stat"><span>Подпись</span><b id=ref>0</b>[<small id=subRef></small>]</div> */
+      var st = el('div', { class: ('stat' + (e.cls ? ' ' + e.cls : '')) });
+      if (e.label) st.appendChild(el('span', { text: e.label }));
+      var bv = el('b', { text: e.value != null ? String(e.value) : '0' });
+      if (e.ref) bv.id = e.ref;
+      st.appendChild(bv);
+      if (e.subRef) st.appendChild(el('small', { id: e.subRef, text: e.subText || '' }));
+      return st;
     }
     case 'list':
     case 'static': {
       var tag = e.tag || 'div';
-      var n = el(tag, {});
+      var cls = beClassOf(e);
+      if (e.cls) cls = (cls ? cls + ' ' : '') + e.cls;
+      var n = el(tag, { class: cls });
       if (e.ref) n.id = e.ref;
+      else if (e.id) n.id = e.id;
+      if (e.html) n.innerHTML = e.html;
+      else if (e.text) n.textContent = e.text;
+      (e.children || []).forEach(function (ch) { n.appendChild(beElement(ch)); });
       return n;
     }
     default:
       return el('div', {});
+  }
+}
+/* Стабильные bid для панелей листа (исторические ключи раскладок тем:
+   lay.hide ['#hp-shield-panel'] и HOME в baseSheetMap). */
+var BE_LEGACY_BID = { 'hp-shield': 'hp-top', 'weapon-prof': 'wpnprof' };
+/* Блоки вкладки «Лист», лежащие в колонках под именем секции-дубля
+   (полная панель «ПЗ и щит» / «Профичности оружия» вместо компактной секции). */
+var BE_SHEET_DUP = { hp: 'hp-shield', strikes: 'weapon-prof' };
+/* Полноценный fieldset блока из blocks.json (замена статической разметке).
+   Классы совпадают с прежней HTML-разметкой, поэтому layout/стили/рендер
+   работают без изменений. */
+function buildBlockFieldset(def) {
+  var fs;
+  if (def.tab === 'sheet') {
+    /* блоки вкладки «Лист» используют прежние классы sec-*, чтобы
+       раскладки (темы), видимость блоков и дизайн-режим работали без изменений */
+    var isMain = def.id === 'main';
+    var dupOf = BE_SHEET_DUP[def.column] === def.id;
+    var cls = isMain ? 'info-block sheet-sec'
+                     : 'sheet-sec sec-' + (dupOf ? def.column : def.id);
+    fs = el('fieldset', { class: cls });
+  } else {
+    fs = el('fieldset', {});   // прочие вкладки — как в прежней статической разметке
+  }
+  fs.appendChild(el('legend', { text: def.legend || def.name || 'Блок' }));
+  (def.elements || []).forEach(function (e) { fs.appendChild(beElement(e)); });
+  if (def.domId) fs.id = def.domId;
+  fs.dataset.bid = BE_LEGACY_BID[def.id] || def.id;
+  fs.setAttribute('data-json-block', '1');
+  return fs;
+}
+/* Сборка вкладок из blocks.json: блоки создаются динамически,
+   в HTML остаются только служебные контейнеры (.combat-strip и пр.).
+   Возвращает true, если всё собрано; при ошибке лист остаётся статическим. */
+function mountBlocksFromJson() {
+  var bs = State.blocksJson && State.blocksJson.blocks;
+  if (!bs || !bs.length) return false;
+  try {
+    var byTab = {};
+    bs.forEach(function (def) {
+      var tab = def.tab || 'sheet';
+      (byTab[tab] = byTab[tab] || []).push(def);
+    });
+    Object.keys(byTab).forEach(function (tab) {
+      var page = document.getElementById('tab-' + tab);
+      if (!page) throw new Error('нет вкладки ' + tab);
+      var keep = [].slice.call(page.querySelectorAll('.combat-strip'));
+      page.innerHTML = '';
+      keep.forEach(function (n) { page.appendChild(n); });
+      var defs = byTab[tab];
+      if (tab === 'sheet') {
+        var grid = el('div', { class: 'grid sheet-grid', id: 'sheet-grid' });
+        var strip = page.querySelector('.combat-strip') || el('div', { class: 'combat-strip', 'aria-hidden': 'true' });
+        if (!strip.parentNode) grid.appendChild(strip);
+        page.appendChild(grid);
+        ['left', 'mid', 'right'].forEach(function (col) {
+          var area = el('div', { class: 'sheet-area', 'data-col': col });
+          defs.forEach(function (d) { if ((d.column || 'left') === col) area.appendChild(buildBlockFieldset(d)); });
+          grid.appendChild(area);
+        });
+      } else if (tab === 'inventory') {
+        var invGrid = el('div', { class: 'grid3 inv-grid' });
+        defs.forEach(function (d) {
+          var f = buildBlockFieldset(d);
+          if (['block', 'inv-held', 'inv-consumables', 'inv-other'].indexOf(d.id) >= 0) invGrid.appendChild(f);
+          else page.appendChild(f);
+        });
+        page.appendChild(invGrid);
+      } else if (tab === 'bio') {
+        var bioGrid = el('div', { class: 'bio-grid' });
+        defs.forEach(function (d) { bioGrid.appendChild(buildBlockFieldset(d)); });
+        page.appendChild(bioGrid);
+      } else if (tab === 'servers') {
+        var srvL = el('div', { class: 'srv-left' }), srvR = el('div', { class: 'srv-right' });
+        defs.forEach(function (d) {
+          var f = buildBlockFieldset(d);
+          if (d.id === 'srv-chars') srvR.appendChild(f); else srvL.appendChild(f);
+        });
+        var lay = el('div', { class: 'srv-layout' });
+        lay.appendChild(srvL); lay.appendChild(srvR);
+        page.appendChild(lay);
+      } else if (tab === 'io') {
+        var ioGrid = el('div', { class: 'grid3' });
+        defs.forEach(function (d) {
+          var f = buildBlockFieldset(d);
+          if (d.id === 'json-data') page.appendChild(f); else ioGrid.appendChild(f);
+        });
+        page.appendChild(ioGrid);
+      } else {
+        defs.forEach(function (d) { page.appendChild(buildBlockFieldset(d)); });
+      }
+    });
+    return true;
+  } catch (err) {
+    if (window.console) console.error('mountBlocksFromJson:', err);
+    return false;
   }
 }
 /* Сверка блоков страницы с blocks.json: возвращает расхождения
@@ -4437,7 +4680,15 @@ function wirePalettePicker() {
 
 /* ---------------- инициализация ---------------- */
 function boot() {
-  loadBlocksJson();   // описание блоков (blocks.json) — фоновая сверка, не блокирует старт
+  loadBlocksJson();   // описание блоков (blocks.json) — синхронно из инлайна сборки
+  /* Полностью JSON-разметка: если в сборке есть blocks.json, статические
+     блоки удаляются из вкладок и все блоки строятся из JSON. Если JSON
+     недоступен — лист остаётся на прежней статической разметке шаблона. */
+  if (State.blocksJson && State.blocksJson.blocks && State.blocksJson.blocks.length) {
+    window.__JSON_LAYOUT__ = mountBlocksFromJson();
+  } else {
+    window.__JSON_LAYOUT__ = false;
+  }
   renderTabs();
   ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
@@ -4756,6 +5007,20 @@ function applyLayout(themeId) {
   var grid = $('#sheet-grid'); if (!grid) return;
   var lay = effectiveLayout(themeId);
   var cols = lay.cols === 2 ? 2 : 3;
+  /* JSON-блоки: компактные секции, заменённые полными панелями-дублями
+     («Пункты здоровья» → «ПЗ и щит», «Удары» → «Профичности оружия»),
+     скрываем всегда — дубликаты контента в статической разметке не нужны. */
+  $all('#sheet-grid [data-json-block][data-dup-hidden]', grid).forEach(function (n) {
+    n.classList.remove('sec-hidden');
+    n.removeAttribute('data-dup-hidden');
+  });
+  ['hp', 'strikes'].forEach(function (sid) {
+    var dup = $('[data-bid="' + sid + '"]', grid);
+    if (dup && dup.hasAttribute('data-json-block')) {
+      dup.classList.add('sec-hidden');
+      dup.setAttribute('data-dup-hidden', '1');
+    }
+  });
 
   var areas = {
     left: $('.sheet-area[data-col="left"]', grid),
@@ -5209,6 +5474,9 @@ function tabNameOf(node) {
 function applyBlockVisibility() {
   var vis = loadBlockVis();
   allBlocks().forEach(function (f) {
+    /* панели-дубли JSON-блоков всегда скрыты — не показываем их даже
+       если пользователь раньше включил компактную секцию */
+    if (f.hasAttribute('data-dup-hidden')) return;
     f.classList.toggle('sec-hidden', vis[f.dataset.bid] === 0);
   });
 }

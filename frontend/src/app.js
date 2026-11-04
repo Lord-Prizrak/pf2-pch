@@ -485,7 +485,11 @@ function beControl(c) {
 function beElement(e) {
   switch (e.kind) {
     case 'container': {
-      var div = el('div', { class: beClassOf(e) || 'row' });
+      var div = el(e.tag || 'div', { class: beClassOf(e) });
+      if (!e.cls && e.role !== 'row' && !e.ref) div.className = 'row';
+      if (e.ref) div.id = e.ref;
+      else if (e.id) div.id = e.id;
+      if (e.html) div.innerHTML = e.html;
       (e.children || []).forEach(function (ch) { div.appendChild(beElement(ch)); });
       return div;
     }
@@ -497,6 +501,7 @@ function beElement(e) {
       else if (e.text) sp.textContent = e.text;
       if (e.ref) sp.id = e.ref;
       if (e.dynamic) sp.setAttribute('data-dkey', e.ref || '');
+      else sp.setAttribute('data-be-static', '1');   // фиксированный текст: не чистить в пустом блоке
       (e.children || []).forEach(function (ch) { sp.appendChild(beElement(ch)); });
       return sp;
     }
@@ -536,6 +541,14 @@ function beElement(e) {
       if (e.subRef) st.appendChild(el('small', { id: e.subRef, text: e.subText || '' }));
       return st;
     }
+    case 'section': {
+      var sd = el(e.tag || 'div', { class: beClassOf(e) });
+      if (e.ref) sd.id = e.ref;
+      else if (e.id) sd.id = e.id;
+      if (e.html) sd.innerHTML = e.html;
+      (e.children || []).forEach(function (ch) { sd.appendChild(beElement(ch)); });
+      return sd;
+    }
     case 'list':
     case 'static': {
       var tag = e.tag || 'div';
@@ -553,6 +566,12 @@ function beElement(e) {
       return el('div', {});
   }
 }
+/* Стабильные bid для панелей листа (исторические ключи раскладок тем:
+   lay.hide ['#hp-shield-panel'] и HOME в baseSheetMap). */
+var BE_LEGACY_BID = { 'hp-shield': 'hp-top', 'weapon-prof': 'wpnprof' };
+/* Блоки вкладки «Лист», лежащие в колонках под именем секции-дубля
+   (полная панель «ПЗ и щит» / «Профичности оружия» вместо компактной секции). */
+var BE_SHEET_DUP = { hp: 'hp-shield', strikes: 'weapon-prof' };
 /* Полноценный fieldset блока из blocks.json (замена статической разметке).
    Классы совпадают с прежней HTML-разметкой, поэтому layout/стили/рендер
    работают без изменений. */
@@ -562,7 +581,9 @@ function buildBlockFieldset(def) {
     /* блоки вкладки «Лист» используют прежние классы sec-*, чтобы
        раскладки (темы), видимость блоков и дизайн-режим работали без изменений */
     var isMain = def.id === 'main';
-    var cls = isMain ? 'info-block' : 'sheet-sec sec-' + def.id;
+    var dupOf = BE_SHEET_DUP[def.column] === def.id;
+    var cls = isMain ? 'info-block sheet-sec'
+                     : 'sheet-sec sec-' + (dupOf ? def.column : def.id);
     fs = el('fieldset', { class: cls });
   } else {
     fs = el('fieldset', {});   // прочие вкладки — как в прежней статической разметке
@@ -570,7 +591,7 @@ function buildBlockFieldset(def) {
   fs.appendChild(el('legend', { text: def.legend || def.name || 'Блок' }));
   (def.elements || []).forEach(function (e) { fs.appendChild(beElement(e)); });
   if (def.domId) fs.id = def.domId;
-  fs.dataset.bid = def.id;
+  fs.dataset.bid = BE_LEGACY_BID[def.id] || def.id;
   fs.setAttribute('data-json-block', '1');
   return fs;
 }
@@ -2021,7 +2042,15 @@ function wirePalettePicker() {
 
 /* ---------------- инициализация ---------------- */
 function boot() {
-  loadBlocksJson();   // описание блоков (blocks.json) — фоновая сверка, не блокирует старт
+  loadBlocksJson();   // описание блоков (blocks.json) — синхронно из инлайна сборки
+  /* Полностью JSON-разметка: если в сборке есть blocks.json, статические
+     блоки удаляются из вкладок и все блоки строятся из JSON. Если JSON
+     недоступен — лист остаётся на прежней статической разметке шаблона. */
+  if (State.blocksJson && State.blocksJson.blocks && State.blocksJson.blocks.length) {
+    window.__JSON_LAYOUT__ = mountBlocksFromJson();
+  } else {
+    window.__JSON_LAYOUT__ = false;
+  }
   renderTabs();
   ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
@@ -2340,6 +2369,20 @@ function applyLayout(themeId) {
   var grid = $('#sheet-grid'); if (!grid) return;
   var lay = effectiveLayout(themeId);
   var cols = lay.cols === 2 ? 2 : 3;
+  /* JSON-блоки: компактные секции, заменённые полными панелями-дублями
+     («Пункты здоровья» → «ПЗ и щит», «Удары» → «Профичности оружия»),
+     скрываем всегда — дубликаты контента в статической разметке не нужны. */
+  $all('#sheet-grid [data-json-block][data-dup-hidden]', grid).forEach(function (n) {
+    n.classList.remove('sec-hidden');
+    n.removeAttribute('data-dup-hidden');
+  });
+  ['hp', 'strikes'].forEach(function (sid) {
+    var dup = $('[data-bid="' + sid + '"]', grid);
+    if (dup && dup.hasAttribute('data-json-block')) {
+      dup.classList.add('sec-hidden');
+      dup.setAttribute('data-dup-hidden', '1');
+    }
+  });
 
   var areas = {
     left: $('.sheet-area[data-col="left"]', grid),
@@ -2793,6 +2836,9 @@ function tabNameOf(node) {
 function applyBlockVisibility() {
   var vis = loadBlockVis();
   allBlocks().forEach(function (f) {
+    /* панели-дубли JSON-блоков всегда скрыты — не показываем их даже
+       если пользователь раньше включил компактную секцию */
+    if (f.hasAttribute('data-dup-hidden')) return;
     f.classList.toggle('sec-hidden', vis[f.dataset.bid] === 0);
   });
 }
