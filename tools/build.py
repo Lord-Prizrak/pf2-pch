@@ -186,6 +186,39 @@ def analyze_blocks(stats):
     return blocks
 
 
+def load_fields_js(stats=None):
+    """Web-компоненты полей из frontend/src/fields/*.js (алфавитном порядке).
+    Возвращает склеенный JS и список имён файлов."""
+    fdir = os.path.join(SRC, 'fields')
+    parts, names = [], []
+    if os.path.isdir(fdir):
+        for fn in sorted(os.listdir(fdir)):
+            if fn.endswith('.js'):
+                with open(os.path.join(fdir, fn), encoding='utf-8') as fh:
+                    parts.append(fh.read().strip())
+                names.append(fn)
+    js = '\n'.join(parts)
+    if stats and names:
+        stats.component('Web-компоненты (fields/)', len(js.encode()),
+                        '%d шт: %s' % (len(names), ', '.join(names)))
+    return js, names
+
+
+def check_js_all(stats, tmp_path):
+    """Синтаксическая проверка объединённого JS (fields + app.js)."""
+    if not shutil_which('node'):
+        print('node не найден — синтаксис JS не проверен')
+        return True
+    t = time.time()
+    r = subprocess.run(['node', '--check', tmp_path], capture_output=True, text=True)
+    stats.stage('Проверка JS', time.time() - t)
+    if r.returncode != 0:
+        print('ОШИБКА синтаксиса JS:\n' + r.stderr)
+        return False
+    print('JS синтаксис (fields + app.js): ОК')
+    return True
+
+
 def check_js(stats):
     """Синтаксическая проверка app.js через node --check (если node доступен)."""
     js_path = os.path.join(SRC, 'app.js')
@@ -306,10 +339,25 @@ def main():
     print('[1/5] Исходники прочитаны: шаблон %s строк, app.js %s строк'
           % (html_tpl.count('\n'), js.count('\n')))
 
-    # --- Проверка синтаксиса JS ---
+    # --- Web-компоненты полей (frontend/src/fields/*.js) ---
+    fields_js, field_names = load_fields_js(stats)
+
+    # --- Проверка синтаксиса JS (fields + app.js единым куском) ---
     print('[2/5] Проверка синтаксиса...')
-    if not check_js(stats):
+    if field_names:
+        print('      web-компоненты полей: %d файл(ов): %s'
+              % (len(field_names), ', '.join(field_names)))
+    tmp_js = os.path.join(ROOT, 'frontend', '.build-check.js')
+    with open(tmp_js, 'w', encoding='utf-8') as fh:
+        fh.write(fields_js + '\n' + js)
+    ok = check_js_all(stats, tmp_js)
+    try:
+        os.remove(tmp_js)
+    except OSError:
+        pass
+    if not ok:
         raise SystemExit(1)
+    js = fields_js + '\n' + js   # компоненты регистрируются до запуска приложения
     analyze_blocks(stats)
     if stats.block_stats:
         nb, nf, nl, tabs = stats.block_stats

@@ -474,6 +474,33 @@ function beWcTag(c) {
   var tag = BE_WC_KINDS[k];
   return (tag && window.customElements.get(tag)) ? tag : null;
 }
+/* Кнопки действий из JSON (action: "hp:-1", "export:html", ...) — реестр
+   window.PF2E_ACTIONS строится в wireActions(); web-компонент
+   pf2e-field-button вешает обработчик по атрибуту action. */
+function beButton(e) {
+  var act = e.action || '';
+  var m = /^hp:(.+)$/.exec(act);
+  var hpAttr = m ? m[1] : (e.hp != null ? String(e.hp) : null);
+  if (window.customElements && window.customElements.get('pf2e-field-button')) {
+    var bh = document.createElement('pf2e-field-button');
+    if (e.cls) bh.className = e.cls;
+    if (act) bh.setAttribute('action', act);
+    if (e.type) bh.setAttribute('type', e.type);
+    bh.textContent = e.text || '';
+    if (e.id) bh.id = e.id;
+    else if (e.ref) bh.id = e.ref;
+    if (e.hidden) bh.classList.add('hidden');
+    if (hpAttr != null) bh.setAttribute('data-hp', hpAttr);
+    return bh;
+  }
+  var b = el('button', { type: e.type || 'button', text: e.text || '', class: e.cls || '' });
+  if (act) b.setAttribute('data-action', act);
+  if (hpAttr != null) b.setAttribute('data-hp', hpAttr);
+  if (e.id) b.id = e.id;
+  else if (e.ref) b.id = e.ref;
+  if (e.hidden) b.classList.add('hidden');
+  return b;
+}
 function beControl(c) {
   var wc = beWcTag(c);
   if (wc) {
@@ -488,12 +515,13 @@ function beControl(c) {
     if (c.accept) hostAttrs['accept'] = c.accept;
     var cls = beClassOf(c) + (c.cls ? ' ' + c.cls : '');
     if (c.size) cls += ' ' + c.size;
+    if (c.hidden) cls = (cls + ' hidden').trim();
     cls = cls.trim();
-    if (cls) hostAttrs['class'] = cls;
-    var host = document.createElement(wc, hostAttrs);
-    for (var ka in hostAttrs) { /* noop: attrs уже применены */ }
+    var host = document.createElement(wc);
+    for (var ka in hostAttrs) host.setAttribute(ka, hostAttrs[ka]);
     if (hostAttrs.class) host.className = hostAttrs.class;
     if (c.id) host.id = c.id;
+    if (c.action) host.setAttribute('data-action', c.action);
     return host;
   }
   var inp;
