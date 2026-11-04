@@ -44,11 +44,11 @@ function colSpan(themeId) { return themeId === 'official' ? 6 : 4; }
    остальные; он размещён первым в левой колонке каждой темы. */
 var THEMES = [
   { id: 'default', name: 'Классическая', layout: { cols: 3, map: {
-      left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['magic', 'feats', 'actions'] },
-      hide: ['#hp-shield-panel'] } },
+      left: ['info', 'abil', 'def', 'hp'], mid: ['skills', 'strikes', 'wpnprof', 'combat'], right: ['hp-top', 'magic', 'feats', 'actions'] },
+      hide: [] } },
   { id: 'official', name: 'Официальная (Paizo)', layout: { cols: 2, map: {
       left: ['info', 'abil', 'skills', 'feats', 'actions'], right: ['hp', 'combat', 'def', 'strikes', 'wpnprof', 'magic'] },
-      hide: [] } },
+      hide: ['#hp-shield-panel'] } },
   { id: 'sanych', name: 'Боевая (Саныч)', layout: { cols: 3, map: {
       left: ['info', 'def', 'hp', 'combat'], mid: ['abil', 'skills', 'strikes', 'wpnprof'], right: ['magic', 'feats', 'actions'] },
       hide: ['#hp-shield-panel'] } },
@@ -420,19 +420,6 @@ function blockElementsFlat(def) {
   })(def && def.elements);
   return out;
 }
-function beControl(c) {
-  var inp;
-  if (c.kind === 'textarea') inp = el('textarea', { rows: String(c.rows || 3) });
-  else {
-    inp = el('input', { type: c.type || 'text' });
-    if (c.size) inp.className = c.size;
-    if (c.attrSize) inp.setAttribute('size', String(c.attrSize));
-  }
-  if (c.bind) inp.setAttribute('data-bind', c.bind);
-  if (c.placeholder) inp.placeholder = c.placeholder;
-  if (c.id) inp.id = c.id;
-  return inp;
-}
 /* Построение содержимого fieldset по JSON-определению блока.
    Динамические контейнеры (списки, таблицы) остаются пустыми —
    их наполняют штатные render*-функции. */
@@ -441,23 +428,52 @@ function buildBlockFromDef(def) {
   (def.elements || []).forEach(function (e) { body.appendChild(beElement(e)); });
   return body;
 }
+function beClassOf(e) {
+  var cls = [];
+  if (e.size) cls.push(e.size);           // xs / s / m — ширина поля
+  if (e.role && e.role !== 'row') cls.push(e.role);  // grow / half и т.п.
+  return cls.join(' ');
+}
+function beLabel(e) {
+  /* label с текстом и вложенным контролом (нативная привязка input внутри label) */
+  var attrs = { class: beClassOf(e) };
+  var lab = el('label', attrs);
+  if (e.text) lab.appendChild(document.createTextNode(e.text));
+  if (e.control) lab.appendChild(beControl(e.control));
+  (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
+  return lab;
+}
+function beControl(c) {
+  var inp;
+  if (c.kind === 'textarea') {
+    inp = el('textarea', { rows: String(c.rows || 3), class: c.cls || '' });
+    if (c.spellcheck === false) inp.setAttribute('spellcheck', 'false');
+  } else if (c.kind === 'file' || c.type === 'file') {
+    inp = el('input', { type: 'file', class: c.cls || '' });
+    if (c.accept) inp.setAttribute('accept', c.accept);
+  } else {
+    inp = el('input', { type: c.type || 'text', class: c.cls || '' });
+    if (c.size) inp.className = ((inp.className ? inp.className + ' ' : '') + c.size).trim();
+    if (c.attrSize) inp.setAttribute('size', String(c.attrSize));
+  }
+  if (c.bind) inp.setAttribute('data-bind', c.bind);
+  if (c.placeholder) inp.placeholder = c.placeholder;
+  if (c.id) inp.id = c.id;
+  return inp;
+}
 function beElement(e) {
   switch (e.kind) {
     case 'container': {
-      var div = el('div', { class: e.role ? ('row' === e.role ? 'row' : e.role) : 'row' });
+      var div = el('div', { class: beClassOf(e) || 'row' });
       (e.children || []).forEach(function (ch) { div.appendChild(beElement(ch)); });
       return div;
     }
-    case 'label': {
-      var lab = el('label', { class: 'nb-field' });
-      if (e.text) lab.appendChild(el('span', { text: e.text }));
-      if (e.control) lab.appendChild(beControl(e.control));
-      (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
-      return lab;
-    }
+    case 'label':
+      return beLabel(e);
     case 'text': {
-      var sp = el('span', {});
+      var sp = el('span', { class: beClassOf(e) });
       if (e.html) sp.innerHTML = e.html;
+      else if (e.text) sp.textContent = e.text;
       if (e.ref) sp.id = e.ref;
       if (e.dynamic) sp.setAttribute('data-dkey', e.ref || '');
       (e.children || []).forEach(function (ch) { sp.appendChild(beElement(ch)); });
@@ -467,20 +483,141 @@ function beElement(e) {
     case 'textarea':
       return beControl(Object.assign({ kind: e.kind }, e));
     case 'button': {
-      var b = el('button', { type: e.type || 'button', text: e.text || '' });
+      var b = el('button', { type: e.type || 'button', text: e.text || '', class: e.cls || '' });
       if (e.action) b.setAttribute('data-action', e.action);
-      if (e.ref) b.id = e.ref;
+      if (e.hp) b.setAttribute('data-hp', String(e.hp));
+      if (e.id) b.id = e.id;
+      else if (e.ref) b.id = e.ref;
       return b;
+    }
+    case 'table': {
+      var t = el('table', { class: e.cls || '' });
+      var heads = e.headers || [];
+      if (heads.length) {
+        var thead = el('thead'), htr = el('tr');
+        heads.forEach(function (h) { htr.appendChild(el('th', { html: h || '&nbsp;' })); });
+        thead.appendChild(htr); t.appendChild(thead);
+      }
+      var tb = el('tbody');
+      if (e.ref) tb.id = e.ref;
+      t.appendChild(tb);
+      return t;
+    }
+    case 'hint':
+      return el('div', { class: 'hint' + (e.cls ? ' ' + e.cls : ''), html: e.html || '', text: e.html ? undefined : (e.text || '') });
+    case 'stat': {
+      /* bigstats/hps-row ячейка: <div class="stat"><span>Подпись</span><b id=ref>0</b>[<small id=subRef></small>]</div> */
+      var st = el('div', { class: ('stat' + (e.cls ? ' ' + e.cls : '')) });
+      if (e.label) st.appendChild(el('span', { text: e.label }));
+      var bv = el('b', { text: e.value != null ? String(e.value) : '0' });
+      if (e.ref) bv.id = e.ref;
+      st.appendChild(bv);
+      if (e.subRef) st.appendChild(el('small', { id: e.subRef, text: e.subText || '' }));
+      return st;
     }
     case 'list':
     case 'static': {
       var tag = e.tag || 'div';
-      var n = el(tag, {});
+      var cls = beClassOf(e);
+      if (e.cls) cls = (cls ? cls + ' ' : '') + e.cls;
+      var n = el(tag, { class: cls });
       if (e.ref) n.id = e.ref;
+      else if (e.id) n.id = e.id;
+      if (e.html) n.innerHTML = e.html;
+      else if (e.text) n.textContent = e.text;
+      (e.children || []).forEach(function (ch) { n.appendChild(beElement(ch)); });
       return n;
     }
     default:
       return el('div', {});
+  }
+}
+/* Полноценный fieldset блока из blocks.json (замена статической разметке).
+   Классы совпадают с прежней HTML-разметкой, поэтому layout/стили/рендер
+   работают без изменений. */
+function buildBlockFieldset(def) {
+  var fs;
+  if (def.tab === 'sheet') {
+    /* блоки вкладки «Лист» используют прежние классы sec-*, чтобы
+       раскладки (темы), видимость блоков и дизайн-режим работали без изменений */
+    var isMain = def.id === 'main';
+    var cls = isMain ? 'info-block' : 'sheet-sec sec-' + def.id;
+    fs = el('fieldset', { class: cls });
+  } else {
+    fs = el('fieldset', {});   // прочие вкладки — как в прежней статической разметке
+  }
+  fs.appendChild(el('legend', { text: def.legend || def.name || 'Блок' }));
+  (def.elements || []).forEach(function (e) { fs.appendChild(beElement(e)); });
+  if (def.domId) fs.id = def.domId;
+  fs.dataset.bid = def.id;
+  fs.setAttribute('data-json-block', '1');
+  return fs;
+}
+/* Сборка вкладок из blocks.json: блоки создаются динамически,
+   в HTML остаются только служебные контейнеры (.combat-strip и пр.).
+   Возвращает true, если всё собрано; при ошибке лист остаётся статическим. */
+function mountBlocksFromJson() {
+  var bs = State.blocksJson && State.blocksJson.blocks;
+  if (!bs || !bs.length) return false;
+  try {
+    var byTab = {};
+    bs.forEach(function (def) {
+      var tab = def.tab || 'sheet';
+      (byTab[tab] = byTab[tab] || []).push(def);
+    });
+    Object.keys(byTab).forEach(function (tab) {
+      var page = document.getElementById('tab-' + tab);
+      if (!page) throw new Error('нет вкладки ' + tab);
+      var keep = [].slice.call(page.querySelectorAll('.combat-strip'));
+      page.innerHTML = '';
+      keep.forEach(function (n) { page.appendChild(n); });
+      var defs = byTab[tab];
+      if (tab === 'sheet') {
+        var grid = el('div', { class: 'grid sheet-grid', id: 'sheet-grid' });
+        var strip = page.querySelector('.combat-strip') || el('div', { class: 'combat-strip', 'aria-hidden': 'true' });
+        if (!strip.parentNode) grid.appendChild(strip);
+        page.appendChild(grid);
+        ['left', 'mid', 'right'].forEach(function (col) {
+          var area = el('div', { class: 'sheet-area', 'data-col': col });
+          defs.forEach(function (d) { if ((d.column || 'left') === col) area.appendChild(buildBlockFieldset(d)); });
+          grid.appendChild(area);
+        });
+      } else if (tab === 'inventory') {
+        var invGrid = el('div', { class: 'grid3 inv-grid' });
+        defs.forEach(function (d) {
+          var f = buildBlockFieldset(d);
+          if (['block', 'inv-held', 'inv-consumables', 'inv-other'].indexOf(d.id) >= 0) invGrid.appendChild(f);
+          else page.appendChild(f);
+        });
+        page.appendChild(invGrid);
+      } else if (tab === 'bio') {
+        var bioGrid = el('div', { class: 'bio-grid' });
+        defs.forEach(function (d) { bioGrid.appendChild(buildBlockFieldset(d)); });
+        page.appendChild(bioGrid);
+      } else if (tab === 'servers') {
+        var srvL = el('div', { class: 'srv-left' }), srvR = el('div', { class: 'srv-right' });
+        defs.forEach(function (d) {
+          var f = buildBlockFieldset(d);
+          if (d.id === 'srv-chars') srvR.appendChild(f); else srvL.appendChild(f);
+        });
+        var lay = el('div', { class: 'srv-layout' });
+        lay.appendChild(srvL); lay.appendChild(srvR);
+        page.appendChild(lay);
+      } else if (tab === 'io') {
+        var ioGrid = el('div', { class: 'grid3' });
+        defs.forEach(function (d) {
+          var f = buildBlockFieldset(d);
+          if (d.id === 'json-data') page.appendChild(f); else ioGrid.appendChild(f);
+        });
+        page.appendChild(ioGrid);
+      } else {
+        defs.forEach(function (d) { page.appendChild(buildBlockFieldset(d)); });
+      }
+    });
+    return true;
+  } catch (err) {
+    if (window.console) console.error('mountBlocksFromJson:', err);
+    return false;
   }
 }
 /* Сверка блоков страницы с blocks.json: возвращает расхождения
