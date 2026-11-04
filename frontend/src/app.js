@@ -387,6 +387,15 @@ function loadBlocksJson() {
     try { State.blocksJson = JSON.parse(window.__BLOCKS_JSON__); } catch (e) { /* ignore */ }
     return Promise.resolve(State.blocksJson);
   }
+  // инлайн при сборке: <script id="pf2e-blocks-json" type="application/json">
+  var inline = document.getElementById('pf2e-blocks-json');
+  if (inline && inline.textContent.trim()) {
+    try {
+      State.blocksJson = JSON.parse(inline.textContent);
+      window.__BLOCKS_JSON__ = inline.textContent;
+      return Promise.resolve(State.blocksJson);
+    } catch (e) { /* ignore, пробуем fetch */ }
+  }
   var base = document.currentScript && document.currentScript.src;
   var url = 'blocks.json';
   if (base && /^https?:/.test(base)) url = base.replace(/[^/]*$/, 'blocks.json');
@@ -1854,6 +1863,7 @@ function wirePalettePicker() {
 
 /* ---------------- инициализация ---------------- */
 function boot() {
+  loadBlocksJson();   // описание блоков (blocks.json) — фоновая сверка, не блокирует старт
   renderTabs();
   ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
@@ -3724,5 +3734,7 @@ var closeBlockModal = requestCloseBlockModal;
 
 document.addEventListener('DOMContentLoaded', boot);
 window.PF2E = { Store: Store, emptySheet: emptySheet, normalizeSheet: normalizeSheet,
-  computeDerived: computeDerived, buildStandaloneHTML: buildStandaloneHTML, State: State };
+  computeDerived: computeDerived, buildStandaloneHTML: buildStandaloneHTML, State: State,
+  loadBlocksJson: loadBlocksJson, blockDefById: blockDefById, buildBlockFromDef: buildBlockFromDef,
+  verifyBlocksAgainstJson: verifyBlocksAgainstJson, blockElementsFlat: blockElementsFlat };
 })();

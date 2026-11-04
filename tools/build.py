@@ -107,6 +107,19 @@ def build_html(html, css, js, payload, theme='default', palette='default'):
     html = re.sub(r'<!-- PF2E-SHEET-DATA:START -->[\s\S]*?<!-- PF2E-SHEET-DATA:END -->',
                   lambda m: block, html)
 
+    # описание блоков (blocks.json) инлайном — работает и при file://
+    blocks_path = os.path.join(ROOT, 'frontend', 'blocks.json')
+    if os.path.exists(blocks_path):
+        with open(blocks_path, encoding='utf-8') as fh:
+            blocks_txt = fh.read().strip().replace('</', '<\\/')
+        blocks_script = ('<script id="pf2e-blocks-json" type="application/json">\n'
+                         + blocks_txt + '\n</script>')
+        html = re.sub(r'<script id="pf2e-blocks-json"[^>]*>[\s\S]*?</script>',
+                      lambda m: blocks_script, html)
+        if 'pf2e-blocks-json' not in html:
+            html = html.replace('<script src="app.js"></script>',
+                                blocks_script + '\n<script src="app.js"></script>')
+
     # инлайн JS
     html = html.replace('<script src="app.js"></script>',
                         '<script>\n' + js.replace('</script>', '<\\/script>') + '\n</script>')

@@ -1074,6 +1074,1503 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
 <div id="toast-wrap"></div>
 <div id="modal-back" class="hidden"><div id="modal"></div></div>
 
+<script id="pf2e-blocks-json" type="application/json">
+{
+ "version": 1,
+ "source": "frontend/src/index.template.html",
+ "generator": "tools/export_blocks_json.py",
+ "blocks": [
+  {
+   "id": "main",
+   "name": "Основное",
+   "legend": "Основное",
+   "domId": null,
+   "tab": "sheet",
+   "column": "left",
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Имя персонажа",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "name"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Игрок",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "player"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Народ",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.ancestry"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Происхождение",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.heritage"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Размер",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.size",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Занятие",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.background"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Класс",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.class"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Мировоззрение",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.alignment",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Божество",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.deity"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Уровень",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "core.level",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Опыт",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "core.xp",
+        "size": "s"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "text",
+       "role": "inline",
+       "html": "Языки",
+       "children": [
+        {
+         "kind": "container",
+         "ref": "languages-list",
+         "list": "chips",
+         "dynamic": true
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Скорость, футов",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "core.speed.feet",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Особые перемещения",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "core.speed.notes"
+       },
+       "role": "grow",
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "text",
+       "role": "inline",
+       "html": "Пункты героизма"
+      },
+      {
+       "kind": "container",
+       "ref": "hero-points",
+       "list": "chips",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "abilities",
+   "name": "Характеристики",
+   "legend": "Характеристики",
+   "domId": null,
+   "tab": "sheet",
+   "column": "left",
+   "elements": [
+    {
+     "kind": "static",
+     "tag": "table",
+     "headers": [
+      "",
+      "Хар",
+      "Мод",
+      "+2 ув."
+     ],
+     "columns": 4,
+     "ref": "abilities-body",
+     "list": "table-rows"
+    },
+    {
+     "kind": "list",
+     "ref": "ability-cards",
+     "list": "cards",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "defense",
+   "name": "Защиты",
+   "legend": "Защиты",
+   "domId": null,
+   "tab": "sheet",
+   "column": "left",
+   "elements": [
+    {
+     "kind": "container",
+     "role": "bigstats",
+     "children": [
+      {
+       "kind": "container",
+       "role": "stat",
+       "children": [
+        {
+         "kind": "text",
+         "role": "inline",
+         "html": "КБ"
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "ac-total",
+         "dynamic": true
+        }
+       ]
+      },
+      {
+       "kind": "container",
+       "role": "stat",
+       "children": [
+        {
+         "kind": "text",
+         "role": "inline",
+         "html": "Классовая КС"
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "classdc-total",
+         "dynamic": true
+        }
+       ]
+      },
+      {
+       "kind": "container",
+       "role": "stat",
+       "children": [
+        {
+         "kind": "text",
+         "role": "inline",
+         "html": "Внимание"
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "perc-total",
+         "dynamic": true
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "КБ: базовая+10",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.acBase",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Лвк/макс.мод ЛВК",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.dexOrCap",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Штраф проверки",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.checkPenalty",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Предмет",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.item",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "list",
+     "ref": "armor-block",
+     "list": "armor",
+     "dynamic": true
+    },
+    {
+     "kind": "list",
+     "ref": "saves-block",
+     "list": "saves",
+     "dynamic": true
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Классовая КС: ключ. мод",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "classDC.key",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Предмет",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "classDC.item",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Щит: твёрдость",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.shield.hardness",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Макс.ПЗ",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.shield.hp",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "ПП",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.shield.bt",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Текущие ПЗ щита",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "armor.shield.current",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Устойчивости/невосприимчивости",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "resistances"
+       },
+       "role": "grow",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hp",
+   "name": "Пункты здоровья",
+   "legend": "Пункты здоровья",
+   "domId": null,
+   "tab": "sheet",
+   "column": "left",
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Макс",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "hitPoints.max",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Тек",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "hitPoints.current",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Врем",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "hitPoints.temp",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "list",
+     "ref": "hp-bar-wrap",
+     "list": "bar",
+     "dynamic": true
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "−1",
+       "action": "hp:-1"
+      },
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "−5",
+       "action": "hp:-5"
+      },
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "+1",
+       "action": "hp:1"
+      },
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "+5",
+       "action": "hp:5"
+      },
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "Отдых",
+       "action": "hp:full"
+      },
+      {
+       "kind": "text",
+       "role": "inline",
+       "html": "Умирает: 0 Ранен: 0",
+       "children": [
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "dying-val",
+         "dynamic": true
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "wounded-val",
+         "dynamic": true
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "skills",
+   "name": "Навыки",
+   "legend": "Навыки",
+   "domId": null,
+   "tab": "sheet",
+   "column": "mid",
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Восприятие",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "perception.total",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "container",
+       "ref": "perception-prof",
+       "list": "badge",
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "list",
+     "ref": "skills-block",
+     "list": "items",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "strikes",
+   "name": "Удары",
+   "legend": "Удары",
+   "domId": null,
+   "tab": "sheet",
+   "column": "mid",
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "strikes-block",
+     "list": "items",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "weapon-prof",
+   "name": "Профичности оружия",
+   "legend": "Профичности оружия",
+   "domId": "weapon-prof-panel",
+   "tab": "sheet",
+   "column": "mid",
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "weapon-prof-block",
+     "list": "checkbox-grid",
+     "dynamic": true
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Примечания",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "weaponProfNotes"
+       },
+       "role": "grow",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hp-shield",
+   "name": "ПЗ и щит",
+   "legend": "ПЗ и щит",
+   "domId": "hp-shield-panel",
+   "tab": "sheet",
+   "column": "right",
+   "elements": [
+    {
+     "kind": "container",
+     "role": "hps-row",
+     "children": [
+      {
+       "kind": "container",
+       "role": "stat",
+       "children": [
+        {
+         "kind": "text",
+         "role": "inline",
+         "html": "Пункты здоровья"
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "hp-big-cur",
+         "dynamic": true
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "",
+         "ref": "hp-big-max",
+         "dynamic": true
+        }
+       ]
+      },
+      {
+       "kind": "container",
+       "role": "stat",
+       "children": [
+        {
+         "kind": "text",
+         "role": "inline",
+         "html": "Щит"
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "0",
+         "ref": "shield-big",
+         "dynamic": true
+        },
+        {
+         "kind": "text",
+         "role": "value",
+         "html": "",
+         "ref": "shield-big-max",
+         "dynamic": true
+        }
+       ]
+      },
+      {
+       "kind": "list",
+       "ref": "hps-quick",
+       "list": "buttons",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "combat",
+   "name": "Бой",
+   "legend": "Бой",
+   "domId": "combat-panel",
+   "tab": "sheet",
+   "column": "right",
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "combat-summary",
+     "list": "summary",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "magic",
+   "name": "Магия",
+   "legend": "Магия",
+   "domId": null,
+   "tab": "sheet",
+   "column": "right",
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "spellcasting-block",
+     "list": "items",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "feats",
+   "name": "Черты и умения",
+   "legend": "Черты и умения",
+   "domId": null,
+   "tab": "sheet",
+   "column": "right",
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "feats-block",
+     "list": "items",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "actions",
+   "name": "Действия",
+   "legend": "Действия",
+   "domId": null,
+   "tab": "sheet",
+   "column": "right",
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "actions-block",
+     "list": "items",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "coins",
+   "name": "Богатство",
+   "legend": "Богатство",
+   "domId": null,
+   "tab": "inventory",
+   "column": null,
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Пп",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "inventory.coins.pp",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Зл",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "inventory.coins.gp",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Ср",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "inventory.coins.sp",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Мд",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "inventory.coins.cp",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Макс. вес (bulk)",
+       "control": {
+        "kind": "input",
+        "type": "number",
+        "bind": "inventory.bulkMax",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "block",
+   "name": "Надето / Носится",
+   "legend": "Надето / Носится",
+   "domId": null,
+   "tab": "inventory",
+   "column": null,
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "inv-worn",
+     "list": "inventory",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "inv-held",
+   "name": "В руках",
+   "legend": "В руках",
+   "domId": null,
+   "tab": "inventory",
+   "column": null,
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "inv-held",
+     "list": "inventory",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "inv-consumables",
+   "name": "Расходники",
+   "legend": "Расходники",
+   "domId": null,
+   "tab": "inventory",
+   "column": null,
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "inv-consumables",
+     "list": "inventory",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "inv-other",
+   "name": "Прочее",
+   "legend": "Прочее",
+   "domId": null,
+   "tab": "inventory",
+   "column": null,
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "inv-other",
+     "list": "inventory",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "inv-notes",
+   "name": "Примечания инвентаря",
+   "legend": "Примечания инвентаря",
+   "domId": null,
+   "tab": "inventory",
+   "column": null,
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Заметки о снаряжении",
+       "control": {
+        "kind": "textarea",
+        "rows": 3,
+        "bind": "inventory.notes"
+       },
+       "role": "grow",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "origin",
+   "name": "Происхождение",
+   "legend": "Происхождение",
+   "domId": null,
+   "tab": "bio",
+   "column": null,
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Этническая принадлежность",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.ethnicity"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Место рождения",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.birthplace"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Возраст",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.age",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Пол/мест.",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.gender",
+        "size": "m"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Рост",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.height",
+        "size": "xs"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Вес",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.weight",
+        "size": "xs"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Внешность",
+       "control": {
+        "kind": "textarea",
+        "rows": 3,
+        "bind": "biography.appearance"
+       },
+       "role": "grow",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "personality",
+   "name": "Личность",
+   "legend": "Личность",
+   "domId": null,
+   "tab": "bio",
+   "column": null,
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Отношение",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.attitude",
+        "size": "m"
+       },
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Девиз/фраза",
+       "control": {
+        "kind": "input",
+        "type": "text",
+        "bind": "biography.catchphrases"
+       },
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Эдикты",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.edicts"
+       },
+       "role": "half",
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Анафемы",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.anathema"
+       },
+       "role": "half",
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Нравится",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.likes"
+       },
+       "role": "half",
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Не нравится",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.dislikes"
+       },
+       "role": "half",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "history",
+   "name": "История и мир",
+   "legend": "История и мир",
+   "domId": null,
+   "tab": "bio",
+   "column": null,
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Предыстория / заметки кампании",
+       "control": {
+        "kind": "textarea",
+        "rows": 6,
+        "bind": "biography.backstory"
+       },
+       "role": "grow",
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Союзники",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.allies"
+       },
+       "role": "half",
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Враги",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.enemies"
+       },
+       "role": "half",
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "label",
+       "text": "Организации",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.organizations"
+       },
+       "role": "half",
+       "dynamic": true
+      },
+      {
+       "kind": "label",
+       "text": "Прочие заметки",
+       "control": {
+        "kind": "textarea",
+        "rows": 2,
+        "bind": "biography.notes"
+       },
+       "role": "half",
+       "dynamic": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "servers",
+   "name": "Серверы",
+   "legend": "Серверы",
+   "domId": null,
+   "tab": "servers",
+   "column": null,
+   "elements": [
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "input",
+       "type": "text",
+       "attrSize": 28,
+       "placeholder": "https://my-server.example:8443",
+       "id": "srv-url",
+       "action": "input:srv-url",
+       "dynamic": true
+      },
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "Добавить сервер",
+       "id": "srv-add",
+       "action": "server:add",
+       "dynamic": true
+      }
+     ]
+    },
+    {
+     "kind": "list",
+     "ref": "server-list",
+     "list": "servers",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "api",
+   "name": "Подключение (логин / API-ключ)",
+   "legend": "Подключение (логин / API-ключ)",
+   "domId": null,
+   "tab": "servers",
+   "column": null,
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "srv-auth",
+     "list": "auth-form",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "srv-chars",
+   "name": "Персонажи на сервере",
+   "legend": "Персонажи на сервере",
+   "domId": null,
+   "tab": "servers",
+   "column": null,
+   "elements": [
+    {
+     "kind": "list",
+     "ref": "srv-chars",
+     "list": "chars",
+     "dynamic": true
+    }
+   ]
+  },
+  {
+   "id": "export",
+   "name": "Экспорт",
+   "legend": "Экспорт",
+   "domId": null,
+   "tab": "io",
+   "column": null,
+   "elements": [
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Скопировать JSON в буфер",
+     "id": "exp-json-clipboard",
+     "action": "export:json-clipboard"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Скачать JSON-файл",
+     "id": "exp-json-file",
+     "action": "export:json-file"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Скачать HTML с персонажем",
+     "id": "exp-html",
+     "action": "export:html"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Скачать все персонажи (JSON)",
+     "id": "exp-all-json",
+     "action": "export:all-json"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Скачать HTML со всеми",
+     "id": "exp-all-html",
+     "action": "export:all-html"
+    }
+   ]
+  },
+  {
+   "id": "import",
+   "name": "Импорт",
+   "legend": "Импорт",
+   "domId": null,
+   "tab": "io",
+   "column": null,
+   "elements": [
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Из буфера обмена",
+     "id": "imp-json-clipboard",
+     "action": "import:json-clipboard"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Из JSON-файла",
+     "id": "imp-json-file-btn",
+     "action": "import:json-file"
+    },
+    {
+     "kind": "input",
+     "type": "file",
+     "id": "imp-json-file",
+     "action": "input:imp-json-file"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Из HTML-файла листа",
+     "id": "imp-html-btn",
+     "action": "import:html"
+    },
+    {
+     "kind": "input",
+     "type": "file",
+     "id": "imp-html-file",
+     "action": "input:imp-html-file"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Из PDF-листа (fields→JSON)",
+     "id": "imp-pdf-btn",
+     "action": "import:pdf"
+    },
+    {
+     "kind": "input",
+     "type": "file",
+     "id": "imp-pdf-file",
+     "action": "input:imp-pdf-file"
+    }
+   ]
+  },
+  {
+   "id": "io-server",
+   "name": "Сервер",
+   "legend": "Сервер",
+   "domId": null,
+   "tab": "io",
+   "column": null,
+   "elements": [
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Загрузить текущего на сервер ⤴",
+     "id": "push-server",
+     "action": "server:push"
+    },
+    {
+     "kind": "button",
+     "type": "button",
+     "text": "Обновить текущего с сервера ⤓",
+     "id": "pull-server",
+     "action": "server:pull"
+    }
+   ]
+  },
+  {
+   "id": "json-data",
+   "name": "JSON данных текущего персонажа",
+   "legend": "JSON данных текущего персонажа",
+   "domId": null,
+   "tab": "io",
+   "column": null,
+   "elements": [
+    {
+     "kind": "textarea",
+     "rows": 14,
+     "id": "json-editor",
+     "spellcheck": false,
+     "action": "input:json-editor",
+     "dynamic": true
+    },
+    {
+     "kind": "container",
+     "role": "row",
+     "children": [
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "Применить из текстового поля",
+       "id": "json-apply",
+       "action": "json:apply"
+      },
+      {
+       "kind": "button",
+       "type": "button",
+       "text": "Обновить поле из листа",
+       "id": "json-refresh",
+       "action": "json:refresh"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "blockvis",
+   "name": "Блоки",
+   "legend": "Блоки",
+   "domId": null,
+   "tab": "blockvis",
+   "column": null,
+   "elements": []
+  }
+ ]
+}
+</script>
 <script>
 /* ==========================================================================
    PF2e Character Sheet — клиентское приложение (vanilla JS, без сборки).
@@ -1397,7 +2894,8 @@ var State = {
   tab: 'sheet',
   selectedServer: null, // url
   serverChars: {},      // url -> [chars]
-  autoSaveTimer: null
+  autoSaveTimer: null,
+  blocksJson: null      // описание всех блоков из frontend/blocks.json (Block Format v1)
 };
 
 /* ---------------- вкладки ---------------- */
@@ -1448,6 +2946,133 @@ function switchCharacter(id) {
   State.sheet = normalizeSheet(map[id]);
   localStorage.setItem(LS_CURRENT, id);
   renderAll();
+}
+
+/* ============================================================
+   BLOCKS.JSON — описание всех блоков листа (Block Format v1)
+   Единый источник структуры: frontend/blocks.json генерируется
+   tools/export_blocks_json.py из разметки шаблона. Приложение
+   загружает его при старте (window.__BLOCKS_JSON__ инлайнится
+   сборщиком для file://, иначе fetch), сверяет блоки страницы
+   с определениями и умеет строить блоки из JSON целиком.
+   ============================================================ */
+function loadBlocksJson() {
+  if (window.__BLOCKS_JSON__) {
+    try { State.blocksJson = JSON.parse(window.__BLOCKS_JSON__); } catch (e) { /* ignore */ }
+    return Promise.resolve(State.blocksJson);
+  }
+  // инлайн при сборке: <script id="pf2e-blocks-json" type="application/json">
+  var inline = document.getElementById('pf2e-blocks-json');
+  if (inline && inline.textContent.trim()) {
+    try {
+      State.blocksJson = JSON.parse(inline.textContent);
+      window.__BLOCKS_JSON__ = inline.textContent;
+      return Promise.resolve(State.blocksJson);
+    } catch (e) { /* ignore, пробуем fetch */ }
+  }
+  var base = document.currentScript && document.currentScript.src;
+  var url = 'blocks.json';
+  if (base && /^https?:/.test(base)) url = base.replace(/[^/]*$/, 'blocks.json');
+  return fetch(url).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { State.blocksJson = d; return d; })
+    .catch(function () { return null; });
+}
+function blockDefById(id) {
+  var bs = State.blocksJson && State.blocksJson.blocks;
+  if (!bs) return null;
+  for (var i = 0; i < bs.length; i++) if (bs[i].id === id) return bs[i];
+  return null;
+}
+/* Элементы блока -> плоский список (для обхода валидатором/дизайнером) */
+function blockElementsFlat(def) {
+  var out = [];
+  (function walk(list) {
+    (list || []).forEach(function (e) {
+      out.push(e);
+      if (e.children) walk(e.children);
+    });
+  })(def && def.elements);
+  return out;
+}
+function beControl(c) {
+  var inp;
+  if (c.kind === 'textarea') inp = el('textarea', { rows: String(c.rows || 3) });
+  else {
+    inp = el('input', { type: c.type || 'text' });
+    if (c.size) inp.className = c.size;
+    if (c.attrSize) inp.setAttribute('size', String(c.attrSize));
+  }
+  if (c.bind) inp.setAttribute('data-bind', c.bind);
+  if (c.placeholder) inp.placeholder = c.placeholder;
+  if (c.id) inp.id = c.id;
+  return inp;
+}
+/* Построение содержимого fieldset по JSON-определению блока.
+   Динамические контейнеры (списки, таблицы) остаются пустыми —
+   их наполняют штатные render*-функции. */
+function buildBlockFromDef(def) {
+  var body = el('div', { class: 'new-block-body' });
+  (def.elements || []).forEach(function (e) { body.appendChild(beElement(e)); });
+  return body;
+}
+function beElement(e) {
+  switch (e.kind) {
+    case 'container': {
+      var div = el('div', { class: e.role ? ('row' === e.role ? 'row' : e.role) : 'row' });
+      (e.children || []).forEach(function (ch) { div.appendChild(beElement(ch)); });
+      return div;
+    }
+    case 'label': {
+      var lab = el('label', { class: 'nb-field' });
+      if (e.text) lab.appendChild(el('span', { text: e.text }));
+      if (e.control) lab.appendChild(beControl(e.control));
+      (e.children || []).forEach(function (ch) { lab.appendChild(beElement(ch)); });
+      return lab;
+    }
+    case 'text': {
+      var sp = el('span', {});
+      if (e.html) sp.innerHTML = e.html;
+      if (e.ref) sp.id = e.ref;
+      if (e.dynamic) sp.setAttribute('data-dkey', e.ref || '');
+      (e.children || []).forEach(function (ch) { sp.appendChild(beElement(ch)); });
+      return sp;
+    }
+    case 'input':
+    case 'textarea':
+      return beControl(Object.assign({ kind: e.kind }, e));
+    case 'button': {
+      var b = el('button', { type: e.type || 'button', text: e.text || '' });
+      if (e.action) b.setAttribute('data-action', e.action);
+      if (e.ref) b.id = e.ref;
+      return b;
+    }
+    case 'list':
+    case 'static': {
+      var tag = e.tag || 'div';
+      var n = el(tag, {});
+      if (e.ref) n.id = e.ref;
+      return n;
+    }
+    default:
+      return el('div', {});
+  }
+}
+/* Сверка блоков страницы с blocks.json: возвращает расхождения
+   (used in tests/diagnostics; ничего не меняет). */
+function verifyBlocksAgainstJson() {
+  var diffs = [];
+  var bs = State.blocksJson && State.blocksJson.blocks;
+  if (!bs) return ['blocks.json не загружен'];
+  bs.forEach(function (def) {
+    var els = blockElementsFlat(def);
+    var page = $('#tab-' + (def.tab || 'sheet'));
+    if (!page) { diffs.push('нет вкладки ' + def.tab); return; }
+    els.forEach(function (e) {
+      if (e.bind && !$('[data-bind="' + e.bind + '"]', page)) diffs.push(def.id + ': нет поля ' + e.bind);
+      if (e.ref && !document.getElementById(e.ref)) diffs.push(def.id + ': нет контейнера #' + e.ref);
+    });
+  });
+  return diffs;
 }
 
 /* ---------------- рендеринг листа ---------------- */
@@ -2812,6 +4437,7 @@ function wirePalettePicker() {
 
 /* ---------------- инициализация ---------------- */
 function boot() {
+  loadBlocksJson();   // описание блоков (blocks.json) — фоновая сверка, не блокирует старт
   renderTabs();
   ensureBlockIds();   // стабильные id блоков — до первой раскладки
   wireThemePicker();
@@ -4682,7 +6308,9 @@ var closeBlockModal = requestCloseBlockModal;
 
 document.addEventListener('DOMContentLoaded', boot);
 window.PF2E = { Store: Store, emptySheet: emptySheet, normalizeSheet: normalizeSheet,
-  computeDerived: computeDerived, buildStandaloneHTML: buildStandaloneHTML, State: State };
+  computeDerived: computeDerived, buildStandaloneHTML: buildStandaloneHTML, State: State,
+  loadBlocksJson: loadBlocksJson, blockDefById: blockDefById, buildBlockFromDef: buildBlockFromDef,
+  verifyBlocksAgainstJson: verifyBlocksAgainstJson, blockElementsFlat: blockElementsFlat };
 })();
 
 </script>
