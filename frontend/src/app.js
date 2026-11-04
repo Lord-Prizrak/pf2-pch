@@ -2960,31 +2960,48 @@ function openBlockModal(f) {
   }
   var designSaved = null; // read-only снимок значений до перехода в режим дизайна
 
-  /* В режиме «только дизайн» блок отображается чистым (без данных текущего
-     персонажа), поля можно перемещать и выделять для просмотра свойств,
-     но ввод данных и прочие взаимодействия заблокированы. */
-  function clearBlockData() {
-    $all('input, textarea, select', f).forEach(function (i) {
-      if (!isDataInput(i)) return;
-      if (i.type === 'checkbox' || i.type === 'radio') i.checked = false;
-      else i.value = '';
-      if (i.tagName === 'SELECT') {
-        for (var o = i.options.length - 1; o >= 0; o--) i.remove(o);
-        i.appendChild(el('option', { text: '—' }));
-        i.selectedIndex = 0;
-      }
+  /* В режиме «только дизайн» блок отображается ЧИСТЫМ — как пустой лист без
+     данных текущего персонажа. Значения input/textarea/select скрываются через
+     CSS (value не трогается — данные возвращаются мгновенно при выключении),
+     списковые строки (языки, навыки, заклинания…) прячутся целиком, чтобы не
+     оставалось пустых плашек и кнопок. Поля можно перемещать и выделять для
+     просмотра свойств, но ввод данных и прочие взаимодействия заблокированы. */
+  /* Контейнеры, полностью перестраиваемые renderAll(): если редактор открыт
+     в режиме дизайна и такой контейнер попадает под перерисовку — сразу же
+     прячем его содержимое повторно. */
+  var DYNAMIC_LIST_SEL = '#languages-list, #skills-block, #strikes-block, ' +
+    '#spellcasting-block, #feats-block, #actions-block, #inventory-block, ' +
+    '.lang-items, .lang-add';
+  function hideOneList(box) {
+    if (box.getAttribute('data-be-hidden')) return;
+    if (box.hasChildNodes()) {
+      var ph = document.createElement('div');
+      ph.className = 'be-ghost';
+      while (box.firstChild) ph.appendChild(box.firstChild); // сохраняем узлы для возврата
+      box.appendChild(ph);
+    }
+    box.setAttribute('data-be-hidden', '1');
+  }
+  function hideDynamicLists() {
+    $all(DYNAMIC_LIST_SEL, f).forEach(hideOneList);
+  }
+  function showDynamicLists() {
+    $all('[data-be-hidden]', f).forEach(function (box) {
+      var ph = box.querySelector(':scope > .be-ghost');
+      if (ph) while (ph.firstChild) box.appendChild(ph.firstChild);
+      box.removeAttribute('data-be-hidden');
     });
-    $all('.be-chip', f).forEach(function (c) { c.textContent = ''; });
   }
   function applyDesignMode() {
     f.classList.toggle('be-design-mode', designOnly);
     panel.classList.toggle('be-design-on', designOnly);
     if (designOnly) {
-      designSaved = snapshotFieldValues();
-      clearBlockData();
-      toast('Режим «Только дизайн»: данные скрыты, ввод отключён.');
+      designSaved = snapshotFieldValues(); // снимок на всякий случай (CSS-скрытие его не меняет)
+      hideDynamicLists();
+      toast('Режим «Только дизайн»: блок показан пустым, ввод отключён.');
     } else {
-      /* Возврат к рабочему режиму: восстанавливаем read-only снимок данных */
+      /* Возврат к рабочему режиму: снимаем скрытие — данные персонажа те же */
+      showDynamicLists();
       restoreBlockValues(designSaved);
       designSaved = null;
       refreshAllTextareas(f);
@@ -2994,6 +3011,16 @@ function openBlockModal(f) {
     designOnly = this.checked;
     applyDesignMode();
   });
+
+  /* Если в режиме дизайна сработает перерисовка листа (renderAll полностью
+     перестраивает динамические контейнеры), сразу пряжем свежие данные. */
+  var origRenderAll = renderAll;
+  renderAll = function () {
+    var r = origRenderAll.apply(this, arguments);
+    if (blockModal && blockModal.designOnly && document.body.contains(f)) hideDynamicLists();
+    return r;
+  };
+  overlay._restoreRenderAll = function () { renderAll = origRenderAll; };
 
   function propRow(labelText, inputNode) {
     return el('div', { class: 'bep-prop-row' }, [el('span', { class: 'bep-plabel', text: labelText }), inputNode]);
@@ -3269,10 +3296,17 @@ function openBlockModal(f) {
   /* Клон блока с восстановленными значениями полей из designSaved —
      чтобы временная очистка в режиме «только дизайн» не считалась изменением. */
   function htmlForCompare() {
-    if (!designOnly || !designSaved) return f.innerHTML;
+    if (!designOnly) return f.innerHTML;
     var tmp = f.cloneNode(true);
+    // снятие CSS-скрытия значений и списков (режим «только дизайн»)
+    tmp.classList.remove('be-design-mode');
+    $all('[data-be-hidden]', tmp).forEach(function (box) {
+      var ph = box.querySelector(':scope > .be-ghost');
+      if (ph) while (ph.firstChild) box.appendChild(ph.firstChild);
+      box.removeAttribute('data-be-hidden');
+    });
     $all('input, textarea, select', tmp).forEach(function (i) {
-      var s = designSaved[fieldKeyOf(i)];
+      var s = designSaved ? designSaved[fieldKeyOf(i)] : null;
       if (!s) return;
       if (i.type === 'checkbox' || i.type === 'radio') i.checked = !!s.checked;
       else i.value = s.value != null ? s.value : '';
@@ -3317,7 +3351,7 @@ function openBlockModal(f) {
   blockModal = { overlay: overlay, panel: panel, closeBtn: closeBtn, host: host,
                  origParent: origParent, nextSibling: nextSibling, bid: f.dataset.bid,
                  isDirty: isDirty, applyEdits: applyEdits,
-                 designChk: designChk };
+                 designChk: designChk, get designOnly() { return designOnly; } };
   var placeClose = function () {
     closeBtn.style.left = (panel.offsetLeft + panel.offsetWidth - 6) + 'px';
     closeBtn.style.top = Math.max(0, panel.offsetTop - 30) + 'px';
@@ -3350,8 +3384,17 @@ function doCloseBlockModal() {
   // возвращаем блок на исходное место, если он всё ещё в панели
   var child = m.host.firstChild;
   // если редактор закрыли в режиме «только дизайн», снимаем его с блока:
-  // на странице данные персонажа должны отображаться как обычно
+  // возвращаем скрытые списки и убираем класс — на странице данные персонажа
+  // должны отображаться как обычно
   if (child && child.classList) child.classList.remove('be-design-mode');
+  if (child && child.tagName === 'FIELDSET') {
+    $all('[data-be-hidden]', child).forEach(function (box) {
+      var ph = box.querySelector(':scope > .be-ghost');
+      if (ph) while (ph.firstChild) box.appendChild(ph.firstChild);
+      box.removeAttribute('data-be-hidden');
+    });
+  }
+  if (m.overlay._restoreRenderAll) m.overlay._restoreRenderAll();
   if (child && child.tagName === 'FIELDSET' && m.origParent && m.origParent.contains !== undefined) {
     try { m.origParent.insertBefore(child, m.nextSibling); }
     catch (e) { document.body.appendChild(child); }

@@ -416,9 +416,18 @@ body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
 .bep-design-label input[type="checkbox"] { width: auto; cursor: pointer; }
 .block-modal-panel.be-design-on .be-palette { opacity: .55; pointer-events: none; }
 .be-fieldset-be-design, fieldset.be-design-mode { outline: 2px dashed var(--accent, #b5893e); outline-offset: 4px; }
-fieldset.be-design-mode .be-canvas input,
-fieldset.be-design-mode .be-canvas textarea,
-fieldset.be-design-mode .be-canvas select { pointer-events: none; opacity: .55; }
+/* «Только дизайн»: блок выглядит ПУСТЫМ — как на чистом листе.
+   Значения полей скрыты через color:transparent (value не трогается),
+   списковые контейнеры спрятаны целиком ([data-be-hidden]). */
+fieldset.be-design-mode input:not([type="checkbox"]):not([type="radio"]),
+fieldset.be-design-mode textarea,
+fieldset.be-design-mode select { color: transparent; text-shadow: none !important; -webkit-text-fill-color: transparent; caret-color: transparent; }
+fieldset.be-design-mode input[type="checkbox"],
+fieldset.be-design-mode input[type="radio"] { accent-color: transparent; }
+fieldset.be-design-mode [data-be-hidden] > *:not(.be-ghost) { display: none !important; }
+fieldset.be-design-mode .be-ghost { display: none; }
+fieldset.be-design-mode input::placeholder,
+fieldset.be-design-mode textarea::placeholder { color: transparent; }
 fieldset.be-design-mode .be-chip { opacity: .55; }
 /* Данные персонажа в редакторе блоков — read-only (дизайнер их не меняет) */
 .block-modal-host [data-bind] { background: var(--chip); color: var(--ink); cursor: default; }
