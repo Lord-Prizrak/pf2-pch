@@ -17,14 +17,68 @@
     python3 tools/build.py --list-themes       # показать доступные темы и гаммы
 """
 import argparse
+import collections
 import json
 import os
 import re
+import subprocess
+import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'frontend', 'src')
 OUT = os.path.join(ROOT, 'frontend', 'sheet.html')
 OUT_EMPTY = os.path.join(ROOT, 'frontend', 'sheet-empty.html')
+BLOCKS_JSON = os.path.join(ROOT, 'frontend', 'blocks.json')
+
+
+def human_size(n):
+    """Человекочитаемый размер: 256 КБ / 1.5 МБ."""
+    if n >= 1024 * 1024:
+        return '%.2f МБ' % (n / 1024.0 / 1024.0)
+    if n >= 1024:
+        return '%d КБ' % (n // 1024)
+    return '%d Б' % n
+
+
+class Stats:
+    """Сбор статистики по этапам сборки."""
+
+    def __init__(self):
+        self.t0 = time.time()
+        self.stages = []          # [(имя, длительность_сек)]
+        self.components = {}      # имя -> (байт, доп.описание)
+        self.block_stats = None   # (кол-во блоков, поля, списки, вкладки)
+        self.char_names = []
+
+    def stage(self, name, dur):
+        self.stages.append((name, dur))
+
+    def component(self, name, nbytes, note=''):
+        self.components[name] = (nbytes, note)
+
+    def report(self, out_path, theme, palette, with_data):
+        total = time.time() - self.t0
+        size = os.path.getsize(out_path)
+        print('\n=== Статистика сборки ===')
+        print('Результат : %s (%s)' % (os.path.relpath(out_path, ROOT), human_size(size)))
+        print('Конфигурация: раскладка=%s, гамма=%s, данные персонажей: %s'
+              % (theme, palette, 'встроены' if with_data else 'нет (--no-data)'))
+        print('-- Компоненты встроенного файла --')
+        for name in sorted(self.components, key=lambda k: -self.components[k][0]):
+            b, note = self.components[name]
+            print('  %-22s %8s  %s' % (name, human_size(b), note))
+        if self.block_stats:
+            nb, nf, nl, tabs = self.block_stats
+            print('-- Блоки (blocks.json) --')
+            print('  блоков: %d | полей с data-bind: %d | динамических списков: %d'
+                  % (nb, nf, nl))
+            print('  вкладки: ' + ', '.join('%s(%d)' % (t, c) for t, c in sorted(tabs.items())))
+        if self.char_names:
+            print('  персонажи встроены: ' + ', '.join(self.char_names))
+        print('-- Этапы --')
+        for nm, dur in self.stages:
+            print('  %-22s %6.3f с' % (nm, dur))
+        print('Итого времени: %.3f с' % total)
 
 # id темы -> имя файла CSS-дополнения в frontend/src (default — только style.css).
 # ТЕМА отвечает ТОЛЬКО за расположение блоков (раскладку).
@@ -44,12 +98,15 @@ PALETTES = {
 }
 
 
-def load_css():
+def load_css(stats=None):
     """Базовый style.css + дополнения всех тем и гамм: в собранном файле
     присутствуют все варианты, поэтому пользователь может переключать их на лету."""
     with open(os.path.join(SRC, 'style.css'), encoding='utf-8') as fh:
         css = fh.read()
+    if stats:
+        stats.component('CSS (базовый)', len(css.encode()), 'style.css')
     seen = set()
+    extras = []
     for tid in sorted(THEMES):
         extra = THEMES[tid]
         if not extra or extra in seen:
@@ -57,6 +114,8 @@ def load_css():
         seen.add(extra)
         with open(os.path.join(SRC, extra), encoding='utf-8') as fh:
             css += '\n\n/* === тема: %s === */\n' % tid + fh.read()
+        extras.append(extra)
+    pal_extras = []
     for pid in sorted(PALETTES):
         extra = PALETTES[pid]
         if not extra or extra in seen:
@@ -64,10 +123,14 @@ def load_css():
         seen.add(extra)
         with open(os.path.join(SRC, extra), encoding='utf-8') as fh:
             css += '\n\n/* === гамма: %s === */\n' % pid + fh.read()
+        pal_extras.append(extra)
+    if stats:
+        stats.component('CSS (всего)', len(css.encode()),
+                        'базовый + %d тем(-ы) + %d гамм(-ы)' % (len(extras), len(pal_extras)))
     return css
 
 
-def load_embedded():
+def load_embedded(stats=None):
     sheets_dir = os.path.join(ROOT, 'sheets')
     chars = []
     if os.path.isdir(sheets_dir):
@@ -79,10 +142,72 @@ def load_embedded():
                     chars.append(data)
                 elif isinstance(data, list):
                     chars.extend(data)
+    if stats:
+        stats.char_names = [c.get('name', '?') for c in chars]
     return {'schema': 1, 'characters': chars}
 
 
-def build_html(html, css, js, payload, theme='default', palette='default'):
+def analyze_blocks(stats):
+    """Статистика по blocks.json: блоки, поля, списки, вкладки."""
+    if not os.path.exists(BLOCKS_JSON):
+        return None
+    with open(BLOCKS_JSON, encoding='utf-8') as fh:
+        raw = fh.read()
+    try:
+        doc = json.loads(raw)
+    except ValueError:
+        print('ВНИМАНИЕ: blocks.json повреждён (невалидный JSON)!')
+        return None
+    blocks = doc.get('blocks', []) if isinstance(doc, dict) else doc
+
+    n_fields = n_lists = 0
+    tabs = collections.Counter()
+
+    def walk(node):
+        nonlocal n_fields, n_lists
+        if isinstance(node, dict):
+            if node.get('bind') or node.get('dataBind'):
+                n_fields += 1
+            # динамические списки: узел с list (chip-list / item-list) или kind
+            if 'list' in node or node.get('kind') in ('chip-list', 'item-list') \
+               or node.get('type') in ('chip-list', 'item-list'):
+                n_lists += 1
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for b in blocks:
+        tabs[b.get('tab', '?')] += 1
+        walk(b)
+    stats.component('blocks.json', len(raw.encode()), '%d блоков' % len(blocks))
+    stats.block_stats = (len(blocks), n_fields, n_lists, tabs)
+    return blocks
+
+
+def check_js(stats):
+    """Синтаксическая проверка app.js через node --check (если node доступен)."""
+    js_path = os.path.join(SRC, 'app.js')
+    if not shutil_which('node'):
+        print('node не найден — синтаксис app.js не проверен')
+        return True
+    t = time.time()
+    r = subprocess.run(['node', '--check', js_path], capture_output=True, text=True)
+    stats.stage('Проверка JS', time.time() - t)
+    if r.returncode != 0:
+        print('ОШИБКА синтаксиса app.js:\n' + r.stderr)
+        return False
+    print('JS синтаксис app.js: ОК')
+    return True
+
+
+def shutil_which(name):
+    from shutil import which
+    return which(name)
+
+
+def build_html(html, css, js, payload, theme='default', palette='default', stats=None):
     # инлайн CSS: все темы/гаммы присутствуют в файле — переключение на лету;
     # --theme — раскладка сборки (класс theme-* на <body>),
     # --palette — цветовая гамма (класс pal-*)
@@ -123,7 +248,29 @@ def build_html(html, css, js, payload, theme='default', palette='default'):
     # инлайн JS
     html = html.replace('<script src="app.js"></script>',
                         '<script>\n' + js.replace('</script>', '<\\/script>') + '\n</script>')
+
+    if stats is not None:
+        stats.component('Данные персонажей', len(payload_txt.encode()),
+                        '%d персонаж(ей)' % len(payload.get('characters', [])))
+        stats.component('JS (app.js)', len(js.encode()),
+                        '%d строк' % js.count('\n'))
+        stats.component('HTML-каркас', len(html_tpl_size[0].encode()) if html_tpl_size else 0,
+                        'index.template.html')
     return html
+
+
+html_tpl_size = [None]  # размер шаблона для статистики (заполняется в main)
+
+
+def emit(out, html, stats, theme, palette, with_data):
+    t = time.time()
+    with open(out, 'w', encoding='utf-8') as fh:
+        fh.write(html)
+    stats.stage('Запись файла', time.time() - t)
+    print('Собрано: %s (%s, %d КБ)' % (os.path.relpath(out, ROOT),
+                                        os.path.basename(out),
+                                        os.path.getsize(out) // 1024))
+    stats.report(out, theme, palette, with_data)
 
 
 def main():
@@ -147,31 +294,60 @@ def main():
             print(f'  {pid}: {PALETTES[pid] or "style.css (классический пергамент)"}')
         return
 
+    stats = Stats()
+
+    # --- Чтение исходников ---
+    t = time.time()
     with open(os.path.join(SRC, 'index.template.html'), encoding='utf-8') as fh:
         html_tpl = fh.read()
-    css = load_css()
-    with open(os.path.join(SRC, 'app.js'), encoding='utf-8') as fh:
-        js = fh.read()
+    html_tpl_size[0] = html_tpl
+    js = open(os.path.join(SRC, 'app.js'), encoding='utf-8').read()
+    stats.stage('Чтение исходников', time.time() - t)
+    print('[1/5] Исходники прочитаны: шаблон %s строк, app.js %s строк'
+          % (html_tpl.count('\n'), js.count('\n')))
 
+    # --- Проверка синтаксиса JS ---
+    print('[2/5] Проверка синтаксиса...')
+    if not check_js(stats):
+        raise SystemExit(1)
+    analyze_blocks(stats)
+    if stats.block_stats:
+        nb, nf, nl, tabs = stats.block_stats
+        print('      blocks.json: %d блоков, %d полей, %d динамических списков' % (nb, nf, nl))
+
+    # --- CSS ---
+    t = time.time()
+    css = load_css(stats)
+    stats.stage('Сборка CSS', time.time() - t)
+    print('[3/5] CSS собран: %s (%d тем + %d гамм встроено)'
+          % (human_size(len(css.encode())), len(THEMES), len(PALETTES)))
+
+    # --- Данные персонажей ---
     empty_payload = {'schema': 1, 'characters': []}
-    payload = empty_payload if args.no_data else load_embedded()
-
-    out = OUT_EMPTY if args.no_data else OUT
-    html = build_html(html_tpl, css, js, payload, theme=args.theme, palette=args.palette)
-    with open(out, 'w', encoding='utf-8') as fh:
-        fh.write(html)
+    payload = empty_payload if args.no_data else load_embedded(stats)
     n = len(payload['characters'])
-    lay = args.theme
-    print(f'sheet собран: {out} ({os.path.getsize(out)} байт, персонажей встроено: {n}, '
-          f'тема: {args.theme}, раскладка: {lay})')
+    print('[4/5] Данные: %s' % ('без персонажей (--no-data)' if args.no_data
+                                else 'встроено персонажей: %d (%s)'
+                                     % (n, ', '.join(stats.char_names) or '—')))
+
+    # --- Сборка и запись ---
+    print('[5/5] Сборка HTML...')
+    out = OUT_EMPTY if args.no_data else OUT
+    t = time.time()
+    html = build_html(html_tpl, css, js, payload, theme=args.theme,
+                      palette=args.palette, stats=stats)
+    stats.stage('Подстановка компонентов', time.time() - t)
+    emit(out, html, stats, args.theme, args.palette, not args.no_data)
 
     # за --no-data также пересобираем и обычный лист, чтобы сервер мог
     # раздавать обе страницы (sheet.html и sheet-empty.html)
     if args.no_data:
-        full = build_html(html_tpl, css, js, load_embedded(), theme=args.theme, palette=args.palette)
+        full = build_html(html_tpl, css, js, load_embedded(), theme=args.theme,
+                          palette=args.palette)
         with open(OUT, 'w', encoding='utf-8') as fh:
             fh.write(full)
-        print(f'sheet собран: {OUT} ({os.path.getsize(OUT)} байт, тема: {args.theme}, раскладка: {lay})')
+        print('Дополнительно пересобран: %s (%s)'
+              % (os.path.relpath(OUT, ROOT), human_size(os.path.getsize(OUT))))
 
 
 if __name__ == '__main__':
