@@ -443,6 +443,9 @@ fieldset.be-design-mode .be-canvas > .be-field:not(.be-selected) .be-flabel { op
 /* Данные персонажа в редакторе блоков — read-only (дизайнер их не меняет) */
 .block-modal-host [data-bind] { background: var(--chip); color: var(--ink); cursor: default; }
 
+/* Пустой вид блока в режиме «Только дизайн»: кнопки действий отключены */
+.be-empty-off { opacity: .45; pointer-events: none; }
+
 
 /* === тема: dark === */
 /* ==========================================================================
@@ -4050,11 +4053,19 @@ function openBlockModal(f) {
      персонажа, а не как блок с очищенными данными. Оригинальные DOM-узлы
      (со всеми слушателями и значениями) сохраняются в be-ghost и возвращаются
      при выключении режима либо при закрытии редактора. */
-  var DYNAMIC_LIST_SEL = '#languages-list, #skills-block, #strikes-block, ' +
-    '#spellcasting-block, #feats-block, #actions-block, #inventory-block, ' +
-    '#weapon-prof-block, #hero-points, #armor-block, #saves-block, ' +
-    '#abilities-body, #ability-cards, ' +
-    '.lang-items, .lang-add';
+  /* Контейнеры собираются из трёх источников: фиксированный список id
+     (совпадает с шаблоном листа), все [data-dkey] и контейнеры JS-рендеров
+     (#inv-*, #srv-*, #hp-bar-wrap, #combat-summary, #hps-quick). */
+  function dynamicListSel() {
+    var ids = ['languages-list', 'skills-block', 'strikes-block', 'spellcasting-block',
+      'feats-block', 'actions-block', 'weapon-prof-block', 'hero-points', 'armor-block',
+      'saves-block', 'abilities-body', 'ability-cards', 'hp-bar-wrap', 'combat-summary',
+      'hps-quick'];
+    $all('[id]', canvas).forEach(function (n) {
+      if (/^(inv-|srv-)/.test(n.id)) ids.push(n.id);
+    });
+    return '#' + ids.join(', #') + ', [data-dkey], .lang-items, .lang-add';
+  }
   function hideOneList(box) {
     if (box.getAttribute('data-be-hidden')) return;
     var ph = ensureGhost(box.parentNode); // ghost — последний ребёнок родителя
@@ -4073,7 +4084,7 @@ function openBlockModal(f) {
     return ph;
   }
   function hideDynamicLists() {
-    $all(DYNAMIC_LIST_SEL, canvas).forEach(hideOneList);
+    $all(dynamicListSel(), canvas).forEach(hideOneList);
   }
   function showDynamicLists() {
     $all('[data-be-hidden]', canvas).forEach(function (box) {
@@ -4096,10 +4107,41 @@ function openBlockModal(f) {
     }
     else { i.value = ''; i.removeAttribute('value'); }
   }
+  /* Пустое состояние для контролов без data-bind: значения таких полей
+     живут только в DOM (в State.sheet их нет), поэтому при построении
+     пустого клона они тоже обнуляются. */
+  var EMPTY_TEXT_PLACEHOLDERS = ['Текст', 'Число', 'Многострочный', '—', 'пункт 1', '+ пункт',
+    'Навык +0', 'Слот ▢▢▢'];
+  function isEmptyPlaceholderPh(elx) {
+    return !!(elx.placeholder && EMPTY_TEXT_PLACEHOLDERS.indexOf(elx.placeholder) >= 0);
+  }
+  function clearStaticControl(elx) {
+    var tag = elx.tagName.toLowerCase();
+    if (tag === 'input') {
+      if (elx.type === 'checkbox' || elx.type === 'radio') { elx.checked = false; return; }
+      if (isEmptyPlaceholderPh(elx)) return;          // поле дизайнера: остаётся как на чистом листе
+      elx.value = '';                                 // данные, введённые на странице раньше
+    } else if (tag === 'textarea') {
+      if (!isEmptyPlaceholderPh(elx)) elx.value = '';
+    } else if (tag === 'select') {
+      if (elx.dataset.fkey) {                          // select поля дизайнера — одна пустая опция
+        while (elx.options.length > 1) elx.remove(1);
+        if (elx.options.length) { elx.options[0].textContent = '—'; elx.options[0].value = ''; elx.options[0].selected = true; }
+      } else if (elx.options.length > 1) {             // select с данными: остаётся первая нейтральная опция
+        elx.selectedIndex = 0;
+        Array.prototype.slice.call(elx.options).forEach(function (o) { o.selected = o.index === 0; });
+      }
+    }
+  }
   function makeEmptyClone(src) {
     var c = src.cloneNode(true);
-    $all('input, textarea, select', c).forEach(clearOneControl);
-    $all(DYNAMIC_LIST_SEL, c).forEach(function (n) { n.remove(); });
+    $all('input, textarea, select', c).forEach(function (i) {
+      if (isDataInput(i)) clearOneControl(i);
+      else clearStaticControl(i);
+    });
+    $all(dynamicListSel(), c).forEach(function (n) { n.remove(); });
+    // кнопки действий и пиcker-ы (−1/+1/Отдых, профи, броски): не часть пустого блока
+    $all('button', c).forEach(function (b) { b.disabled = true; b.classList.add('be-empty-off'); });
     // вычисляемые/данные подписи <b>/<span>/<p>/<td> с id — очищаем текст
     $all('b[id], span[id], p[id], td[id], li[id]', c).forEach(function (n) {
       if (n.querySelector('input, textarea, select, button')) return;

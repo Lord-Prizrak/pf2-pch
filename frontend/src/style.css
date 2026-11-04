@@ -422,3 +422,6 @@ body.pal-dark .bep-save, body.pal-sanych .bep-save { filter: brightness(1.15); }
 fieldset.be-design-mode .be-canvas > .be-field:not(.be-selected) .be-flabel { opacity: .75; }
 /* Данные персонажа в редакторе блоков — read-only (дизайнер их не меняет) */
 .block-modal-host [data-bind] { background: var(--chip); color: var(--ink); cursor: default; }
+
+/* Пустой вид блока в режиме «Только дизайн»: кнопки действий отключены */
+.be-empty-off { opacity: .45; pointer-events: none; }
