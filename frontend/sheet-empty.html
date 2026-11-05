@@ -3573,6 +3573,17 @@ function verifyBlocksAgainstJson() {
 }
 
 /* ---------------- рендеринг листа ---------------- */
+/* Синхронизация связанных контролов с State.sheet: значения data-bind
+   (включая внутренние контролы web-компонентов pf2e-field-*), когда данные
+   изменены программно (кнопки HP, отдых, импорт и т.п.) — без перезапуска
+   bindInputs, чтобы не терять _bound-флаги и фокус. */
+function syncBoundInputs() {
+  $all('[data-bind]').forEach(function (inp) {
+    var val = getPath(State.sheet, inp.getAttribute('data-bind'));
+    if (val == null) val = '';
+    if (document.activeElement !== inp && String(inp.value) !== String(val)) inp.value = val;
+  });
+}
 function bindInputs(root) {
   $all('[data-bind]', root).forEach(function (inp) {
     var path = inp.getAttribute('data-bind');
@@ -4349,6 +4360,7 @@ function renderAll() {
   applySheetSchema(State.sheet);   // кастомные блоки из данных персонажа
   renderCharSwitcher();
   bindInputs(document);
+  syncBoundInputs();   // значения data-bind (в т.ч. внутри web-компонентов) всегда актуальны
   renderAbilities();
   renderDefense();
   renderSkills();
@@ -4869,9 +4881,15 @@ function wireActions() {
     var act = btn.getAttribute('data-action') || '';
     var m = /^hp:(.+)$/.exec(act);
     var v = m ? m[1] : btn.getAttribute('data-hp');
-    if (v === 'full') { State.sheet.hitPoints.current = State.sheet.hitPoints.max; State.sheet.hitPoints.temp = 0; State.sheet.hitPoints.dying = 0; State.sheet.hitPoints.wounded = 0; }
+    /* защита от повреждённых профилей: hitPoints может отсутствовать/быть некорректным */
+    if (!State.sheet.hitPoints || typeof State.sheet.hitPoints !== 'object') State.sheet.hitPoints = {};
+    var hp = State.sheet.hitPoints;
+    ['max', 'current', 'temp', 'dying', 'wounded'].forEach(function (k) {
+      if (typeof hp[k] !== 'number' || isNaN(hp[k])) hp[k] = Number(hp[k]) || 0;
+    });
+    if (v === 'full') { hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0; }
     else applyDamage(Number(v));
-    markDirty(); updateComputed();
+    markDirty(); updateComputed(); syncBoundInputs();
   }
   A['hp:-1'] = A['hp:-5'] = A['hp:1'] = A['hp:5'] = A['hp:full'] = hpAction;
   /* серверы */

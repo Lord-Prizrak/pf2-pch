@@ -12,6 +12,13 @@
       if (this.className) b.className = this.className;
       var act = this.getAttribute('action') || this.getAttribute('data-action');
       if (act) b.setAttribute('data-action', act);
+      /* действие может быть задано на самом кастомном элементе извне:
+         <pf2e-field-button onclick="..."> или <pf2e-field-button data-hp="full"> —
+         переносим на внутренний button, иначе клик по нему не всплывёт как
+        обработчик outerHTML-элемента и не сработает */
+      if (this.getAttribute('onclick')) { b.setAttribute('onclick', this.getAttribute('onclick')); this.removeAttribute('onclick'); }
+      var hpOuter = this.getAttribute('data-hp');
+      if (hpOuter != null) b.setAttribute('data-hp', hpOuter);
       var hpAttr = this.getAttribute('hp');
       if (hpAttr != null) b.setAttribute('data-hp', hpAttr);
       this.textContent = '';
