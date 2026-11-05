@@ -2065,10 +2065,16 @@ function wireTopbar() {
   });
   $all('[data-hp]').forEach(function (b) {
     b.addEventListener('click', function () {
+      /* защита от повреждённых профилей */
+      if (!State.sheet.hitPoints || typeof State.sheet.hitPoints !== 'object') State.sheet.hitPoints = {};
+      var hp = State.sheet.hitPoints;
+      ['max', 'current', 'temp', 'dying', 'wounded'].forEach(function (k) {
+        if (typeof hp[k] !== 'number' || isNaN(hp[k])) hp[k] = Number(hp[k]) || 0;
+      });
       var v = b.getAttribute('data-hp');
-      if (v === 'full') { State.sheet.hitPoints.current = State.sheet.hitPoints.max; State.sheet.hitPoints.temp = 0; State.sheet.hitPoints.dying = 0; State.sheet.hitPoints.wounded = 0; }
+      if (v === 'full') { hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0; }
       else applyDamage(Number(v));
-      markDirty(); updateComputed();
+      markDirty(); updateComputed(); syncBoundInputs();
     });
   });
 }
