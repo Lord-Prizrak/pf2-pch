@@ -3519,7 +3519,12 @@ body.pal-sanych .server-list .srv-item { background: var(--panel); }
              (wireActions вызывается в boot после монтирования блоков) —
              ищем функцию в момент клика */
           var fn = window.PF2E_ACTIONS && window.PF2E_ACTIONS[act];
-          if (typeof fn === 'function') fn(ev, b);
+          if (typeof fn === 'function') {
+            fn(ev, b);
+            this._actHandled = true;   // страховочный делегат на document не должен повторить
+            var self = this;
+            setTimeout(function () { self._actHandled = false; }, 0);
+          }
         });
       }
     }
@@ -5436,7 +5441,10 @@ function exportCurrentJSON(pretty) {
   return JSON.stringify(s, null, pretty === false ? 0 : 2);
 }
 function refreshJsonEditor() {
-  if (State.sheet) $('#json-editor').value = exportCurrentJSON();
+  if (!State.sheet) return;
+  var e = $('#json-editor');
+  if (!e) return;
+  (e.control || e).value = exportCurrentJSON();   // WC pf2e-field-textarea: пишем во внутренний textarea
 }
 
 /* ---------------- серверное взаимодействие ---------------- */
@@ -5698,19 +5706,22 @@ function wireTopbar() {
     if (ids.length) switchCharacter(ids[0]);
     else { State.sheet = null; renderCharSwitcher(); location.reload(); }
   });
-  $all('[data-hp]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      /* защита от повреждённых профилей */
-      if (!State.sheet.hitPoints || typeof State.sheet.hitPoints !== 'object') State.sheet.hitPoints = {};
-      var hp = State.sheet.hitPoints;
-      ['max', 'current', 'temp', 'dying', 'wounded'].forEach(function (k) {
-        if (typeof hp[k] !== 'number' || isNaN(hp[k])) hp[k] = Number(hp[k]) || 0;
-      });
-      var v = b.getAttribute('data-hp');
-      if (v === 'full') { hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0; }
-      else applyDamage(Number(v));
-      markDirty(); updateComputed(); syncBoundInputs();
+  /* Делегирование кликов по HP-кнопкам: обработчик вешается на document,
+     поэтому работает и для кнопок, созданных позже (web-компоненты
+     pf2e-field-button с data-hp на внутреннем <button>, JSON-блоки). */
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('[data-hp]') : null;
+    if (!b || !State.sheet) return;
+    /* защита от повреждённых профилей */
+    if (!State.sheet.hitPoints || typeof State.sheet.hitPoints !== 'object') State.sheet.hitPoints = {};
+    var hp = State.sheet.hitPoints;
+    ['max', 'current', 'temp', 'dying', 'wounded'].forEach(function (k) {
+      if (typeof hp[k] !== 'number' || isNaN(hp[k])) hp[k] = Number(hp[k]) || 0;
     });
+    var v = b.getAttribute('data-hp');
+    if (v === 'full') { hp.current = hp.max; hp.temp = 0; hp.dying = 0; hp.wounded = 0; }
+    else applyDamage(Number(v));
+    markDirty(); updateComputed(); syncBoundInputs();
   });
 }
 
@@ -5834,6 +5845,20 @@ function wireActions() {
   A['input:imp-pdf-file'] = function () { var f = document.getElementById('imp-pdf-file'); if (f) (f.control || f).click(); };
   A['input:json-editor'] = function () { var ed = document.getElementById('json-editor'); if (ed) (ed.control || ed).focus(); };
   A['input:srv-url'] = function () { var inp = document.getElementById('srv-url'); if (inp) (inp.control || inp).focus(); };
+
+  /* Страховочное делегирование кликов по data-action: web-компонент
+     pf2e-field-button сам вызывает PF2E_ACTIONS, но если обработчик WC
+     не успел повеситься (или action задан на обычном <button> из JSON),
+     клик дойдёт сюда. Двойной вызов исключён отметкой _actHandled. */
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('[data-action]') : null;
+    if (!b) return;
+    var act = b.getAttribute('data-action');
+    var fn = window.PF2E_ACTIONS && window.PF2E_ACTIONS[act];
+    if (typeof fn !== 'function') return;
+    if (b._actHandled) { b._actHandled = false; return; }  // уже выполнено WC
+    fn(ev, b);
+  });
 }
 
 /* ---------------- темы оформления (цвета + раскладка) ---------------- */

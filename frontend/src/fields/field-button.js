@@ -31,7 +31,12 @@
              (wireActions вызывается в boot после монтирования блоков) —
              ищем функцию в момент клика */
           var fn = window.PF2E_ACTIONS && window.PF2E_ACTIONS[act];
-          if (typeof fn === 'function') fn(ev, b);
+          if (typeof fn === 'function') {
+            fn(ev, b);
+            this._actHandled = true;   // страховочный делегат на document не должен повторить
+            var self = this;
+            setTimeout(function () { self._actHandled = false; }, 0);
+          }
         });
       }
     }
