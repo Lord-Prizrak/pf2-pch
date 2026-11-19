@@ -5742,6 +5742,10 @@ function wireActions() {
     var act = btn.getAttribute('data-action') || '';
     var m = /^hp:(.+)$/.exec(act);
     var v = m ? m[1] : btn.getAttribute('data-hp');
+    /* HP-кнопки с data-hp уже обрабатываются страховочным делегатом
+       wireTopbar (document click по [data-hp]); здесь берём только чисто
+       action-кнопки (hp:* без data-hp), иначе действие выполнится дважды */
+    if (!m && btn.hasAttribute && btn.hasAttribute('data-hp')) return;
     /* защита от повреждённых профилей: hitPoints может отсутствовать/быть некорректным */
     if (!State.sheet.hitPoints || typeof State.sheet.hitPoints !== 'object') State.sheet.hitPoints = {};
     var hp = State.sheet.hitPoints;
